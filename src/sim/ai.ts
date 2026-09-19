@@ -1,7 +1,7 @@
-import type { InputFrame, Road, VehicleDefinition, V3 } from '../core/types';
-import { CIRCUIT, ROADS, pointAt, nearestRoad } from '../content/world';
-import { clamp, distance, wrap } from '../core/math';
-import { neutralInput, Vehicle } from './physics';
+import type { InputFrame, Road } from '../core/types';
+import { CIRCUIT, pointAt, nearestRoad } from '../content/world';
+import { clamp, wrap } from '../core/math';
+import { Vehicle } from './physics';
 
 export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,wetness:number,index:number,road:Road=CIRCUIT):InputFrame {
   const s=vehicle.state,near=nearestRoad(s.position.x,s.position.z,r=>r.id===road.id),speed=Math.abs(s.speed),lookAhead=clamp(9+speed*.60,9,48);
@@ -25,21 +25,3 @@ export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,w
   const throttleBudget=vehicle.definition.class==='FORMULA'?clamp(1-cornerLoad*.8,.2,1)*clamp((.19-sideSlip)/.12,0,1):1;
   const error=targetSpeed-speed;return {steer:clamp(angle/maxSteer,-1,1),throttle:clamp(error*.25,0,throttleBudget),brake:clamp(-error*.20,0,1),handbrake:false,shift:0,reverse:false};
 }
-export interface TrafficAgent {vehicle:Vehicle;road:Road;direction:1|-1;lane:number;input:InputFrame;timer:number;stuck:number;signal:number}
-export function trafficInput(agent:TrafficAgent,others:Vehicle[],clock:number):InputFrame {
-  const v=agent.vehicle,s=v.state,speed=Math.abs(s.speed),road=agent.road,nearest=nearestRoad(s.position.x,s.position.z,r=>r.id===road.id);
-  if(!road.loop&&(agent.direction===1&&nearest.progress>road.length-20||agent.direction===-1&&nearest.progress<20)){
-    const end=pointAt(road,agent.direction===1?road.length-.1:0);let candidate:Road|undefined,dir:1|-1=1,best=80;
-    for(const r of ROADS){if(r.id===road.id||r.kind==='circuit'||r.kind==='pit'||r.kind==='test')continue;for(const side of [0,1]){const p=side?r.points[r.points.length-1]:r.points[0],dist=distance(end,p);if(dist<best){best=dist;candidate=r;dir=side?-1:1;}}}
-    if(candidate){agent.road=candidate;agent.direction=dir;}else agent.direction=agent.direction===1?-1:1;
-  }
-  let targetSpeed=road.speed*(.8+(agent.signal%4)*.04),lane=agent.direction*road.width/(road.lanes===4?8:4);
-  for(const other of others){if(other===v)continue;const dx=other.state.position.x-s.position.x,dz=other.state.position.z-s.position.z,forward=dx*Math.sin(s.yaw)+dz*Math.cos(s.yaw),lateral=dx*Math.cos(s.yaw)-dz*Math.sin(s.yaw);if(forward>0&&forward<10+speed*1.3&&Math.abs(lateral)<2.5){targetSpeed=Math.min(targetSpeed,Math.max(0,other.state.speed+(forward-10-speed*.8)*.4));if(road.lanes===4&&forward>14){const adjacentClear=others.every(o=>o===v||distance(o.state.position,s.position)>16||Math.abs(o.state.position.x-s.position.x)<1);if(adjacentClear)lane*=3;}}}
-  // Signals are deterministic by junction zone and clock; traffic slows before entering a red zone.
-  const ahead=pointAt(road,nearest.progress+agent.direction*(12+speed),lane);
-  if(road.id.startsWith('city')){const junction=nearestRoad(ahead.x,ahead.z,r=>r.id!==road.id&&r.id.startsWith('city'));if(junction.distance<12){const green=(Math.floor(clock/12)+(road.id==='city1'||road.id==='city2'?0:1))%2===0;if(!green)targetSpeed=0;}}
-  const lookAhead=8+speed*.65,target=pointAt(agent.road,nearest.progress+agent.direction*lookAhead,lane),alpha=wrap(Math.atan2(target.x-s.position.x,target.z-s.position.z)-s.yaw),angle=Math.atan2(2*v.definition.wheelbase*Math.sin(alpha),lookAhead),maxSteer=clamp(.57/(1+speed*.055),.115,.57);
-  const curvature=Math.abs(pointAt(road,nearest.progress+agent.direction*25).curvature);targetSpeed=Math.min(targetSpeed,Math.sqrt(.55*9.81/Math.max(.0001,curvature)));if(Math.abs(alpha)>.8)targetSpeed=Math.min(targetSpeed,5);
-  const error=targetSpeed-speed;return {throttle:clamp(error*.22,0,.65),brake:clamp(-error*.25,0,1),steer:clamp(angle/maxSteer,-1,1),handbrake:false,shift:0,reverse:false};
-}
-export function trafficSpawn(player:V3,index:number):{road:Road;position:ReturnType<typeof pointAt>;direction:1|-1}{const near=nearestRoad(player.x,player.z,r=>r.kind==='road'||r.kind==='highway');const direction:1|-1=index%3===0?-1:1;const road=near.road,offset=direction*road.width/(road.lanes===4?8:4),position=pointAt(road,near.progress+35+index*37,offset);if(direction===-1)position.yaw+=Math.PI;return {road,position,direction};}

@@ -55,6 +55,7 @@ node scripts/verify-racing.mjs
 node scripts/verify-weekend.mjs
 node scripts/verify-physics.mjs
 node scripts/verify-handling.mjs
+node scripts/verify-traffic.mjs
 node scripts/inspect-handling.mjs
 node scripts/verify-controller-navigation.mjs
 node scripts/verify-audio.mjs
@@ -70,7 +71,7 @@ The verification scripts use the dev server on port 5187. `verify-delivery.mjs` 
 
 `node scripts/verify-delivery.mjs --25mbps` adds browser-emulated 25Mbps download / 5Mbps upload with 40ms latency and a cold browser cache. Its separate `output/delivery-25mbps/` results are development-host network emulation, not an actual-laptop or Internet deployment benchmark.
 
-See [architecture and tuning](docs/architecture.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. The art, advanced traffic/streaming systems, full rule/interaction fault matrix, and target-laptop performance still need work.
+See [architecture and tuning](docs/architecture.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. The art, asynchronous streaming, broad traffic/racing endurance, full interaction/fault matrix, and target-laptop performance still need work.
 
 ## Static hosting
 

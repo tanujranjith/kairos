@@ -7,7 +7,8 @@ import { createCar, type CarVisual } from './render/car';
 import { loadCarAssets } from './render/car-assets';
 import { PhysicsWorld, Vehicle, FIXED_DT, neutralInput } from './sim/physics';
 import { RaceManager, insidePitLane } from './sim/race';
-import { racingInput, trafficInput, trafficSpawn, type TrafficAgent } from './sim/ai';
+import { racingInput } from './sim/ai';
+import { TrafficRuntime } from './runtime/traffic';
 import { VEHICLES, vehicleById, defaultSave } from './content/vehicles';
 import { ROADS, CIRCUIT, PIT, LANDMARKS, pointAt, nearestRoad, RoadGraph } from './content/world';
 import { HANDLING, inHandlingCourse } from './content/handling-course';
@@ -26,13 +27,14 @@ export class Kairos {
   private menuNavigation!:ControllerMenuNavigator;
   screen:Screen='home';mode='Free Drive';clock=0;wetness=0;pausedFromDrive=false;hasDrive=false;
   raceConfig:RaceSessionConfig={kind:'Quick Race',laps:5,entrants:8,difficulty:.65,position:4,vehicleClass:'GT'};
-  opponents:Opponent[]=[];traffic:(TrafficAgent&{visual:CarVisual})[]=[];route:V3[]=[];destination:string|null=null;mapSelection:string|null=null;
+  opponents:Opponent[]=[];trafficSystem!:TrafficRuntime;route:V3[]=[];destination:string|null=null;mapSelection:string|null=null;
+  get traffic(){return this.trafficSystem?.cars??[];}
   activity:{name:string;id:string;time:number;score:number;started:boolean}|null=null;message='';messageUntil=0;
   private manual=false;private accumulator=0;private testAccumulator=0;private last=performance.now();private aiClock=0;private saveClock=0;private uiClock=0;private routeClock=0;private serviceTimer=0;private lastInput=neutralInput();private autoTestDriver=false;private lastDamage=0;private speedTraps=new Map<string,number>();private showcase:CarVisual[]=[];private physicsMs=0;private frameTimes:number[]=[];private overloads=0;private cameraClock=0;
   get vehicle(){return this.player;}
   async init(){
     this.save=await this.store.open();const canvas=document.querySelector<HTMLCanvasElement>('#game')!;
-    this.renderer=await Renderer.create(canvas);this.physics=await PhysicsWorld.create(this.renderer.scene);this.world=new WorldRenderer(this.renderer.scene,this.physics);
+    this.renderer=await Renderer.create(canvas);this.physics=await PhysicsWorld.create(this.renderer.scene);this.world=new WorldRenderer(this.renderer.scene,this.physics);this.trafficSystem=new TrafficRuntime(this.physics,this.world,this.renderer.scene);
     await loadCarAssets(this.renderer.scene,VEHICLES.map(v=>v.id));
     const spawn=this.freeSpawn();this.player=new Vehicle(this.physics,vehicleById(this.save.selected),'player',spawn,spawn.yaw,this.store.customization(this.save,this.save.selected));this.visual=createCar(this.renderer.scene,this.player.definition,this.player.setup);this.renderer.registerCar(this.visual);
     this.world.setEnabled(false);this.input=new Input(()=>this.save.settings);this.input.onAction=action=>this.handleInputAction(action);
@@ -63,11 +65,11 @@ export class Kairos {
     if(action==='reset'&&this.hasDrive)this.resetPlayer();
   }
   private changeCar(id:string,spawn=this.freeSpawn(),yaw=spawn.yaw){this.player.dispose();this.visual.dispose();this.save.selected=id;const d=vehicleById(id),setup=this.store.customization(this.save,id);this.player=new Vehicle(this.physics,d,'player',spawn,yaw,setup);this.visual=createCar(this.renderer.scene,d,setup);this.renderer.registerCar(this.visual);void this.store.write(this.save);}
-  private clearOthers(){this.opponents.forEach(o=>{o.vehicle.dispose();o.visual.dispose();});this.traffic.forEach(t=>{t.vehicle.dispose();t.visual.dispose();});this.opponents=[];this.traffic=[];}
+  private clearOthers(){this.opponents.forEach(o=>{o.vehicle.dispose();o.visual.dispose();});this.opponents=[];this.trafficSystem.clear();}
   private prepareDrive(){this.clearOthers();this.serviceTimer=0;this.input.clear();this.autoTestDriver=false;this.hasDrive=true;this.lastDamage=0;this.activity=null;this.clock=0;this.aiClock=0;this.accumulator=0;this.race=new RaceManager();}
   private startAudio(){void this.audio.start().catch(()=>{});window.setTimeout(()=>{if(this.screen==='drive'&&this.audio.needsGesture&&this.save.settings.volume>0)this.toast('Click or press a key to enable audio. You can keep driving with your controller.',8);},700);}
   async startDrive(handling=false){this.startAudio();this.prepareDrive();this.mode='Free Drive';this.world.clear();const spawn=handling?{...HANDLING.spawn,s:0,curvature:0}:this.freeSpawn();this.world.ensure(spawn);this.changeCar(this.save.selected,spawn);if(!handling)this.createTraffic();this.setScreen('drive');this.toast(handling?'Northstar · Skidpad, slalom, braking, banking and ride tests. No traffic on the pad.':'WASD or arrows to drive · C changes camera · M opens your map',6);}
-  private createTraffic(){this.traffic.forEach(t=>{t.vehicle.dispose();t.visual.dispose();});this.traffic=[];for(let i=0;i<this.save.settings.traffic;i++){const spawn=trafficSpawn(this.player.state.position,i);this.world.ensure(spawn.position);const def=VEHICLES[[0,2,3][i%3]],v=new Vehicle(this.physics,def,`traffic-${i}`,spawn.position,spawn.position.yaw),visual=createCar(this.renderer.scene,def,{paint:['#bac7c4','#9bafbc','#936951','#d9d3c2','#425762'][i%5],wheels:'#82929c',livery:0,brakeBias:.6,aero:1},true);this.traffic.push({vehicle:v,visual,road:spawn.road,direction:spawn.direction,lane:0,input:neutralInput(),timer:0,stuck:0,signal:i});}}
+  private createTraffic(){this.trafficSystem.populate(this.player,this.save.settings.traffic,this.clock);}
   async startRace(stage=0){this.startAudio();this.prepareDrive();this.mode=this.raceConfig.kind;this.world.clear();this.race.start(this.raceConfig,stage);const playerSlot=this.raceConfig.position-1,d=vehicleById(this.raceConfig.vehicleClass==='FORMULA'?'apex':'gtx');
     const grid=(slot:number)=>pointAt(CIRCUIT,CIRCUIT.length-18-Math.floor(slot/2)*14,(slot%2===0?-1:1)*3);
     const p=grid(playerSlot);this.world.ensure(p);this.changeCar(d.id,p);
@@ -109,6 +111,7 @@ export class Kairos {
   private step(){
     if(this.screen!=='drive')return;const dt=FIXED_DT;this.clock+=dt;this.saveClock+=dt;this.aiClock+=dt;this.routeClock+=dt;
     const settings=this.save.settings;settings.time=(settings.time+dt*settings.timeRate/3600)%24;this.wetness=clamp(this.wetness+(settings.weather==='Rain'?.012:-.003)*dt,0,1);
+    if(this.mode==='Free Drive')this.trafficSystem.beforeStep(this.player,this.clock,dt);
     const raceActive=this.mode!=='Free Drive',all=[this.player,...this.opponents.map(o=>o.vehicle),...this.traffic.map(t=>t.vehicle)];
     if(this.aiClock>=.1){const elapsed=this.aiClock;this.aiClock=0;this.world.ensure(this.player.state.position);for(let i=0;i<this.opponents.length;i++){
       const o=this.opponents[i],v=o.vehicle,n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='circuit');this.world.ensure(v.state.position);
@@ -122,7 +125,6 @@ export class Kairos {
       o.stuck=Math.abs(v.state.speed)<1.5&&!o.pit?o.stuck+elapsed:0;
       if(v.needsRecovery()||o.stuck>8){const p=pointAt(CIRCUIT,n.progress-8,i%2?3:-3);if(all.every(other=>other===v||distance(other.state.position,p)>9)){this.world.ensure(p);v.reset(p,p.yaw);this.race.resetLap(v.id);o.stuck=0;}}
     }
-      for(let i=0;i<this.traffic.length;i++){const t=this.traffic[i];this.world.ensure(t.vehicle.state.position);t.input=trafficInput(t,all,this.clock);if(distance(t.vehicle.state.position,this.player.state.position)>700||t.vehicle.needsRecovery()){const spawn=trafficSpawn(this.player.state.position,i);this.world.ensure(spawn.position);t.vehicle.reset(spawn.position,spawn.position.yaw);t.road=spawn.road;t.direction=spawn.direction;}}
     }
     let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.raceConfig.difficulty,this.wetness,0):this.input.poll(dt,this.player.state.speed);this.lastInput=input;
     const countdown=this.race.state.phase==='countdown';if(countdown&&(this.autoTestDriver||input.throttle<.05))input={...neutralInput(),brake:1};
@@ -146,6 +148,7 @@ export class Kairos {
   private finishSession(){this.audio.pause();this.setScreen('results');void this.store.write(this.save);}
   private frame(){const now=performance.now(),raw=(now-this.last)/1000;this.last=now;if(this.manual)return;if(document.hidden)return;if(raw>FIXED_DT*8)this.overloads++;const dt=Math.min(raw,.067);this.frameTimes.push(raw*1000);if(this.frameTimes.length>1800)this.frameTimes.shift();this.accumulator+=dt;let steps=0;const start=performance.now();while(this.accumulator>=FIXED_DT&&steps<8){this.step();this.accumulator-=FIXED_DT;steps++;}this.physicsMs=performance.now()-start;if(this.accumulator>=FIXED_DT){this.overloads++;this.accumulator%=FIXED_DT;}this.draw(dt,this.accumulator/FIXED_DT);}
   private draw(dt:number,alpha=1){this.cameraClock+=dt;if(this.message&&this.cameraClock>this.messageUntil)this.message='';
+    this.world.updateSignals(this.clock);
     this.world.setEnabled(!this.garage);if(!this.garage)this.world.update(this.player.state.position,this.player.state.velocity,[...this.opponents.map(o=>o.vehicle.state.position),...this.traffic.map(t=>t.vehicle.state.position)]);this.world.setWetness(this.wetness);
     this.renderer.update(this.player,this.visual,this.save.settings,dt,this.garage,this.cameraClock,this.wetness,alpha);
     for(const o of [...this.opponents,...this.traffic]){o.visual.root.setEnabled(!this.garage&&distance(o.vehicle.state.position,this.player.state.position)<650);o.visual.root.position.copyFrom(Vector3.Lerp(o.vehicle.previousPosition,o.vehicle.node.position,alpha));o.visual.root.rotationQuaternion=Quaternion.Slerp(o.vehicle.previousRotation,o.vehicle.node.rotationQuaternion!,alpha);o.visual.update(o.vehicle.state);}
@@ -157,7 +160,7 @@ export class Kairos {
   resumeRealTime(){this.manual=false;this.last=performance.now();this.accumulator=0;}
   setAutopilot(enabled:boolean){this.autoTestDriver=enabled;}
   teleport(x:number,z:number,roadId?:string){const n=nearestRoad(x,z,roadId?r=>r.id===roadId:undefined);const p=pointAt(n.road,n.progress,2);this.world.ensure(p);this.player.reset(p,p.yaw);this.race.resetLap('player');}
-  snapshot(){return {screen:this.screen,mode:this.mode,renderer:this.renderer.rendererName,coordinateSystem:'meters; Y up; +Z forward at yaw 0; +X right',player:this.player.state,race:this.race.state,cells:this.world.cells.size,traffic:this.traffic.map(t=>({id:t.vehicle.id,position:t.vehicle.state.position,speed:t.vehicle.state.speed})),opponents:this.opponents.map(o=>({id:o.vehicle.id,position:o.vehicle.state.position,speed:o.vehicle.state.speed})),destination:this.destination,routePoints:this.route.length,activity:this.activity,weather:this.save.settings.weather,wetness:this.wetness,time:this.save.settings.time,physicsMs:this.physicsMs,overloads:this.overloads,frameTimeP95:percentile(this.frameTimes,.95),message:this.message};}
+  snapshot(){return {screen:this.screen,mode:this.mode,renderer:this.renderer.rendererName,coordinateSystem:'meters; Y up; +Z forward at yaw 0; +X right',player:this.player.state,race:this.race.state,cells:this.world.cells.size,traffic:this.traffic.map(t=>({id:t.vehicle.id,position:t.vehicle.state.position,speed:t.vehicle.state.speed,path:t.agent.pathId,reason:t.agent.reason})),trafficSystem:this.trafficSystem.snapshot(),opponents:this.opponents.map(o=>({id:o.vehicle.id,position:o.vehicle.state.position,speed:o.vehicle.state.speed})),destination:this.destination,routePoints:this.route.length,activity:this.activity,weather:this.save.settings.weather,wetness:this.wetness,time:this.save.settings.time,physicsMs:this.physicsMs,overloads:this.overloads,frameTimeP95:percentile(this.frameTimes,.95),message:this.message};}
   view():ViewModel{return {screen:this.screen,save:this.save,player:this.player.state,race:this.race.state,raceOrder:this.race.order(),raceStage:this.race.stage,raceConfig:this.raceConfig,mode:this.mode,renderer:this.renderer.rendererName,fps:this.renderer.engine.getFps(),cells:this.world.cells.size,drawCalls:this.renderer.scene.getActiveMeshes().length,triangles:this.renderer.scene.getActiveIndices()/3,wetness:this.wetness,clock:this.clock,route:this.route,destination:this.destination,mapSelection:this.mapSelection,activity:this.activity,message:this.message,storageError:this.store.error,pausedFromDrive:this.pausedFromDrive,trafficCount:this.traffic.length,physicsMs:this.physicsMs};}
 }
 

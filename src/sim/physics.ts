@@ -4,7 +4,7 @@ import HavokPhysics from '@babylonjs/havok';
 import havokUrl from '@babylonjs/havok/lib/esm/HavokPhysics.wasm?url';
 import type { VehicleDefinition, VehicleState, InputFrame, Settings, Customization, V3 } from '../core/types';
 import { clamp, approach } from '../core/math';
-import { nearestRoad, terrainHeight, inLake } from '../content/world';
+import { nearestRoad, terrainHeight, inLake, onJunctionSurface } from '../content/world';
 import { tireForces } from './tire';
 import { inHandlingCourse } from '../content/handling-course';
 
@@ -61,7 +61,7 @@ export class Vehicle {
     if(this.shiftTimer>0)throttle*=.12;
     if(s.fuel<=0||s.rpm>d.redline)throttle=0;
     s.absActive=false;s.tcActive=false;
-    const near=nearestRoad(this.node.position.x,this.node.position.z,undefined,1),onRoad=inHandlingCourse(this.node.position.x,this.node.position.z)||near.distance<near.road.width*.5+1;
+    const near=nearestRoad(this.node.position.x,this.node.position.z,undefined,1),onRoad=inHandlingCourse(this.node.position.x,this.node.position.z)||near.distance<near.road.width*.5+1||onJunctionSurface(this.node.position);
     s.surface=onRoad?'Asphalt':inLake(this.node.position.x,this.node.position.z)?'Water':'Grass';
     const surfaceMu=onRoad?1:.46;const wetMu=1-wetness*(d.class==='ROAD'?.28:.4);
     const rest=.32+d.travel*.5;

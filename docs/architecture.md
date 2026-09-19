@@ -27,7 +27,7 @@ Northstar's validation rig creates a fresh physical vehicle per scenario, settle
 
 Spline definitions generate sampled road geometry, markings, contact surfaces and graph points. World cells are 256m. Nearby surface cells are generated before physics reaches them; additional detail queues favor direction/speed. The local implementation generates cells synchronously, so there are no asynchronous network-cell requests to cancel. This simplifies failure handling but cell-generation spikes still need profiling.
 
-Repeated scenery uses thin instances. Each cell owns unique instance-buffer geometry (sharing it would overwrite every cell's transforms). Materials are shared; cell-owned sign textures are explicitly disposed. AI locations protect their contact cells. Navigation uses A* over sampled roads and intersection proximity links. Layer-aware overpass topology is not yet generalized.
+Repeated scenery uses thin instances. Each cell owns unique instance-buffer geometry (sharing it would overwrite every cell's transforms). Materials are shared; cell-owned sign textures are explicitly disposed. Physical AI locations protect their contact cells. Navigation uses A* over directed lanes and explicitly authored turn connectors shared with traffic. Incompatible-height junctions are rejected; generalized elevation-span topology and layer-aware wheel contacts are still incomplete. See `traffic.md` for scheduling, priorities, signals, lane changes and physical/distant resource ownership.
 
 ## Persistence
 

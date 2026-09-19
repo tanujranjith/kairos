@@ -61,6 +61,27 @@ Latest full-weekend test (eight cars; 300s practice, 300s qualifying, three-lap 
 
 Both player races had zero penalties after the pit-lane exclusion fix. The six phases total approximately 33 minutes of **controlled simulation time**, not 30 minutes of real-time endurance. At phase endpoints, scene meshes ranged 357–512, materials 76–100 and textures 8–9; these bounded samples do not prove absence of memory growth, resident memory limits or GPU budgets. Physics-batch timing in this harness covers many simulated seconds and must not be read as a per-frame CPU measurement.
 
-## Still required
+## Directed traffic checkpoint — September 19, 2026
+
+The 60-test pure suite passes. Eleven browser traffic checks pass using real Havok cars with standard input/assists. Selected dry-road scenarios measured:
+
+| Scenario | Observation |
+|---|---|
+| Red-light approach | Stopped with chassis center 3.92m before connector entry; departed on green |
+| Left / right turn | Maximum path error 0.80m / 1.21m; zero recorded damage |
+| Terminal turn-around | Completed connector and exit; maximum path error 1.71m |
+| Merge | Completed connector, joined parkway and returned to outer lane; maximum tracking error 1.81m |
+| Stationary obstruction | Stopped with 4.26m full-body clearance, then held position |
+| Passing | Completed lane change with minimum oriented full-body clearance 1.53m |
+| Obstruction removed | Resumed from a stopped queue; reached 12.21m/s without reset |
+| Tier transitions | Started 12 physical + 12 distant; sampled 40 promotions / 33 demotions after region changes; maximum two decisions per 120Hz tick |
+
+Tier samples retained 24 actors, no non-finite states or recorded damage, and 31–51 loaded cells. A sample during transition had seven physical actors, so these results do not promise twelve physical cars at every instant. Timing is controlled simulation, not real-time performance/endurance. Detailed traces, visible red/green light names and screenshots are in `output/traffic/report.json` and `output/traffic/`.
+
+The general interaction and six-car physics suites passed after the junction collider/terrain changes. Repeated 60/30/20Hz input cadence still yielded 23.060786m/s and 33.08–33.10m stopping distance. Installed Edge sequentially passed both WebGPU and WebGL2 with four contacts, 12.101111m/s after two seconds, and no page/external-request errors. The supplied skill client was rerun sequentially; its gameplay screenshot/state were opened and checked. A prior concurrent verification attempt timed out in Edge navigation and the client's click; those timed-out checks were not counted as passes.
+
+The sequential production cold-browser-cache checks with 25Mbps/40ms emulation reached the start screen in **4.197s / 4.088s**, transferred **4,489,007 bytes** through Free Drive and the handling-course flow, and sampled approximately **85 / 60MB JS heap**. No page errors, failed or external requests were recorded, and production test hooks were absent. Concurrent runs were slower (15.198s / 8.343s); neither set measures target-laptop frame pacing, whole-process/GPU memory or an HTTPS deployment. The final sequential report is `output/delivery-25mbps/report.json`.
+
+## Remaining acceptance work
 
 Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; p95 frame time; separate physics/AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); real-time 30-minute endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. No target-budget pass is claimed for these unmeasured items.

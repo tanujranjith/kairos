@@ -7,6 +7,12 @@ export class Geometry {
   uvs: number[] = [];
   colors: number[] = [];
 
+  polygon(points:V3[]){
+    if(points.length<3)return;const first=this.positions.length/3;
+    for(const p of points){this.positions.push(p.x,p.y,p.z);this.uvs.push(p.x/12,p.z/12);}
+    for(let i=1;i<points.length-1;i++)this.indices.push(first,first+i,first+i+1);
+  }
+
   quad(a: V3, b: V3, c: V3, d: V3, color?: number[]) {
     const n = this.positions.length / 3;
     for (const p of [a, b, c, d]) {

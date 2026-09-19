@@ -8,16 +8,20 @@ import { inHandlingCourse, terrainOutsideHandling } from '../content/handling-co
 import { createHandlingCell } from './handling-course';
 import { Geometry } from './geometry';
 import { TUNNELS } from '../content/structures';
+import { TrafficScenery, insideJunction, type SignalMesh } from './traffic';
+import { terrainOutsideJunctions } from '../content/terrain-clipping';
 
-interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[]}
+interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];signals:SignalMesh[]}
 export class WorldRenderer {
   cells=new Map<string,Cell>();root:TransformNode;backdrop:Mesh;water:Mesh;
   private terrain:PBRMaterial;private road:PBRMaterial;private shoulder:PBRMaterial;private marking:PBRMaterial;private yellow:PBRMaterial;private curb:PBRMaterial;private wall:PBRMaterial;private roof:PBRMaterial;private glass:PBRMaterial;private foliage:PBRMaterial;private trunk:PBRMaterial;
   private treeMesh:Mesh;private trunkMesh:Mesh;private boulders:Mesh;private queue:{cx:number;cz:number;priority:number}[]=[];private center='';
   private roadCells=new Map<string,{road:typeof ROADS[number];index:number}[]>();
   private quality:Quality='Low';private enabled=true;
+  private trafficScenery:TrafficScenery;
   constructor(public scene:Scene,public physics:PhysicsWorld){
     this.root=new TransformNode('world',scene);
+    this.trafficScenery=new TrafficScenery(scene);
     const mat=(name:string,hex:string)=>{const m=new PBRMaterial(name,scene);m.albedoColor=Color3.FromHexString(hex);m.roughness=.97;m.metallic=0;return m;};
     this.terrain=mat('meadow','#777c48');this.shoulder=mat('gravel','#9f967a');this.marking=mat('road-paint','#e8e4d1');this.yellow=mat('centerline','#d6b96d');this.curb=mat('red-curbs','#a94435');this.wall=mat('stone-buildings','#c2ba9f');this.roof=mat('roof-metal','#555b59');this.glass=mat('architectural-glass','#344c54');this.foliage=mat('pine-needles','#344b2f');this.trunk=mat('tree-bark','#594939');
     // A millimetric physical separation alone loses depth precision at long range.
@@ -39,6 +43,7 @@ export class WorldRenderer {
   setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);}
   setQuality(q:Quality){if(q===this.quality)return;this.clear();this.quality=q;this.center='';}
   setWetness(v:number){this.road.roughness=.92-v*.72;this.road.albedoColor.set(.31-v*.12,.33-v*.12,.32-v*.11);}
+  updateSignals(clock:number){for(const cell of this.cells.values())this.trafficScenery.update(cell.signals,clock);}
   ensure(position:V3){const cx=Math.floor(position.x/CELL_SIZE),cz=Math.floor(position.z/CELL_SIZE);for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)this.createCell(cx+dx,cz+dz);}
   update(position:V3,velocity:V3,protectedPositions:V3[]=[]){
     if(!this.enabled)return;
@@ -55,24 +60,26 @@ export class WorldRenderer {
   hasSurface(position:V3){return this.cells.has(this.key(Math.floor(position.x/CELL_SIZE),Math.floor(position.z/CELL_SIZE)));}
   private createCell(cx:number,cz:number){
     const key=this.key(cx,cz);if(this.cells.has(key)||cx< -9||cx>8||cz< -9||cz>8)return;
-    const cell:Cell={key,cx,cz,meshes:[],colliders:[]},x0=cx*CELL_SIZE,z0=cz*CELL_SIZE;this.cells.set(key,cell);
+    const cell:Cell={key,cx,cz,meshes:[],colliders:[],signals:[]},x0=cx*CELL_SIZE,z0=cz*CELL_SIZE;this.cells.set(key,cell);
     const attach=(mesh:Mesh|null,collision=false)=>{if(!mesh)return;mesh.parent=this.root;cell.meshes.push(mesh);if(collision)cell.colliders.push(this.physics.addStaticMesh(mesh));};
     const terrain=new Geometry(),step=16;
     for(let x=x0;x<x0+CELL_SIZE;x+=step)for(let z=z0;z<z0+CELL_SIZE;z+=step)for(const [left,bottom,right,top] of terrainOutsideHandling([x,z,x+step,z+step])){
-      terrain.quad({x:left,y:terrainHeight(left,bottom),z:bottom},{x:right,y:terrainHeight(right,bottom),z:bottom},{x:left,y:terrainHeight(left,top),z:top},{x:right,y:terrainHeight(right,top),z:top});
+      for(const polygon of terrainOutsideJunctions([left,bottom,right,top]))terrain.polygon(polygon.map(p=>({...p,y:terrainHeight(p.x,p.z)})));
     }
     attach(terrain.mesh(`terrain-${key}`,this.scene,this.terrain),true);
     createHandlingCell(this.scene,[x0,z0,x0+CELL_SIZE,z0+CELL_SIZE],{road:this.road,white:this.marking,red:this.curb,dark:this.roof},attach);
+    cell.signals=this.trafficScenery.createCell(cx,cz,{road:this.road,white:this.marking,dark:this.roof},attach);
     const asphalt=new Geometry(),verge=new Geometry(),white=new Geometry(),yellow=new Geometry(),curbs=new Geometry(),rails=new Geometry(),buildings=new Geometry(),roofs=new Geometry(),windows=new Geometry();
     for(const {road,index}of this.roadCells.get(key)??[]){const a=road.points[index],b=road.points[index+1];if(road.kind==='test'&&inHandlingCourse(a.x,a.z))continue;const strip=(g:Geometry,offset:number,width:number,y=.0)=>{const p=(v:typeof a,o:number)=>({x:v.x+Math.cos(v.yaw)*o,y:v.y+y,z:v.z-Math.sin(v.yaw)*o});g.quad(p(a,offset-width/2),p(a,offset+width/2),p(b,offset-width/2),p(b,offset+width/2));};
-      strip(asphalt,0,road.width,.025);strip(verge,0,road.width+3,-.015);
-      for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046);
+      const junction=insideJunction((a.x+b.x)/2,(a.z+b.z)/2,road.id);
+      if(!junction){strip(asphalt,0,road.width,.025);strip(verge,0,road.width+3,-.015);}
+      if(!junction)for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046);
       if(road.kind==='circuit'){if(index%2===0)for(const side of [-1,1])strip(curbs,side*(road.width*.5+.4),.85,.045);}
-      else if(road.kind!=='pit'&&road.kind!=='test'){
+      else if(!junction&&road.kind!=='pit'&&road.kind!=='test'){
         if(index%3!==0)strip(road.kind==='highway'?white:yellow,0,.12,.046);
         if(road.lanes===4&&index%3!==0)for(const side of [-1,1])strip(white,side*road.width*.25,.12,.046);
       }
-      if((road.kind==='highway'||a.z>950||inLake(a.x,a.z))&&index%2===0){for(const side of [-1,1]){const offset=side*(road.width*.5+1);const x=a.x+Math.cos(a.yaw)*offset,z=a.z-Math.sin(a.yaw)*offset;rails.box(x,a.y+.65,z,.13,.30,16,a.yaw);rails.box(x,a.y,z,.13,.95,.13,a.yaw);}}
+      if(!junction&&(road.kind==='highway'||a.z>950||inLake(a.x,a.z))&&index%2===0){for(const side of [-1,1]){const offset=side*(road.width*.5+1);const x=a.x+Math.cos(a.yaw)*offset,z=a.z-Math.sin(a.yaw)*offset;rails.box(x,a.y+.65,z,.13,.30,16,a.yaw);rails.box(x,a.y,z,.13,.95,.13,a.yaw);}}
       // Lake crossing is a real elevated deck with piers over lower terrain.
       if(inLake(a.x,a.z)&&index%5===0){rails.box(a.x,a.y-1,a.z,road.width,.85,9,a.yaw);buildings.box(a.x,2,a.z,2,a.y-3,3,a.yaw);}
       for(const tunnel of TUNNELS)if(road.id===tunnel.roadId&&a.s>tunnel.start&&a.s<tunnel.end&&index%3===0){const sideOffset=tunnel.innerWidth/2+.5;for(const side of [-1,1])buildings.box(a.x+Math.cos(a.yaw)*side*sideOffset,a.y,a.z-Math.sin(a.yaw)*side*sideOffset,1,tunnel.height,25,a.yaw);roofs.box(a.x,a.y+tunnel.height,a.z,tunnel.innerWidth+2,1,25,a.yaw);}
@@ -81,7 +88,7 @@ export class WorldRenderer {
     const random=rng(hash(cx,cz)),trees:Matrix[]=[],trunks:Matrix[]=[],rocks:Matrix[]=[];
     const count={Low:32,Medium:48,High:65,Ultra:90}[this.quality];
     for(let i=0;i<count;i++){
-      const x=x0+random()*CELL_SIZE,z=z0+random()*CELL_SIZE,near=nearestRoad(x,z,undefined,1);if(inHandlingCourse(x,z,12)||inLake(x,z)||near.distance<near.road.width*.5+5)continue;const y=terrainHeight(x,z);
+      const x=x0+random()*CELL_SIZE,z=z0+random()*CELL_SIZE,near=nearestRoad(x,z,undefined,1);if(inHandlingCourse(x,z,12)||inLake(x,z)||insideJunction(x,z)||near.distance<near.road.width*.5+5)continue;const y=terrainHeight(x,z);
       const city=x< -650&&z< -650,industrial=x< -850&&z< -300&&z> -780,circuit=x>300&&z< -450;
       if((city||industrial)&&near.distance<95&&i%2===0){const h=city?7+random()*30:8+random()*9,w=12+random()*13,l=12+random()*16;buildings.box(x,y,z,w,h,l);roofs.box(x,y+h,z,w+1,.6,l+1);for(let level=4;level<h-1;level+=3.3){windows.box(x,y+level,z-l*.5-.025,w*.83,1.35,.05);windows.box(x-w*.5-.025,y+level,z,.05,1.35,l*.82);}}
       else if(!circuit&&!industrial){const s=.6+random()*.95,yaw=random()*Math.PI;trees.push(Matrix.Compose(new Vector3(s,s,s),Quaternion.RotationYawPitchRoll(yaw,0,0),new Vector3(x,y+8*s,z)));trunks.push(Matrix.Compose(new Vector3(s,s,s),Quaternion.Identity(),new Vector3(x,y+3.5*s,z)));if(i%5===0)rocks.push(Matrix.Compose(new Vector3(s*1.5,s*.7,s),Quaternion.RotationYawPitchRoll(yaw,0,0),new Vector3(x+5,y+.5,z+3)));}

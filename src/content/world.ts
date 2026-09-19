@@ -1,6 +1,8 @@
 import type { Road, RoadPoint, NearestRoad, Landmark, V3 } from '../core/types';
 import { clamp, distance, lerp, smooth, wrap } from '../core/math';
 import { HANDLING, handlingTerrainBlend, inHandlingCourse } from './handling-course';
+import { LaneGraph, samplePath, projectPath } from '../sim/lane-graph';
+import { resolveJunctions, PRIVATE_TRAFFIC_ROADS } from './junctions';
 
 export const CELL_SIZE=256;
 export const WORLD_SIZE=4096;
@@ -48,6 +50,11 @@ export const ROADS:Road[]=[
 ];
 export const CIRCUIT=ROADS.find(r=>r.id==='circuit')!;
 export const PIT=ROADS.find(r=>r.id==='pit')!;
+export const PUBLIC_ROADS=ROADS.filter(r=>r.kind==='road'||r.kind==='highway');
+export const JUNCTIONS=resolveJunctions(PUBLIC_ROADS);
+export const LANE_GRAPH=new LaneGraph(PUBLIC_ROADS,JUNCTIONS,PRIVATE_TRAFFIC_ROADS);
+export function junctionRadius(junction:{control:string;radius:number}){return junction.control==='turnaround'?18:junction.radius+12;}
+export function onJunctionSurface(position:V3){return [...LANE_GRAPH.junctions.values()].some(j=>Math.abs(position.y-j.y)<3&&Math.hypot(position.x-j.x,position.z-j.z)<junctionRadius(j));}
 const buckets=new Map<string,{road:Road,index:number}[]>();
 for(const road of ROADS) for(let i=0;i<road.points.length-1;i++){const p=road.points[i],key=`${Math.floor(p.x/64)},${Math.floor(p.z/64)}`;const list=buckets.get(key)??[];list.push({road,index:i});buckets.set(key,list);}
 export function nearestRoad(x:number,z:number,filter?:(r:Road)=>boolean,maxRadius=3):NearestRoad {
@@ -90,25 +97,32 @@ export const LANDMARKS:Landmark[]=[
 ];
 export function regionAt(x:number,z:number) { if(inHandlingCourse(x,z,32))return 'NORTHSTAR HANDLING GROUNDS';if(x>300&&z<-460)return 'ASTER MOTORSPORT PARK';if(z>1000&&x>300)return 'RIDGEWAY PASS';if(x<-700&&z<-750)return 'WESTBROOK';if(x<-650&&z<-250)return 'THE FOUNDRY';if(z>600&&x>-350&&x<600)return 'PINECREST FOREST';if(x<0&&z>-200)return 'LAKE AURELIA';return 'REDWOOD VALLEY'; }
 
-// Graph edges follow sampled road geometry. Links only connect nearby compatible elevations.
-export interface NavNode { x:number;z:number;y:number;edges:{to:number;cost:number}[];road:string }
+// Directed navigation uses the same legal lanes/turns as traffic. Lane changes
+// move forward along an adjacent lane; proximity never creates a junction.
+export interface NavNode { x:number;z:number;y:number;edges:{to:number;cost:number}[];road:string;path:string;s:number }
 export class RoadGraph {
   nodes:NavNode[]=[];
+  private pathNodes=new Map<string,number[]>();
   constructor() {
-    const bins=new Map<string,number[]>();
-    for(const road of ROADS.filter(r=>r.kind!=='circuit'&&r.kind!=='pit'&&r.kind!=='test')){
-      let previous=-1,first=-1;
-      for(let s=0;s<road.length;s+=24){const p=pointAt(road,s),id=this.nodes.length,node:NavNode={x:p.x,y:p.y,z:p.z,road:road.id,edges:[]};this.nodes.push(node);if(first<0)first=id;
-        if(previous>=0)this.link(previous,id);previous=id;
-        const bx=Math.floor(p.x/32),bz=Math.floor(p.z/32);for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++)for(const n of bins.get(`${bx+dx},${bz+dz}`)??[])if(this.nodes[n].road!==road.id&&distance(p,this.nodes[n])<28&&Math.abs(p.y-this.nodes[n].y)<3)this.link(n,id);
-        const key=`${bx},${bz}`;const bucket=bins.get(key)??[];bucket.push(id);bins.set(key,bucket);
-      } if(road.loop)this.link(previous,first);
+    for(const path of LANE_GRAPH.paths.values()){
+      const ids:number[]=[],count=Math.ceil(path.length/16);
+      for(let i=0;i<=count;i++){const p=samplePath(path,i/count*path.length),id=this.nodes.length;this.nodes.push({...p,road:path.roadId,path:path.id,edges:[]});if(i)this.link(ids[i-1],id);ids.push(id);}
+      this.pathNodes.set(path.id,ids);
+    }
+    for(const path of LANE_GRAPH.paths.values()){
+      const ids=this.pathNodes.get(path.id)!;
+      for(const next of path.next)this.link(ids.at(-1)!,this.pathNodes.get(next)![0]);
+      for(const id of ids){const node=this.nodes[id];if(node.s<24||path.length-node.s<64||Math.abs(samplePath(path,node.s).curvature)>.007)continue;
+        for(const adjacent of path.adjacent){const other=LANE_GRAPH.paths.get(adjacent)!,progress=projectPath(other,node).progress+24,target=this.pathNodes.get(adjacent)!.find(n=>this.nodes[n].s>=progress);if(target!==undefined)this.link(id,target,8);}
+      }
     }
   }
-  private link(a:number,b:number){const cost=distance(this.nodes[a],this.nodes[b]);this.nodes[a].edges.push({to:b,cost});this.nodes[b].edges.push({to:a,cost});}
+  private link(a:number,b:number,penalty=0){this.nodes[a].edges.push({to:b,cost:Math.max(.01,distance(this.nodes[a],this.nodes[b]))+penalty});}
   closest(x:number,z:number){let best=0,d=Infinity;this.nodes.forEach((n,i)=>{const nd=Math.hypot(n.x-x,n.z-z);if(nd<d){d=nd;best=i;}});return best;}
-  route(from:{x:number;z:number},to:{x:number;z:number}):V3[]{
-    const a=this.closest(from.x,from.z),b=this.closest(to.x,to.z),dist=new Float64Array(this.nodes.length).fill(Infinity),prev=new Int32Array(this.nodes.length).fill(-1),open=new Set<number>([a]);dist[a]=0;
+  route(from:{x:number;z:number;y?:number;yaw?:number},to:{x:number;z:number;y?:number}):V3[]{
+    const source=LANE_GRAPH.nearest(from,from.yaw),goal=LANE_GRAPH.nearest(to),sourceIds=this.pathNodes.get(source.path.id)!,goalIds=this.pathNodes.get(goal.path.id)!;
+    const a=sourceIds.find(id=>this.nodes[id].s>=source.progress)??sourceIds.at(-1)!,b=goalIds.reduce((best,id)=>Math.abs(this.nodes[id].s-goal.progress)<Math.abs(this.nodes[best].s-goal.progress)?id:best,goalIds[0]);
+    const dist=new Float64Array(this.nodes.length).fill(Infinity),prev=new Int32Array(this.nodes.length).fill(-1),open=new Set<number>([a]);dist[a]=0;
     while(open.size){let current=-1,score=Infinity;for(const n of open){const f=dist[n]+distance(this.nodes[n],this.nodes[b]);if(f<score){score=f;current=n;}}if(current===b)break;open.delete(current);for(const edge of this.nodes[current].edges){const nd=dist[current]+edge.cost;if(nd<dist[edge.to]){dist[edge.to]=nd;prev[edge.to]=current;open.add(edge.to);}}}
     if(!Number.isFinite(dist[b]))return [];const result:V3[]=[];for(let n=b;n!==-1;n=prev[n])result.unshift({x:this.nodes[n].x,y:this.nodes[n].y,z:this.nodes[n].z});return result;
   }
