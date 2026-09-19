@@ -11,6 +11,7 @@ import { cellManifest,cellKey } from './cell-manifest';
 import { meadowColor } from './landscape';
 import { buildArchitecture,type BuildingStyle } from './architecture';
 import { buildServicePavilion } from './service-pavilion';
+import { buildPitGarage } from './pit-garage';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
@@ -30,7 +31,6 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
   const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder();
   const roadContacts:ContactRange[]=[];
-  const utilityWindow=(...args:Parameters<MeshDataBuilder['box']>)=>{const first=windows.uvs.length;windows.box(...args);for(let i=first;i<windows.uvs.length;i+=2){windows.uvs[i]=.25;windows.uvs[i+1]=.5;}};
   for(const {road,index}of roadCells.get(key)??[]){
     const a=road.points[index],b=road.points[index+1],span=roadSpanAt(road,(a.s+b.s)/2);if(road.kind==='test'&&inHandlingCourse(a.x,a.z))continue;
     const strip=(g:MeshDataBuilder,offset:number,width:number,y=0)=>{const p=(v:typeof a,o:number)=>({x:v.x+Math.cos(v.yaw)*o,y:v.y+y,z:v.z-Math.sin(v.yaw)*o});g.quad(p(a,offset-width/2),p(a,offset+width/2),p(b,offset-width/2),p(b,offset+width/2));};
@@ -57,6 +57,13 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     }
     for(const tunnel of TUNNELS)if(road.id===tunnel.roadId&&a.s>tunnel.start&&a.s<tunnel.end&&index%3===0){const sideOffset=tunnel.innerWidth/2+.5;for(const side of [-1,1])buildings.box(a.x+Math.cos(a.yaw)*side*sideOffset,a.y,a.z-Math.sin(a.yaw)*side*sideOffset,1,tunnel.height,25,a.yaw);roofs.box(a.x,a.y+tunnel.height,a.z,tunnel.innerWidth+2,1,25,a.yaw);}
   }
+  if(cx>=2&&cx<=4&&cz===-6){
+    const x=x0+128,start=asphalt.indices.length/3;
+    // The garage fronts open onto a level working apron, not a strip of lawn.
+    asphalt.quad({x:x-115,y:17.025,z:-1456.5},{x:x+115,y:17.025,z:-1456.5},{x:x-115,y:17.025,z:-1444.5},{x:x+115,y:17.025,z:-1444.5});
+    roadContacts.push({start,end:asphalt.indices.length/3,surface:'Asphalt',layer:'surface',roadId:'pit'});
+    for(let bay=0;bay<12;bay++){const px=x-105.6+bay*19.2;for(const side of [-1,1])white.box(px+side*3.2,17.05,-1450.7,.10,.004,6.5);white.box(px,17.05,-1453.9,6.5,.004,.10);}
+  }
   add('verge',verge,'shoulder');add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('paint',white,'marking');add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
   const random=rng(hash(cx,cz)),urban=x0<-650&&z0<-300,count=quality==='Low'&&urban?32:{Low:44,Medium:60,High:80,Ultra:105}[quality];
   for(let i=0;i<count;i++){
@@ -73,7 +80,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   for(const landmark of LANDMARKS){if(Math.floor(landmark.x/CELL_SIZE)!==cx||Math.floor(landmark.z/CELL_SIZE)!==cz)continue;const n=nearestRoad(landmark.x,landmark.z,landmark.roadId?r=>r.id===landmark.roadId:undefined),x=n.point.x+Math.cos(n.point.yaw)*(n.road.width*.5+7),z=n.point.z-Math.sin(n.point.yaw)*(n.road.width*.5+7),y=terrainHeight(x,z);
     if(landmark.type==='service'||landmark.type==='garage'){const px=n.point.x+Math.cos(n.point.yaw)*(n.road.width*.5+17),pz=n.point.z-Math.sin(n.point.yaw)*(n.road.width*.5+17);buildServicePavilion({wall:buildings,roof:roofs,glass:windows},pavement,{x:px,y:terrainHeight(px,pz),z:pz,yaw:n.point.yaw+Math.PI/2});}if(landmark.type!=='trial'&&landmark.type!=='drift')signs.push({id:landmark.id,name:landmark.name,position:{x,y,z},yaw:n.point.yaw});
   }
-  if(cx>=2&&cx<=4&&cz===-6){const x=x0+128,y=17;buildings.box(x,y,-1436,230,9,19);utilityWindow(x,y+5,-1445.6,224,2.2,.06);roofs.box(x,y+9,-1436,236,.4,23);for(let i=0;i<12;i++)utilityWindow(x-110+i*19,y,-1445.7,12,3.8,.06);}
+  if(cx>=2&&cx<=4&&cz===-6)buildPitGarage({wall:buildings,roof:roofs,glass:windows},x0+128,17,-1436);
   if(cx===3&&cz===-7){buildings.box(900,17,-1540,190,3,28);for(let i=0;i<6;i++)roofs.box(900,20+i*.9,-1533-i*3,185,.6,2.6);for(const z of [-1512,-1488])buildings.box(680,17,z,1,8,1);roofs.box(680,25,-1500,1.5,1,25);}
   add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');
   return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};

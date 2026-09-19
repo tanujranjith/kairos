@@ -93,8 +93,8 @@ export class Kairos {
   },()=>this.startRace(stage));}
   private resetPlayer(){
     const onCourse=this.mode==='Free Drive'&&inHandlingCourse(this.player.node.position.x,this.player.node.position.z);
-    const near=nearestRoadAt(this.player.node.position,this.mode==='Free Drive'?r=>r.kind!=='pit':r=>r.id==='circuit');
-    const p=onCourse?HANDLING.spawn:pointAt(near.road,near.progress,this.mode==='Free Drive'?2:0);
+    const near=nearestRoadAt(this.player.node.position,this.mode==='Free Drive'?undefined:r=>r.id==='circuit');
+    const p=onCourse?HANDLING.spawn:pointAt(near.road,near.progress,this.mode==='Free Drive'&&!near.road.oneWay?2:0);
     this.world.requestAround(p,true);this.player.reset(p,p.yaw);this.race.resetLap('player');this.input.clear();
     this.toast(onCourse?'Back at Northstar’s braking lane.':this.mode==='Free Drive'?'Back on the road.':'Back on circuit · current lap invalidated.');
   }

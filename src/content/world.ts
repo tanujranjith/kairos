@@ -28,8 +28,10 @@ export function makeRoad(id:string,name:string,anchors:Anchor[],width:number,kin
   let s=0;
   const points:RoadPoint[]=raw.map((p,i)=>{if(i)s+=distance(p,raw[i-1]);const n=raw[Math.min(i+1,raw.length-1)],prev=raw[Math.max(0,i-1)];return {...p,s,yaw:Math.atan2(n.x-prev.x,n.z-prev.z),curvature:0};});
   for(let i=1;i<points.length-1;i++) points[i].curvature=wrap(points[i+1].yaw-points[i-1].yaw)/Math.max(1,points[i+1].s-points[i-1].s);
-  return {id,name,points,width,kind,loop,lanes,speed,length:s};
+  return {id,name,points,width,kind,loop,lanes,speed,length:s,oneWay:kind==='circuit'||kind==='pit'};
 }
+const asterCircuit=makeRoad('circuit','Aster International',[[680,-1500,17],[1260,-1500,17],[1550,-1350,19],[1590,-950,24],[1470,-620,27],[1200,-490,26],[1000,-650,23],[1160,-920,23],[900,-1130,20],[570,-940,18],[400,-1140,17],[470,-1410,17]],14,'circuit',true,2,75);
+const pitMerge=pointAt(asterCircuit,840),pitApproach=pointAt(asterCircuit,790,-14);
 export const ROADS:Road[]=[
   makeRoad('ring','Valley Parkway',[[-1520,-1450],[-1790,-700],[-1750,350],[-1510,1250],[-650,1660],[380,1690],[1310,1340],[1790,620],[1790,-350],[1710,-1420],[650,-1750],[-580,-1720]],15,'highway',true,4,36),
   makeRoad('lakeshore','Lakeshore Drive',[[-850,-1730],[-650,-1120],[-410,-480],[-380,100],[-350,650],[-410,1120],[-650,1660]],9,'road',false,2,23),
@@ -43,18 +45,19 @@ export const ROADS:Road[]=[
   makeRoad('city2','Market Street',[[-1610,-1210],[-1290,-1200],[-980,-1190],[-690,-1180]],10,'road',false,2,14),
   makeRoad('city3','Cedar Street',[[-1430,-1470],[-1400,-1200],[-1340,-940],[-1300,-620],[-1250,-370]],9,'road',false,2,14),
   makeRoad('city4','Harbor Street',[[-1070,-1650],[-1020,-1320],[-980,-1190],[-960,-940],[-960,-840],[-900,-370]],9,'road',false,2,14),
-  makeRoad('circuitlink','Aster Circuit Access',[[1050,-210],[900,-360],[720,-470],[500,-650],[470,-1050]],9,'road',false,2,17),
-  makeRoad('circuit','Aster International',[[680,-1500,17],[1260,-1500,17],[1550,-1350,19],[1590,-950,24],[1470,-620,27],[1200,-490,26],[1000,-650,23],[1160,-920,23],[900,-1130,20],[570,-940,18],[400,-1140,17],[470,-1410,17]],14,'circuit',true,2,75),
-  makeRoad('pit','Aster Pit Lane',[[510,-1450,17],[660,-1460,17],[960,-1460,17],[1260,-1460,17],[1390,-1410,18]],7,'pit',false,1,16.67),
+  makeRoad('circuitlink','Aster Circuit Access',[[1050,-210],[1050,-330],[900,-420],[720,-470],[500,-650],[470,-950],[480,-1100,12],[480,-1250,17],[490,-1360,17],[500,-1400,17],[510,-1450,17]],9,'road',false,2,17),
+  asterCircuit,
+  makeRoad('pit','Aster Pit Lane',[[510,-1450,17],[660,-1460,17],[960,-1460,17],[1260,-1460,17],[1390,-1410,18],[pitApproach.x,pitApproach.z,pitApproach.y],[pitMerge.x,pitMerge.z,pitMerge.y]],7,'pit',false,1,16.67),
   makeRoad('testaccess','Northstar Access',[[-650,1660,landHeight(-650,1660)+.13],[-840,1690,HANDLING.height],[-1010,1740,HANDLING.height]],8,'road',false,2,14),
   makeRoad('test','Northstar Skidpad',Array.from({length:24},(_,i):Anchor=>{const a=i/24*Math.PI*2;return [HANDLING.skidpad.x+Math.sin(a)*HANDLING.skidpad.radius,HANDLING.skidpad.z+Math.cos(a)*HANDLING.skidpad.radius,HANDLING.height];}),14,'test',true,2,20)
 ];
-ROADS.forEach(configureRoadLayers);
+ROADS.forEach(road=>configureRoadLayers(road,(x,z)=>landHeight(x,z)+.13));
 export const CIRCUIT=ROADS.find(r=>r.id==='circuit')!;
 export const PIT=ROADS.find(r=>r.id==='pit')!;
 export const PUBLIC_ROADS=ROADS.filter(r=>r.kind==='road'||r.kind==='highway');
-export const JUNCTIONS=resolveJunctions(PUBLIC_ROADS);
-export const LANE_GRAPH=new LaneGraph(PUBLIC_ROADS,JUNCTIONS,PRIVATE_TRAFFIC_ROADS);
+export const NAV_ROADS=ROADS.filter(r=>r.kind!=='test');
+export const JUNCTIONS=resolveJunctions(NAV_ROADS);
+export const LANE_GRAPH=new LaneGraph(NAV_ROADS,JUNCTIONS,PRIVATE_TRAFFIC_ROADS);
 export function junctionRadius(junction:{control:string;radius:number}){return junction.control==='turnaround'?18:junction.radius+12;}
 export function onJunctionSurface(position:V3){return [...LANE_GRAPH.junctions.values()].some(j=>Math.abs(position.y-j.y)<3&&Math.hypot(position.x-j.x,position.z-j.z)<junctionRadius(j));}
 const buckets=new Map<string,{road:Road,index:number}[]>();
@@ -112,7 +115,9 @@ export class RoadGraph {
   private pathNodes=new Map<string,number[]>();
   constructor() {
     for(const path of LANE_GRAPH.paths.values()){
-      const ids:number[]=[],count=Math.ceil(path.length/16);
+      // Short turns need enough samples to retain the authored curve; a 16m
+      // chord can cut across the verge on a paddock or urban hairpin.
+      const ids:number[]=[],count=Math.ceil(path.length/(path.kind==='connector'?2:16));
       for(let i=0;i<=count;i++){const p=samplePath(path,i/count*path.length),id=this.nodes.length;this.nodes.push({...p,road:path.roadId,path:path.id,edges:[]});if(i)this.link(ids[i-1],id);ids.push(id);}
       this.pathNodes.set(path.id,ids);
     }

@@ -21,6 +21,8 @@ Open the local URL in hardware-accelerated Chrome or Edge. `?renderer=webgl` for
 
 ## Play
 
+In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
+
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.
 
 **Handling course** in the sidebar opens Northstar's traffic-free proving ground with the selected car. It contains braking lanes, a slalom, three skidpad rings, measured bumps, a banked road, a gradient, a curb and a launch ramp. It is also connected to the public road network. Reset inside the course returns to its braking lane. See [course layout and measured tests](docs/handling-course.md).
@@ -60,6 +62,7 @@ node scripts/verify-startup.mjs --channel=msedge --race --output=output/startup-
 node scripts/verify-handling.mjs
 node scripts/verify-traffic.mjs
 node scripts/verify-layers.mjs
+node scripts/verify-access.mjs
 node scripts/verify-pits.mjs
 node scripts/verify-scenery.mjs
 node scripts/verify-graphics-streaming.mjs

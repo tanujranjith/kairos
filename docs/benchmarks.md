@@ -2,7 +2,42 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
-## September 19 startup investigation and consolidated engine
+## September 19 Aster access and paddock checkpoint
+
+`output/circuit-access/report.json` records installed Edge/WebGL2, controlled-time input-only physics traversals. Collision data is installed synchronously for this geometry test, so it is not streaming or FPS acceptance.
+
+| Route | Authored route length | Simulated time | Peak lane error | Damage / airborne / non-asphalt contacts |
+|---|---:|---:|---:|---|
+| Expressway approach to actual Aster pit destination | 2,106.99m | 188.62s | 0.995m | None |
+| Pit exit, circuit, west gate, return onto expressway | 5,249.07m | 461.09s | 1.395m | None |
+
+Upper deck, lower access and pit each retain four correctly tagged asphalt contacts before/after reset. The inbound run records Aster discovery and clears its reached navigation destination; the return ends with all wheels on the public expressway. Initial failures are preserved in `first-gate-error.json` and `dense-path-error.json`: tight turns produced up to 4.14m error and grass contacts. Fixes widened the actual junction geometry, retained dense navigation curves and chose the inside pit merge lane; assertions and vehicle/follower tuning were not weakened.
+
+Opened underpass, deck, paddock, pit-exit and garage-bay captures. Screenshot inspection prompted smooth ground ramps and a paved garage apron. The original batched garage uses fewer than 4,000 triangles per block, with no additional material groups or per-bay draws. Visual appearance remains stylized.
+
+After these changes both eight-car, three-lap quick races complete with all eight classified: GT 387.78s and Formula 300.07s session elapsed. Both players finish with zero damage/penalty; GT receives two track-limit warnings and Formula zero. This is selected race regression evidence, not comprehensive AI/flags acceptance. Physical service restores fuel above 99.99L/109.99L respectively and every tire above 99% wear remaining. Ordered pit checkpoints and automatic AI service/rejoin remain incomplete.
+
+Final strict build and all 97 pure tests pass. A preceding concurrent run hit the existing five-second blueprint-test timeout; isolated reruns pass without changing it (7.87s and 8.90s full-suite durations). The existing large-Babylon-chunk warning remains.
+
+All eleven traffic checks and the earlier Ridgeway/lake/tunnel/contact-layer checks re-pass. Traffic population samples remain 12/12/7 physical cars, replenishing to eight after the last transition; the total stays 24. Streaming delay, failed-load retry, no replay of rejected time, race reservation and return-home cleanup pass. Three repeated region loops retain identical mesh/material/texture counts at corresponding endpoints: city 465/64/40, mountain 325/65/41, lakeshore 334/64/40, each with 25 ready cells. This is short resource-count stability, not a 30-minute memory result.
+
+Low rendering audit on the development **RTX 3060**, installed Edge/WebGL2, samples 66 controlled 30Hz steps per scene. Peaks remain below the geometry/draw-count budgets in these views:
+
+| Scene | Peak draw calls | Peak reported active triangles |
+|---|---:|---:|
+| Showroom | 162 | 164,246 |
+| Lakeshore traffic | 235 | 381,131 |
+| City traffic | 194 | 405,067 |
+| Wet night | 194 | 403,888 |
+| Eight-car grid | 273 | 345,789 |
+
+Submission medians range 4.2–7.2ms, including driver synchronization; they are not real-time frame pacing, GPU time or integrated-laptop certification. See `output/render-cost/report.json`.
+
+The final supplied web-game client re-passes (`output/access-final-input`): 3.710974m/s, four Lakeshore asphalt contacts, zero damage, eleven physical traffic cars, no loading/error state or error artifact; actual screenshot and JSON inspected. The rebuilt production preview passes installed Edge with forced WebGL2 and actual WebGPU, cold browser cache and emulated 25Mbps/40ms: menu readiness 5.221/5.533s, click-to-motion 4.724/7.223s, 11,012,037 bytes through Free Drive/Northstar/clean eight-car race entry and return. No page/failed/external requests or development hooks; WebGPU has only the known Windows `powerPreference` warning. These two passes do not resolve the preceding intermittent startup/interaction stalls or certify the target laptop/HTTPS.
+
+Installed Chrome parity also passes both paths with the same flows and no page/failed/external requests: menu readiness 5.085/5.284s, click-to-motion 4.652/6.454s, same 11,012,037 bytes. Reports/captures: `output/access-delivery` and `output/access-delivery-chrome`. Both use the final rebuilt bundle; no external deployment occurred.
+
+## September 19 startup investigation and consolidated engine (preceding checkpoint)
 
 The preceding 28.893s / 25.863s cold samples remain failures, not retroactively passes. An initial CPU-profile attempt timed out at 30 seconds; a retained second attempt timed out at 92.647s with about 90.6s main-thread idle (`output/startup-baseline`). That evidence does not establish a scene-generation bottleneck or explain the intermittent stall. Startup now records six production User Timing phases to make future slow samples diagnosable.
 

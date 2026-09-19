@@ -37,7 +37,7 @@ export interface RoadPoint extends V3 { s: number; yaw: number; curvature: numbe
 export interface RoadLayerSpan {id:string;start:number;end:number;kind:'bridge'|'tunnel'}
 export interface Road {
   id: string; name: string; points: RoadPoint[]; width: number; lanes: number; speed: number;
-  loop: boolean; kind: 'road' | 'highway' | 'circuit' | 'pit' | 'test'; length: number;layers?:RoadLayerSpan[];
+  loop: boolean; kind: 'road' | 'highway' | 'circuit' | 'pit' | 'test'; length: number;layers?:RoadLayerSpan[];oneWay?:boolean;
 }
 export interface NearestRoad { road: Road; index: number; point: RoadPoint; distance: number; lateral: number; progress: number;layer?:string }
 export interface WorldCellManifest { id: string; cx: number; cz: number; bounds: [number, number, number, number]; seed: number; version:1; assets:string[]; dependencies:string[]; roadIds:string[]; layers:string[] }

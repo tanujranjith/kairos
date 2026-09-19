@@ -66,8 +66,8 @@ export class LaneGraph {
       const entries=(ports.get(road.id)??[]).sort((a,b)=>a.s-b.s);
       const section=(start:number,end:number,from:LaneJunction|null,to:LaneJunction|null,index:number)=>{
         if(end-start<2)return;
-        const count=Math.max(1,road.lanes/2),width=road.width/road.lanes;
-        for(const direction of [1,-1] as const)for(let laneIndex=0;laneIndex<count;laneIndex++){
+        const count=road.oneWay?road.lanes:Math.max(1,road.lanes/2),width=road.width/road.lanes;
+        for(const direction of (road.oneWay?[1]:[1,-1]) as (1|-1)[])for(let laneIndex=0;laneIndex<count;laneIndex++){
           const offset=direction*(road.width/2-width*(laneIndex+.5)),raw:RoadPoint[]=[],n=Math.max(2,Math.ceil((end-start)/6));
           const marks=Array.from({length:n+1},(_,i)=>lerp(start,end,i/n));
           for(const span of road.layers??[])for(const boundary of [span.start,span.end])for(const cycle of [0,road.length])if(boundary+cycle>start&&boundary+cycle<end)marks.push(boundary+cycle);
@@ -89,8 +89,13 @@ export class LaneGraph {
       const incoming=this.paths.get(incomingId)!,outgoing=this.paths.get(outgoingId)!,uturn=incoming.roadId===outgoing.roadId&&incoming.direction!==outgoing.direction;
       if(uturn&&junction.control!=='turnaround')continue;
       const a=incoming.points.at(-1)!,b=outgoing.points[0],angle=wrap(b.yaw-a.yaw),turn=uturn?'uturn':Math.abs(angle)<.5?'straight':angle>0?'right':'left';
-      const incomingCount=this.roadById.get(incoming.roadId)!.lanes/2,outgoingCount=this.roadById.get(outgoing.roadId)!.lanes/2;
-      if(turn==='straight'&&outgoing.laneIndex!==Math.min(incoming.laneIndex,outgoingCount-1))continue;
+      const lanes=(id:string)=>{const r=this.roadById.get(id)!;return r.oneWay?r.lanes:Math.max(1,r.lanes/2);},incomingCount=lanes(incoming.roadId),outgoingCount=lanes(outgoing.roadId);
+      // A one-way feeder joins the nearest through lane, not necessarily lane
+      // zero (the pit approaches Aster from the inside of the circuit).
+      const mergeLane=junction.control==='merge'&&this.roadById.get(incoming.roadId)!.oneWay&&incomingCount<outgoingCount
+        ?junction.outgoing.map(id=>this.paths.get(id)!).filter(p=>p.roadId===outgoing.roadId&&p.direction===outgoing.direction).sort((p,q)=>distance(a,p.points[0])-distance(a,q.points[0]))[0].laneIndex
+        :Math.min(incoming.laneIndex,outgoingCount-1);
+      if(turn==='straight'&&outgoing.laneIndex!==mergeLane)continue;
       if(turn==='right'&&(incoming.laneIndex!==0||outgoing.laneIndex!==0))continue;
       if(turn==='left'&&(incoming.laneIndex!==incomingCount-1||outgoing.laneIndex!==outgoingCount-1))continue;
       const handle=uturn?junction.radius*2:Math.min(30,Math.max(8,distance(a,b)*.52)),c={x:a.x+Math.sin(a.yaw)*handle,z:a.z+Math.cos(a.yaw)*handle},d={x:b.x-Math.sin(b.yaw)*handle,z:b.z-Math.cos(b.yaw)*handle};

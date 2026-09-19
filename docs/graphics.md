@@ -25,6 +25,8 @@ Run the supplied `web_game_playwright_client.mjs` for driving inputs and open it
 
 ## Still below the finished art target
 
+Aster's pit garages now use original framed hospitality glazing, shuttered ground-floor bays, deep columns, canopies, roof equipment and a paved/painted working apron. The first underpass inspection also prompted smoothly graded embankments instead of abrupt grass walls. These changes reuse existing per-cell materials/collision batches; see [access verification](circuit-access.md). They improve the paddock's detail but do not establish the reference mockups' realism.
+
 This remains procedural, stylized game art, not the reference images' photorealism. Car families share topology; interiors, glazing, liveries, building variety, roadside dressing, terrain blending, water and vegetation silhouettes need further art direction. The local probe covers a bounded subset of nearby scenery; AI reflections remain analytic. KTX2 compression, broader quality tuning and actual 8GB laptop performance acceptance remain incomplete.
 
 ## Sculpted coachwork and gallery pass

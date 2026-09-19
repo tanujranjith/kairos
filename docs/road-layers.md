@@ -8,7 +8,7 @@ Cell asphalt remains one merged material/collider. Sorted triangle ranges identi
 
 Terrain polygons are clipped against at-grade road footprints, avoiding coarse grid triangles poking through asphalt and falsely changing tire grip. Ground remains beneath bridge spans. Deck undersides follow road pitch; piers avoid the lower road's clearance. Structural objects remain collidable.
 
-Reset and route-source selection include height. Landmark destinations have explicit road IDs and sampled height; arrivals, service and activity triggers require vertical proximity, and player activities require ground contact. Navigation cannot jump between stacked roads. Private Aster access/pit graph integration is still separate work; this change does not claim a complete private-site navigation graph.
+Reset and route-source selection include height. Landmark destinations have explicit road IDs and sampled height; arrivals, service and activity triggers require vertical proximity, and player activities require ground contact. Navigation cannot jump between stacked roads. [Aster's access integration](circuit-access.md) additionally connects the private road, one-way pit and circuit graph. Its bridge retains track height while grading the ground below; no junction is created at the stacked crossing.
 
 ## Evidence and limits
 

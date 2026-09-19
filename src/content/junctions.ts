@@ -22,6 +22,7 @@ export const ROAD_JUNCTIONS:JunctionDefinition[]=[
   junction('lake-east',-350,650,['northbridge','lakeshore','forest'],['lakeshore']),
   junction('ridgeway-south',340,-350,['crossway','pass'],['crossway'],'merge',24),
   junction('aster-access',1050,-210,['crossway','circuitlink'],['crossway'],'merge',24),
+  junction('aster-paddock-gate',510,-1450,['circuitlink','circuit','pit'],['circuit'],'priority',28),
   {...junction('westbrook-cedar',-1340,-940,['city1','city3'],[],'signal'),signalGroups:[['city1'],['city3']],offset:0},
   {...junction('westbrook-harbor',-960,-940,['city1','city4'],[],'signal'),signalGroups:[['city1'],['city4']],offset:5},
   {...junction('market-cedar',-1400,-1200,['city2','city3'],[],'signal'),signalGroups:[['city2'],['city3']],offset:8},
@@ -44,11 +45,12 @@ export const ROAD_TERMINALS=[
   {roadId:'city1',end:'start'},{roadId:'city1',end:'end'},
   {roadId:'city2',end:'start'},{roadId:'city2',end:'end'},
   {roadId:'city3',end:'start'},
-  {roadId:'circuitlink',end:'end'},{roadId:'testaccess',end:'end'},
+  {roadId:'testaccess',end:'end'},
 ] as const;
-export const PRIVATE_TRAFFIC_ROADS=new Set(['testaccess','circuitlink']);
+export const PRIVATE_TRAFFIC_ROADS=new Set(['testaccess','circuitlink','circuit','pit']);
 export function resolveJunctions(roads:Road[]):JunctionDefinition[]{
-  return [...ROAD_JUNCTIONS,...ROAD_TERMINALS.map(terminal=>{
+  const pitEnd=roads.find(r=>r.id==='pit')?.points.at(-1);
+  return [...ROAD_JUNCTIONS,...(pitEnd?[junction('aster-pit-exit',pitEnd.x,pitEnd.z,['pit','circuit'],['circuit'],'merge',14)]:[]),...ROAD_TERMINALS.map(terminal=>{
     const road=roads.find(r=>r.id===terminal.roadId)!;
     const p=terminal.end==='start'?road.points[0]:road.points.at(-1)!;
     return {id:`terminal-${terminal.roadId}-${terminal.end}`,x:p.x,z:p.z,roads:[road.id],control:'turnaround' as const,priority:[],radius:12,layer:'surface'};
