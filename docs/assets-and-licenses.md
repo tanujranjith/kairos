@@ -6,6 +6,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
 | Aster garage bays, glazing, shutters, canopy, roof plant and working apron | Original code-generated geometry in `src/world/pit-garage.ts` and `src/world/cell-blueprint.ts`; no new external asset |
+| Covered grandstand, individual seats, safety fencing, Kairos gantry, grid/finish paint, authored mountain groups and projected cloud deck | Original code-generated content in `src/world/grandstand.ts`, `src/world/cell-blueprint.ts`, `src/world/landscape.ts` and `src/render/atmosphere.ts`; no new external asset |
 | Brick/limestone/office/factory/house architecture, outer ridges, macro meadow colors, occupied-window atlas | Original code-generated content in `src/world/architecture.ts`, `src/world/landscape.ts` and `src/render/world.ts`; no third-party asset |
 | Service pavilions, overpass structure and updated solar/cloud field | Original code-generated content in `src/world/service-pavilion.ts`, `src/world/cell-blueprint.ts` and `src/render/atmosphere.ts`; no new external asset |
 | Paint, glass, albedo/normal material fields, fir/oak/grass atlases, cloudy sky, fallback valley/studio cubemaps, contact darkening, signs | Original procedural materials/textures; source in `src/render` |

@@ -2,6 +2,37 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 19 mountain atmosphere and circuit presentation checkpoint
+
+All 111 tests and strict TypeScript/build pass. Four additional tests cover supported grandstand geometry/material buffers and budget, nonphysical detail/correct gantry cell ownership, mountain valley clearance/slope continuity and seamless cloud projection. Screenshot iteration rejected the original continuous mountain wall, excessive rock normal noise and mirrored lettering; the final finer-ridge slope failure was fixed by reducing geometry amplitude, not weakening its bound.
+
+`output/scenery/report.json` records seven region/light/weather views and both eight-car GT/Formula grids, four wheel contacts, zero grid damage, 33,032 backdrop triangles, positive-Y normals, transferred building colors and a 1024×256 sky. Actual captures and the close grandstand inspection were opened. `output/mountain-stand-final-input` records the supplied input client's 3.710974m/s, four contacts and zero damage without loading/error state. No road geometry, car parameter or race-rule edits were made.
+
+Both three-lap/eight-car regressions again classify all eight entrants: 387.783s GT / 300.075s Formula, zero player penalty/damage, two GT warnings and zero Formula warnings. The nine graphics/streaming checks pass, including missing-surface freeze, delayed/failing worker retry without replayed time, circuit reservation and home cleanup. Corresponding mesh/material/texture counts remain identical across three cycles: city 465/64/41; mountain 325/65/42; lakeshore 334/64/41. Three additional race/home cycles render the new sign/stand then dispose their owned resources, returning each time to 117 meshes, 63 materials and 40 textures with no retained gantry material/detail mesh. These short checks do not establish 30-minute real-time endurance.
+
+The six-car acceleration/ground-contact regression also passes unchanged: 4-second speeds 15.675 / 23.061 / 22.967 / 20.868 / 25.562 / 31.692m/s for Aeris/Velara/Crest/Nova/GTX/Apex. Velara reaches 23.060786m/s under 60/30/20Hz displayed-input cadences, with 33.084–33.099m braking distance. This verifies the sampled numerical behavior, not every maneuver/class/setup combination.
+
+Final submission audit: installed Edge/WebGL2, RTX 3060, Low 1280×720, 66 controlled steps per scene including extra passes:
+
+| View | Maximum draw calls | Maximum active triangles |
+|---|---:|---:|
+| Showroom | 162 | 164,246 |
+| Lakeshore traffic | 235 | 381,131 |
+| City traffic | 194 | 405,067 |
+| Wet night | 194 | 403,888 |
+| Eight-car grid | 272 | 361,645 |
+
+The grid adds roughly 16,000 submitted triangles over the preceding checkpoint while staying within the stated submission budgets. These are development-host controlled-time rendering counters, not GPU timings, real-time p95, process memory or the target laptop's 30 FPS certification. The existing large Babylon bundle warning remains. The reference art target, automatic AI pit strategy, adaptive quality/device-loss recovery, broader endurance and authorized HTTPS delivery remain unfinished.
+
+The rebuilt production preview passes installed Edge and Chrome, forced WebGL2 and actual WebGPU, cold cache with emulated 25Mbps/40ms and third-party hosts blocked. Free Drive motion, Northstar, clean eight-car launch and menu return work; no page errors/failed/external requests or exposed development hooks. Each run transfers 11,015,098 bytes through those flows.
+
+| Browser | WebGL2 menu ready / click-to-motion | WebGPU menu ready / click-to-motion |
+|---|---:|---:|
+| Edge | 6.215s / 5.204s | 5.934s / 8.124s |
+| Chrome | 5.722s / 5.238s | 8.318s / 8.339s |
+
+Reports and screenshots are in `output/mountain-stand-delivery-edge` and `output/mountain-stand-delivery-chrome`. WebGPU logs only the known Windows `powerPreference` warning. These passing samples do not resolve the historical intermittent startup stall or certify the actual laptop, full cold-playable target, HTTPS or endurance. The existing preview at port 5192 contains this build.
+
 ## September 19 directional race/pit timing checkpoint
 
 All 107 pure tests pass. New cases cover finite-width/direction/height crossing, continuous pit progress, stationary service, skipped gates, wrong-height routes, reversing, reset/restart, penalty latching across brief lane departures, and observation-cadence interpolation. Circuit and pit checkpoints now use actual crossing events rather than circuit-nearest projection changes.

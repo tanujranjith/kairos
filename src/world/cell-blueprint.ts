@@ -1,4 +1,4 @@
-import { CELL_SIZE,ROADS,LANDMARKS,terrainHeight,nearestRoad,inLake,JUNCTIONS,junctionRadius } from '../content/world';
+import { CELL_SIZE,ROADS,LANDMARKS,CIRCUIT,pointAt,terrainHeight,nearestRoad,inLake,JUNCTIONS,junctionRadius } from '../content/world';
 import { inHandlingCourse,terrainOutsideHandling } from '../content/handling-course';
 import { terrainOutsideJunctions } from '../content/terrain-clipping';
 import { terrainOutsideRoads } from '../content/road-terrain-clipping';
@@ -12,11 +12,12 @@ import { meadowColor } from './landscape';
 import { buildArchitecture,type BuildingStyle } from './architecture';
 import { buildServicePavilion } from './service-pavilion';
 import { buildPitGarage } from './pit-garage';
+import { buildGrandstand } from './grandstand';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
 export interface CellInstance {kind:'pine'|'oak'|'trunk'|'oakTrunk'|'rock'|'grass';position:V3;scale:V3;yaw:number}
-export interface CellSign {id:string;name:string;position:V3;yaw:number}
+export interface CellSign {id:string;name:string;position:V3;yaw:number;width?:number;height?:number;mounted?:boolean}
 export interface CellBlueprint {manifest:WorldCellManifest;meshes:CellMesh[];instances:CellInstance[];signs:CellSign[];bytes:number}
 const roadCells=new Map<string,{road:typeof ROADS[number];index:number}[]>();
 for(const road of ROADS)for(let index=0;index<road.points.length-1;index++){const p=road.points[index],q=road.points[index+1],key=cellKey(Math.floor((p.x+q.x)/2/CELL_SIZE),Math.floor((p.z+q.z)/2/CELL_SIZE)),list=roadCells.get(key)??[];list.push({road,index});roadCells.set(key,list);}
@@ -31,6 +32,18 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
   const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder();
   const roadContacts:ContactRange[]=[];
+  // Paint comes from the same authored finish/grid positions as session spawns.
+  const finish=pointAt(CIRCUIT,0);
+  if(Math.floor(finish.x/CELL_SIZE)===cx&&Math.floor(finish.z/CELL_SIZE)===cz){
+    const p=(s:number,o:number)=>{const a=pointAt(CIRCUIT,s,o);return {x:a.x,y:a.y+.048,z:a.z};};
+    for(let row=0;row<2;row++)for(let col=0;col<20;col++)if((row+col)%2===0)white.quad(p(row*.7,col*.7-7),p(row*.7,col*.7-6.3),p((row+1)*.7,col*.7-7),p((row+1)*.7,col*.7-6.3));
+  }
+  for(let slot=0;slot<16;slot++){
+    const s=CIRCUIT.length-18-Math.floor(slot/2)*14,o=(slot%2===0?-1:1)*3,a=pointAt(CIRCUIT,s,o);
+    if(Math.floor(a.x/CELL_SIZE)!==cx||Math.floor(a.z/CELL_SIZE)!==cz)continue;
+    white.box(a.x,a.y+.05,a.z,2.5,.004,.10,a.yaw);
+    for(const side of [-1,1])white.box(a.x+Math.cos(a.yaw)*side*1.25-Math.sin(a.yaw)*.7,a.y+.05,a.z-Math.sin(a.yaw)*side*1.25-Math.cos(a.yaw)*.7,.10,.004,1.4,a.yaw);
+  }
   for(const {road,index}of roadCells.get(key)??[]){
     const a=road.points[index],b=road.points[index+1],span=roadSpanAt(road,(a.s+b.s)/2);if(road.kind==='test'&&inHandlingCourse(a.x,a.z))continue;
     const strip=(g:MeshDataBuilder,offset:number,width:number,y=0)=>{const p=(v:typeof a,o:number)=>({x:v.x+Math.cos(v.yaw)*o,y:v.y+y,z:v.z-Math.sin(v.yaw)*o});g.quad(p(a,offset-width/2),p(a,offset+width/2),p(b,offset-width/2),p(b,offset+width/2));};
@@ -81,7 +94,11 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     if(landmark.type==='service'||landmark.type==='garage'){const px=n.point.x+Math.cos(n.point.yaw)*(n.road.width*.5+17),pz=n.point.z-Math.sin(n.point.yaw)*(n.road.width*.5+17);buildServicePavilion({wall:buildings,roof:roofs,glass:windows},pavement,{x:px,y:terrainHeight(px,pz),z:pz,yaw:n.point.yaw+Math.PI/2});}if(landmark.type!=='trial'&&landmark.type!=='drift')signs.push({id:landmark.id,name:landmark.name,position:{x,y,z},yaw:n.point.yaw});
   }
   if(cx>=2&&cx<=4&&cz===-6)buildPitGarage({wall:buildings,roof:roofs,glass:windows},x0+128,17,-1436);
-  if(cx===3&&cz===-7){buildings.box(900,17,-1540,190,3,28);for(let i=0;i<6;i++)roofs.box(900,20+i*.9,-1533-i*3,185,.6,2.6);for(const z of [-1512,-1488])buildings.box(680,17,z,1,8,1);roofs.box(680,25,-1500,1.5,1,25);}
+  if(cx===3&&cz===-7){const detail=new MeshDataBuilder();buildGrandstand({wall:buildings,roof:roofs,glass:windows},detail);add('circuit-detail',detail,'roof');}
+  if(cx===2&&cz===-6){
+    for(const z of [-1512,-1488])buildings.box(680,17,z,.65,7,.65);roofs.box(680,23.6,-1500,1.2,1.4,25);
+    signs.push({id:'aster-gantry',name:'K A I R O S    /    ASTER INTERNATIONAL',position:{x:679.35,y:24.3,z:-1500},yaw:Math.PI/2,width:23,height:1.05,mounted:true});
+  }
   add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');
   return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
 }

@@ -63,7 +63,7 @@ export class Renderer {
     this.ambient.intensity=garage?.35:.32+day*.60;this.sun.intensity=garage?2.8:day*(2.8+golden*.9)*(1-overcast);this.sun.diffuse=Color3.Lerp(new Color3(.96,.96,.89),new Color3(1,.66,.34),golden);this.scene.environmentIntensity=garage?.65:.22+day*.78;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;
     this.scene.imageProcessingConfiguration.exposure=garage?1.1:1.12+day*.06+golden*.15;
     if(garage)this.sun.direction.set(.55,-.6,-.65).normalize();else this.sun.direction.set(-solar.direction.x,-Math.max(.02,solar.direction.y),-solar.direction.z).normalize();
-    const daytimeFog=Color3.Lerp(new Color3(.62,.70,.79),new Color3(.82,.68,.50),golden*(1-overcast));this.scene.fogColor=Color3.Lerp(new Color3(.035,.05,.08),daytimeFog,day);this.scene.fogDensity=.00018+golden*.000035+wetness*.0006;
+    const daytimeFog=Color3.Lerp(new Color3(.54,.66,.79),new Color3(.76,.67,.58),golden*(1-overcast)*.40);this.scene.fogColor=Color3.Lerp(new Color3(.035,.05,.08),daytimeFog,day);this.scene.fogDensity=.00013+golden*.000025+wetness*.0006;
     this.sky.visibility=1;const stamp=`${Math.round(time*50)}:${settings.weather}`;
     if(stamp!==this.skyStamp){this.skyStamp=stamp;this.skyGradient.update(skyPixels(time,settings.weather,this.clouds));}
     this.sunDisc.position.copyFrom(this.camera.position).addInPlace(this.sun.direction.scale(-5000));this.sunDisc.setEnabled(solar.elevation>0&&overcast<.5);

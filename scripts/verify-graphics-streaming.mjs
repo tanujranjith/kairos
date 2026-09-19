@@ -32,8 +32,18 @@ try{
   await page.evaluate(async()=>{const g=window.kairos;g.save.settings.time=22;g.save.settings.weather='Rain';g.wetness=.85;await g.advanceTime(0);});await capture('wet-night');
   const race=await page.evaluate(async()=>{const g=window.kairos;g.save.settings.time=16;g.save.settings.weather='Clear';g.raceConfig.entrants=8;await g.startRace();await g.advanceTime(1000);const {CIRCUIT,PIT}=await import('/src/content/world.ts');return {snapshot:g.snapshot(),allReserved:[...CIRCUIT.points,...PIT.points].every(p=>g.world.hasSurface(p)),sceneMeshes:g.renderer.scene.meshes.length};});assert.ok(race.allReserved);assert.equal(race.snapshot.streaming.profile,'racing');assert.equal(race.snapshot.opponents.length,7);checks.push('eight-car race reserves circuit and pit collision resources');await capture('race-grid');
   await page.evaluate(async()=>{await window.kairos.action('home');await window.advanceTime(0);});checks.push('return-to-showroom releases world cells');assert.equal(await page.evaluate(()=>window.kairos.world.cells.size),0);
+  const raceResources=await page.evaluate(async()=>{
+    const g=window.kairos,s=g.renderer.scene,samples=[];
+    for(let cycle=0;cycle<3;cycle++){
+      await g.startRace();await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);
+      const gantry=s.getMeshByName('sign-aster-gantry')?.isVisible===true,stand=s.meshes.some(m=>m.name.startsWith('circuit-detail'));
+      await g.action('home');await g.advanceTime(0);
+      samples.push({cycle,gantry,stand,cells:g.world.cells.size,meshes:s.meshes.length,materials:s.materials.length,textures:s.textures.length,signRetained:s.materials.some(m=>m.name==='signmat-aster-gantry'),detailRetained:s.meshes.some(m=>m.name.startsWith('circuit-detail'))});
+    }return samples;
+  });
+  for(const sample of raceResources){assert.equal(sample.gantry,true);assert.equal(sample.stand,true);assert.equal(sample.cells,0);assert.equal(sample.signRetained,false);assert.equal(sample.detailRetained,false);for(const key of ['meshes','materials','textures'])assert.equal(sample[key],raceResources[0][key]);}checks.push('three race/home cycles dispose mounted-sign and grandstand resources without count growth');
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);checks.push('no page errors or external requests');
-  await fs.writeFile(`${output}/report.json`,JSON.stringify({checks,initial,hold,resources,race,errors,external},null,2));console.log(JSON.stringify({checks,resources:resources.map(({stream,...r})=>({...r,cells:stream.ready})),errors,external},null,2));
+  await fs.writeFile(`${output}/report.json`,JSON.stringify({checks,initial,hold,resources,race,raceResources,errors,external},null,2));console.log(JSON.stringify({checks,resources:resources.map(({stream,...r})=>({...r,cells:stream.ready})),raceResources,errors,external},null,2));
 }catch(error){
   await page.screenshot({path:`${output}/failure.png`}).catch(()=>{});
   await fs.writeFile(`${output}/failure.json`,JSON.stringify({error:String(error),errors,external,url:page.url(),loading:await page.locator('#loading-message').textContent({timeout:1000}).catch(()=>null)},null,2));throw error;
