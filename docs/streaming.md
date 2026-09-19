@@ -4,7 +4,7 @@ World geometry now comes from a same-origin module worker, with transferable typ
 
 ## Ownership and scheduling
 
-- Cells are 256m. Manifests identify bounds, seed, road dependencies and procedural content version. The current `terrain`/`surface` layer labels are not generalized bridge/tunnel contact-layer support.
+- Cells are 256m. Manifests identify bounds, seed, road dependencies, procedural content version and the actual bridge/tunnel layers in their road samples. Merged collision meshes retain per-triangle contact identities; see `road-layers.md`.
 - The player, physical actors and nearby pending traffic promotions own collision neighborhoods. Velocity adds a sampled six-second swept corridor, rather than only reserving its endpoint. Collision requests outrank the visual ring. Protecting pending promotions also prevents accelerated controlled-time tests from starving the worker event loop while distant cars remain nonphysical.
 - Exploration releases obsolete cells. Racing additionally reserves the entire sampled circuit and pit neighborhood. Scenery remains limited to the selected quality's visible ring.
 - Collision and scenery modes can be enabled separately. Static collision meshes install before scenery. Some special junction/course decorations remain allocated but hidden in collision-only cells.
@@ -21,4 +21,4 @@ Before a fixed step, all physical cars' contact neighborhoods must be ready. Oth
 
 `verify-graphics-streaming.mjs` verifies grounded startup, deferred generation with clocks frozen, failed generation/retry, three repeated city/mountain/lakeshore resource cycles, full circuit/pit reservation with eight entrants and return-to-menu disposal. `verify-worker-recovery.mjs` actually blocks the worker module request, retries into driving, then cancels a separate in-progress session. Pure transaction tests cover priority, stale completion rejection, mode changes and idempotent leases.
 
-These short controlled tests do not establish maximum-speed real-time hitch budgets, 30-minute process/GPU memory endurance, every sharp direction change, broad traffic stress or target-laptop performance. Generalized elevated-road contacts, adaptive LOD, device-loss handling and sustained budget profiling remain work.
+These short controlled tests do not establish maximum-speed real-time hitch budgets, 30-minute process/GPU memory endurance, every sharp direction change, broad traffic stress or target-laptop performance. Additional elevated-road stress cases, private-site navigation, adaptive quality, device-loss handling and sustained budget profiling remain work.

@@ -157,6 +157,30 @@ A final geometry review corrected rows of windows that could overlap an eave and
 
 The final rebuilt production bundle passes both cold-cache 25Mbps/40ms emulated startup paths: **6.887s / 6.740s**, **11,143,058 transferred bytes**, JS heap **132,364,648 / 122,347,584 bytes** through Free Drive and handling-course entry. No page errors, failed/external requests or exposed development hooks. These are localhost/Chromium/SwiftShader samples, not Internet/HTTPS, actual-laptop performance or process-memory certification.
 
+## September 19 — layered roads and roadside presentation
+
+The pure suite now has **90 passing tests**, and strict production build passes (the large Babylon entry-chunk warning remains). Per-wheel contact identities are verified through Havok, including the eight-metre overpass's upper/lower roads and reset, lake bridge, tunnel, grass under a deck and split asphalt/grass contact. Two normal-input 410m traversals complete without airborne time, damage or incorrect surface tags; maximum lane errors are **0.454m / 0.043m**. A first trace exposed ground intruding through the lower road; clipping at-grade terrain footprints fixed it, and the strengthened assertion passes. See `road-layers.md` and `output/road-layers`.
+
+Six-car acceleration, 60/30/20Hz cadence/braking and all thirteen Northstar checks pass with the prior numerical results. Eleven traffic and fifteen interaction checks pass. Seven scenery captures remain grounded; screenshots were opened for the workshop, overpass, rural road, mountain and wet-night scenes. This is still stylized art, not mockup realism.
+
+The first expanded Low city sample exceeded the target at approximately 580k triangles; its report is retained as `output/render-cost/roadside-first-over-budget.json`. Restoring previous Low urban density while retaining denser rural scenery gives the following final short submission sample (installed Edge / RTX3060 / ANGLE D3D11, 1280×720, 66 controlled 30Hz steps):
+
+| Sample | Maximum draw calls | Maximum submitted triangles | Median scene submission |
+|---|---:|---:|---:|
+| Showroom | 162 | 164,246 | 5.4ms |
+| Lakeshore traffic | 235 | 381,131 | 8.5ms |
+| City traffic | 194 | 405,067 | 5.8ms |
+| Wet night | 194 | 403,888 | 7.6ms |
+| Eight-car grid | 272 | 326,497 | 5.8ms |
+
+These are submission/resource observations, **not actual-laptop FPS, real-time p95, isolated physics/AI/GPU time or 30-minute endurance**. A final streaming startup timed out while a production build was also in progress; that attempt is not counted as a pass. The isolated rerun passes all eight streaming checks. Three repeated city/mountain/lakeshore cycles settle at **465/64/40**, **325/65/41**, and **334/64/40** meshes/materials/textures (25 cells each), without cumulative growth.
+
+Final Chrome and Edge each pass WebGPU and forced WebGL2 with **12.101111m/s**, four contacts and no external requests/page errors. The strengthened GT/Formula service test asserts grounded service, a near-full tank and restored tire wear; it starts in the service area and does not validate the complete pit approach/rejoin. Both eight-car, three-lap quick races reach results with **8/8 finishers and zero player penalties**. Session elapsed times are **387.783s GT / 298.792s Formula**, with player best laps **113.625s / 95.225s**. These are controlled-time functional checks, not a new complete-weekend/endurance certification.
+
+The final supplied-client input screenshot/state in `output/roadside-final-input` was opened: **3.710974m/s**, four tire contacts on Lakeshore asphalt, zero damage and no loading/error state.
+
+Final production cold-cache 25Mbps/40ms emulation functionally passes startup, Free Drive and handling-course entry with **11,145,886 transferred bytes**, no page/failed/external requests and no development hooks. However, readiness takes **28.893s / 25.863s**, exceeding the **20s target in both samples**. JS heap snapshots are **85,915,848 / 81,160,124 bytes**, not whole-process or GPU memory. This is a worse cold-start result than the earlier checkpoint; do not dismiss it as host load without profiling or claim cold-start acceptance. The preview is rebuilt, but startup optimization and repeated controlled delivery measurements remain open.
+
 ## Outstanding hardware and deployment acceptance
 
 Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; p95 frame time; separate physics/AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); real-time 30-minute endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. No target-budget pass is claimed for these unmeasured items.

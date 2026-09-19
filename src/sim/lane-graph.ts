@@ -1,6 +1,7 @@
 import type { Road, RoadPoint, V3 } from '../core/types';
 import { clamp, distance, lerp, wrap } from '../core/math';
 import type { JunctionDefinition } from '../content/junctions';
+import { roadLayerAt } from '../content/road-layers';
 
 export interface LanePath {
   id:string; kind:'lane'|'connector'; roadId:string; direction:1|-1; laneIndex:number;
@@ -12,25 +13,26 @@ export interface LanePath {
 export interface LaneProjection<T=LanePath> { path:T; progress:number; point:RoadPoint; distance:number; lateral:number }
 export interface LaneJunction extends JunctionDefinition { y:number; incoming:string[]; outgoing:string[]; connectors:string[] }
 
-export function samplePath(path:{points:RoadPoint[];length:number},progress:number):RoadPoint{
+export function samplePath(path:{points:RoadPoint[];length:number;layer?:string},progress:number):RoadPoint{
   const s=clamp(progress,0,path.length),points=path.points;let lo=0,hi=points.length-1;
   while(hi-lo>1){const mid=(lo+hi)>>1;if(points[mid].s<s)lo=mid;else hi=mid;}
   const a=points[lo],b=points[hi],t=(s-a.s)/Math.max(.000001,b.s-a.s);
-  return {x:lerp(a.x,b.x,t),y:lerp(a.y,b.y,t),z:lerp(a.z,b.z,t),s,yaw:a.yaw+wrap(b.yaw-a.yaw)*t,curvature:lerp(a.curvature,b.curvature,t)};
+  return {x:lerp(a.x,b.x,t),y:lerp(a.y,b.y,t),z:lerp(a.z,b.z,t),s,yaw:a.yaw+wrap(b.yaw-a.yaw)*t,curvature:lerp(a.curvature,b.curvature,t),layer:(t===1?b.layer:a.layer)??path.layer??'surface'};
 }
-export function projectPath<T extends {points:RoadPoint[];length:number}>(path:T,position:Pick<V3,'x'|'z'>):LaneProjection<T>{
-  let best=Infinity,progress=0,lateral=0;
+export function projectPath<T extends {points:RoadPoint[];length:number}>(path:T,position:Pick<V3,'x'|'z'>&Partial<Pick<V3,'y'>>,heightAware=false):LaneProjection<T>{
+  let best=Infinity,bestDistance=Infinity,progress=0,lateral=0;
   for(let i=0;i<path.points.length-1;i++){
     const a=path.points[i],b=path.points[i+1],dx=b.x-a.x,dz=b.z-a.z,len2=dx*dx+dz*dz;
     const t=clamp(((position.x-a.x)*dx+(position.z-a.z)*dz)/Math.max(.00001,len2),0,1);
     const x=a.x+dx*t,z=a.z+dz*t,d=Math.hypot(position.x-x,position.z-z);
-    if(d<best){best=d;progress=lerp(a.s,b.s,t);lateral=((position.x-x)*dz-(position.z-z)*dx)/Math.sqrt(Math.max(.00001,len2));}
+    const score=d+(heightAware&&position.y!==undefined?Math.abs(lerp(a.y,b.y,t)-position.y)*4:0);
+    if(score<best){best=score;bestDistance=d;progress=lerp(a.s,b.s,t);lateral=((position.x-x)*dz-(position.z-z)*dx)/Math.sqrt(Math.max(.00001,len2));}
   }
-  return {path,progress,point:samplePath(path,progress),distance:best,lateral};
+  return {path,progress,point:samplePath(path,progress),distance:bestDistance,lateral};
 }
 function roadPoint(road:Road,s:number,offset=0){
   const p=samplePath(road,road.loop?((s%road.length)+road.length)%road.length:s);
-  return {...p,x:p.x+Math.cos(p.yaw)*offset,z:p.z-Math.sin(p.yaw)*offset};
+  return {...p,x:p.x+Math.cos(p.yaw)*offset,z:p.z-Math.sin(p.yaw)*offset,layer:roadLayerAt(road,s)};
 }
 function pathPoints(raw:V3[]):RoadPoint[]{
   let length=0;
@@ -66,10 +68,14 @@ export class LaneGraph {
         if(end-start<2)return;
         const count=Math.max(1,road.lanes/2),width=road.width/road.lanes;
         for(const direction of [1,-1] as const)for(let laneIndex=0;laneIndex<count;laneIndex++){
-          const offset=direction*(road.width/2-width*(laneIndex+.5)),raw:V3[]=[],n=Math.max(2,Math.ceil((end-start)/6));
-          for(let i=0;i<=n;i++)raw.push(roadPoint(road,lerp(start,end,direction===1?i/n:1-i/n),offset));
+          const offset=direction*(road.width/2-width*(laneIndex+.5)),raw:RoadPoint[]=[],n=Math.max(2,Math.ceil((end-start)/6));
+          const marks=Array.from({length:n+1},(_,i)=>lerp(start,end,i/n));
+          for(const span of road.layers??[])for(const boundary of [span.start,span.end])for(const cycle of [0,road.length])if(boundary+cycle>start&&boundary+cycle<end)marks.push(boundary+cycle);
+          const ordered=[...new Set(marks)].sort((a,b)=>(a-b)*direction);
+          ordered.forEach((s,i)=>raw.push({...roadPoint(road,s,offset),layer:roadLayerAt(road,i<ordered.length-1?(s+ordered[i+1])/2:s)}));
           const points=pathPoints(raw),id=`${road.id}:${index}:${direction}:${laneIndex}`,a=direction===1?from:to,b=direction===1?to:from;
-          const path:LanePath={id,kind:'lane',roadId:road.id,direction,laneIndex,points,length:points.at(-1)!.s,speedLimit:road.speed,layer:a?.layer??b?.layer??'surface',from:a?.id??null,to:b?.id??null,next:[],adjacent:[],trafficAllowed:!privateRoads.has(road.id),roadStart:direction===1?start:end,roadEnd:direction===1?end:start};
+          const layers=new Set(points.map(p=>p.layer??'surface'));
+          const path:LanePath={id,kind:'lane',roadId:road.id,direction,laneIndex,points,length:points.at(-1)!.s,speedLimit:road.speed,layer:layers.size===1?points[0].layer!:'mixed',from:a?.id??null,to:b?.id??null,next:[],adjacent:[],trafficAllowed:!privateRoads.has(road.id),roadStart:direction===1?start:end,roadEnd:direction===1?end:start};
           this.paths.set(id,path);a?.outgoing.push(id);b?.incoming.push(id);
         }
       };
@@ -105,7 +111,7 @@ export class LaneGraph {
     let best:LaneProjection|undefined,score=Infinity;
     for(const path of this.paths.values()){
       if(path.kind!=='lane'||trafficOnly&&!path.trafficAllowed)continue;
-      const projection=projectPath(path,position),height=position.y===undefined?0:Math.abs(projection.point.y-position.y),heading=yaw===undefined?0:Math.abs(wrap(projection.point.yaw-yaw));
+      const projection=projectPath(path,position,true),height=position.y===undefined?0:Math.abs(projection.point.y-position.y),heading=yaw===undefined?0:Math.abs(wrap(projection.point.yaw-yaw));
       const value=projection.distance+height*4+heading*5;
       if(value<score){score=value;best=projection;}
     }

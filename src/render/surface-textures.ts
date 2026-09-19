@@ -11,11 +11,11 @@ export function noise(x:number,y:number,period:number){
 /** Original, periodic material fields: no photo licensing or third-party runtime downloads. */
 export function surfacePixels(kind:SurfaceKind,size=256){
   const heights=new Float32Array(size*size),color=new Uint8Array(size*size*4),normal=new Uint8Array(size*size*4);
-  const base={asphalt:[69,73,74],meadow:[144,150,102],gravel:[135,128,111],concrete:[183,178,165],stone:[81,88,90],bark:[79,68,52],water:[45,76,79]}[kind];
+  const base={asphalt:[79,82,83],meadow:[122,135,98],gravel:[135,128,111],concrete:[183,178,165],stone:[81,88,90],bark:[79,68,52],water:[45,76,79]}[kind];
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const u=x/size,v=y/size,n=noise(u*8,v*8,8),fine=noise(u*96,v*96,96),grain=hash(x,y);
     let height=n*.4+fine*.45+grain*.15,variation=(n-.5)*.15+(fine-.5)*.18+(grain-.5)*.14;
-    if(kind==='asphalt'){height=fine*.65+grain*.35;variation=(fine-.5)*.28+(grain-.5)*.25;if(grain>.97)variation+=.24;}
+    if(kind==='asphalt'){height=fine*.45+grain*.25;variation=(fine-.5)*.15+(grain-.5)*.14;if(grain>.985)variation+=.16;}
     if(kind==='meadow'){variation=(fine-.5)*.16+(grain-.5)*.14;height=noise(u*120,v*80,120)*.6+grain*.4;}
     if(kind==='concrete'){variation=(n-.5)*.055+(fine-.5)*.06+(grain-.5)*.025;height=fine*.25+grain*.15;}
     if(kind==='bark'){height=noise(u*32,v*4,32)*.8+fine*.2;variation=(height-.5)*.65;}

@@ -34,7 +34,7 @@ export class WorldRenderer {
     // Raster bias keeps paint above the asphalt without moving contact geometry.
     for(const paint of [this.marking,this.yellow,this.curb]){paint.zOffset=-2;paint.zOffsetUnits=-2;}
     this.road=mat('asphalt','#ffffff');
-    for(const [material,kind,scale] of [[this.road,'asphalt',3],[this.terrain,'meadow',1],[this.shoulder,'gravel',4],[this.wall,'concrete',1],[this.roof,'stone',1]] as const){
+    for(const [material,kind,scale] of [[this.road,'asphalt',12],[this.terrain,'meadow',2],[this.shoulder,'gravel',6],[this.wall,'concrete',1],[this.roof,'stone',1]] as const){
       const maps=surfaceTextures(scene,kind,scale);material.albedoColor=Color3.White();material.albedoTexture=maps.albedo;material.bumpTexture=maps.normal;material.bumpTexture.level=kind==='meadow'?.55:.35;
     }
     this.road.roughness=.94;this.road.metallic=0;this.glass.albedoColor=Color3.FromHexString('#78909b').toLinearSpace();this.glass.metallic=.15;this.glass.roughness=.25;
@@ -81,13 +81,13 @@ export class WorldRenderer {
     if(!mesh)return;mesh.parent=this.root;cell.meshes.push(mesh);if(collision)cell.collisionMeshes.push(mesh);if(detail)cell.detailMeshes.push(mesh);
     if(mesh.material&&!mesh.metadata?.ownedMaterial){const material=mesh.material,key='material-'+material.uniqueId;if(!this.rootLeases.has(material.uniqueId))this.rootLeases.set(material.uniqueId,this.materialPool.acquire(key,()=>material));cell.leases.set(mesh,this.materialPool.acquire(key,()=>material));}
   }
-  private fromData(part:CellMesh){const mesh=new Mesh(part.name,this.scene),data=new VertexData();data.positions=part.data.positions;data.indices=part.data.indices;data.normals=part.data.normals;data.uvs=part.data.uvs;if(part.data.colors)data.colors=part.data.colors;data.applyToMesh(mesh);mesh.material=this[part.material];mesh.receiveShadows=true;mesh.isPickable=false;mesh.metadata={worldCaster:part.name.startsWith('structures')||part.name.startsWith('roofs')};return mesh;}
+  private fromData(part:CellMesh){const mesh=new Mesh(part.name,this.scene),data=new VertexData();data.positions=part.data.positions;data.indices=part.data.indices;data.normals=part.data.normals;data.uvs=part.data.uvs;if(part.data.colors)data.colors=part.data.colors;data.applyToMesh(mesh);mesh.material=this[part.material];mesh.receiveShadows=true;mesh.isPickable=false;mesh.metadata={worldCaster:part.name.startsWith('structures')||part.name.startsWith('roofs'),contactSurface:part.contactSurface,contactRanges:part.contactRanges};return mesh;}
   private installCell(blueprint:CellBlueprint,demand:CellDemand){
     const {id:key,cx,cz,bounds}=blueprint.manifest,cell:Cell={key,cx,cz,meshes:[],collisionMeshes:[],detailMeshes:[],colliders:[],signals:[],collision:false,detail:false,leases:new Map()};
     try{
       for(const part of blueprint.meshes)if(part.collision)this.register(cell,this.fromData(part),true);
-      const attach=(mesh:Mesh|null,collision=false)=>this.register(cell,mesh,collision);
-      createHandlingCell(this.scene,bounds,{road:this.road,white:this.marking,red:this.curb,dark:this.roof},attach);
+      const attach=(mesh:Mesh|null,collision=false,handling=false)=>{if(mesh&&collision)mesh.metadata={...mesh.metadata,contactSurface:mesh.material===this.road||handling&&mesh.material===this.curb?{surface:'Asphalt',layer:handling?'handling':'surface'}:{surface:'Concrete',layer:'structure'}};this.register(cell,mesh,collision);};
+      createHandlingCell(this.scene,bounds,{road:this.road,white:this.marking,red:this.curb,dark:this.roof},(mesh,collision)=>attach(mesh,collision,true));
       cell.signals=this.trafficScenery.createCell(cx,cz,{road:this.road,white:this.marking,dark:this.roof},attach);
       this.setCellMode(cell,blueprint,demand);this.cells.set(key,cell);return cell;
     }catch(error){this.disposeCell(cell);throw error;}

@@ -3,6 +3,7 @@ import { clamp, distance, lerp, smooth, wrap } from '../core/math';
 import { HANDLING, handlingTerrainBlend, inHandlingCourse } from './handling-course';
 import { LaneGraph, samplePath, projectPath } from '../sim/lane-graph';
 import { resolveJunctions, PRIVATE_TRAFFIC_ROADS } from './junctions';
+import { configureRoadLayers,roadLayerAt } from './road-layers';
 
 export const CELL_SIZE=256;
 export const WORLD_SIZE=4096;
@@ -21,7 +22,7 @@ export function makeRoad(id:string,name:string,anchors:Anchor[],width:number,kin
   for(let i=0;i<count;i++) {
     const a=get(i-1),b=get(i),c=get(i+1),d=get(i+2);
     const steps=Math.max(4,Math.ceil(Math.hypot(c[0]-b[0],c[1]-b[1])/8));
-    for(let j=0;j<steps;j++) {const t=j/steps,x=catmull(a[0],b[0],c[0],d[0],t),z=catmull(a[1],b[1],c[1],d[1],t);const y=b[2]!==undefined&&c[2]!==undefined?lerp(b[2],c[2],smooth(t)):landHeight(x,z)+.13;raw.push({x,y,z});}
+    for(let j=0;j<steps;j++) {const t=j/steps,x=catmull(a[0],b[0],c[0],d[0],t),z=catmull(a[1],b[1],c[1],d[1],t),base=landHeight(x,z)+.13;const y=b[2]!==undefined&&c[2]!==undefined?lerp(b[2],c[2],smooth(t)):base+lerp((b[2]??landHeight(b[0],b[1])+.13)-landHeight(b[0],b[1])-.13,(c[2]??landHeight(c[0],c[1])+.13)-landHeight(c[0],c[1])-.13,smooth(t));raw.push({x,y,z});}
   }
   const end=loop?anchors[0]:anchors[anchors.length-1];raw.push({x:end[0],z:end[1],y:end[2]??landHeight(end[0],end[1])+.13});
   let s=0;
@@ -48,6 +49,7 @@ export const ROADS:Road[]=[
   makeRoad('testaccess','Northstar Access',[[-650,1660,landHeight(-650,1660)+.13],[-840,1690,HANDLING.height],[-1010,1740,HANDLING.height]],8,'road',false,2,14),
   makeRoad('test','Northstar Skidpad',Array.from({length:24},(_,i):Anchor=>{const a=i/24*Math.PI*2;return [HANDLING.skidpad.x+Math.sin(a)*HANDLING.skidpad.radius,HANDLING.skidpad.z+Math.cos(a)*HANDLING.skidpad.radius,HANDLING.height];}),14,'test',true,2,20)
 ];
+ROADS.forEach(configureRoadLayers);
 export const CIRCUIT=ROADS.find(r=>r.id==='circuit')!;
 export const PIT=ROADS.find(r=>r.id==='pit')!;
 export const PUBLIC_ROADS=ROADS.filter(r=>r.kind==='road'||r.kind==='highway');
@@ -57,23 +59,24 @@ export function junctionRadius(junction:{control:string;radius:number}){return j
 export function onJunctionSurface(position:V3){return [...LANE_GRAPH.junctions.values()].some(j=>Math.abs(position.y-j.y)<3&&Math.hypot(position.x-j.x,position.z-j.z)<junctionRadius(j));}
 const buckets=new Map<string,{road:Road,index:number}[]>();
 for(const road of ROADS) for(let i=0;i<road.points.length-1;i++){const p=road.points[i],key=`${Math.floor(p.x/64)},${Math.floor(p.z/64)}`;const list=buckets.get(key)??[];list.push({road,index:i});buckets.set(key,list);}
-export function nearestRoad(x:number,z:number,filter?:(r:Road)=>boolean,maxRadius=3):NearestRoad {
-  let best:NearestRoad|undefined;const cx=Math.floor(x/64),cz=Math.floor(z/64);
-  const examine=(road:Road,index:number)=>{if(filter&&!filter(road))return;const a=road.points[index],b=road.points[index+1];const dx=b.x-a.x,dz=b.z-a.z,l2=dx*dx+dz*dz;const t=clamp(((x-a.x)*dx+(z-a.z)*dz)/l2,0,1);const px=a.x+dx*t,pz=a.z+dz*t,d=Math.hypot(x-px,z-pz);if(best&&d>=best.distance)return;const yaw=Math.atan2(dx,dz);best={road,index,point:{x:px,z:pz,y:lerp(a.y,b.y,t),s:lerp(a.s,b.s,t),yaw,curvature:lerp(a.curvature,b.curvature,t)},distance:d,lateral:(x-px)*Math.cos(yaw)-(z-pz)*Math.sin(yaw),progress:lerp(a.s,b.s,t)};};
-  for(let r=0;r<=maxRadius;r++){for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++){if(r&&Math.abs(i)!==r&&Math.abs(j)!==r)continue;for(const entry of buckets.get(`${cx+i},${cz+j}`)??[])examine(entry.road,entry.index);}if(best&&(best as NearestRoad).distance<(r-1)*64)break;}
+export function nearestRoad(x:number,z:number,filter?:(r:Road)=>boolean,maxRadius=3,height?:number):NearestRoad {
+  let best:NearestRoad|undefined,score=Infinity;const cx=Math.floor(x/64),cz=Math.floor(z/64);
+  const examine=(road:Road,index:number)=>{if(filter&&!filter(road))return;const a=road.points[index],b=road.points[index+1];const dx=b.x-a.x,dz=b.z-a.z,l2=dx*dx+dz*dz;const t=clamp(((x-a.x)*dx+(z-a.z)*dz)/Math.max(.00001,l2),0,1);const px=a.x+dx*t,pz=a.z+dz*t,d=Math.hypot(x-px,z-pz),y=lerp(a.y,b.y,t),value=d+(height===undefined?0:Math.abs(y-height)*4);if(value>=score)return;score=value;const yaw=Math.atan2(dx,dz),progress=lerp(a.s,b.s,t),layer=roadLayerAt(road,progress);best={road,index,point:{x:px,z:pz,y,s:progress,yaw,curvature:lerp(a.curvature,b.curvature,t),layer,terrainY:lerp(a.terrainY??a.y,b.terrainY??b.y,t)},distance:d,lateral:(x-px)*Math.cos(yaw)-(z-pz)*Math.sin(yaw),progress,layer};};
+  for(let r=0;r<=maxRadius;r++){for(let i=-r;i<=r;i++)for(let j=-r;j<=r;j++){if(r&&Math.abs(i)!==r&&Math.abs(j)!==r)continue;for(const entry of buckets.get(`${cx+i},${cz+j}`)??[])examine(entry.road,entry.index);}if(best&&score<(r-1)*64)break;}
   if(!best) for(const road of ROADS)for(let i=0;i<road.points.length-1;i++)examine(road,i);
   return best!;
 }
+export const nearestRoadAt=(position:V3,filter?:(r:Road)=>boolean,maxRadius=3)=>nearestRoad(position.x,position.z,filter,maxRadius,position.y);
 export function pointAt(road:Road,s:number,offset=0):RoadPoint {
   s=road.loop?((s%road.length)+road.length)%road.length:clamp(s,0,road.length-.001);
   let lo=0,hi=road.points.length-1;while(hi-lo>1){const mid=(lo+hi)>>1;if(road.points[mid].s<s)lo=mid;else hi=mid;}
   const a=road.points[lo],b=road.points[hi],t=(s-a.s)/Math.max(.001,b.s-a.s),yaw=a.yaw+wrap(b.yaw-a.yaw)*t;
-  return {x:lerp(a.x,b.x,t)+Math.cos(yaw)*offset,y:lerp(a.y,b.y,t),z:lerp(a.z,b.z,t)-Math.sin(yaw)*offset,s,yaw,curvature:lerp(a.curvature,b.curvature,t)};
+  return {x:lerp(a.x,b.x,t)+Math.cos(yaw)*offset,y:lerp(a.y,b.y,t),z:lerp(a.z,b.z,t)-Math.sin(yaw)*offset,s,yaw,curvature:lerp(a.curvature,b.curvature,t),layer:roadLayerAt(road,s),terrainY:lerp(a.terrainY??a.y,b.terrainY??b.y,t)};
 }
 export function terrainHeight(x:number,z:number) {
   if(inLake(x,z))return 2.5;
   const near=nearestRoad(x,z,undefined,1),blend=1-smooth((near.distance-near.road.width*.5-2)/20);
-  const natural=lerp(landHeight(x,z)+Math.sin(x*.017)*Math.sin(z*.019)*1.3,near.point.y-.16,blend);
+  const natural=lerp(landHeight(x,z)+Math.sin(x*.017)*Math.sin(z*.019)*1.3,(near.point.terrainY??near.point.y)-.16,blend);
   return lerp(natural,HANDLING.height-.16,handlingTerrainBlend(x,z));
 }
 export const LANDMARKS:Landmark[]=[
@@ -95,6 +98,10 @@ export const LANDMARKS:Landmark[]=[
   {id:'drift1',name:'Ridgeway Drift',type:'drift',x:1140,z:950,description:'Drift zone · link the mountain bends'},
   {id:'drift2',name:'Foundry Drift',type:'drift',x:-1280,z:-630,description:'Drift zone · keep the car in balance'}
 ];
+const LANDMARK_ROADS:Record<string,string>={home:'lakeshore',handling:'testaccess',aster:'pit',westbrook:'city4',summitservice:'pass',vista:'pass',lakeside:'northbridge',pines:'forest',speed1:'crossway',speed2:'northbridge',speed3:'pass',speed4:'ring',trial1:'lakeshore',trial2:'ring',trial3:'forest',drift1:'pass',drift2:'industrial'};
+for(const landmark of LANDMARKS){landmark.roadId=LANDMARK_ROADS[landmark.id];if(landmark.end)landmark.end.roadId=landmark.id==='trial1'?'pass':landmark.id==='trial2'?'ring':'forest';}
+export function landmarkPosition(target:{x:number;z:number;roadId?:string}){const n=nearestRoad(target.x,target.z,target.roadId?r=>r.id===target.roadId:undefined);return {x:target.x,y:n.point.y,z:target.z,layer:n.layer,roadId:n.road.id};}
+export function atDestination(position:V3,target:{x:number;z:number;roadId?:string},radius:number){return distance(position,target)<radius&&Math.abs(position.y-landmarkPosition(target).y)<3;}
 export function regionAt(x:number,z:number) { if(inHandlingCourse(x,z,32))return 'NORTHSTAR HANDLING GROUNDS';if(x>300&&z<-460)return 'ASTER MOTORSPORT PARK';if(z>1000&&x>300)return 'RIDGEWAY PASS';if(x<-700&&z<-750)return 'WESTBROOK';if(x<-650&&z<-250)return 'THE FOUNDRY';if(z>600&&x>-350&&x<600)return 'PINECREST FOREST';if(x<0&&z>-200)return 'LAKE AURELIA';return 'REDWOOD VALLEY'; }
 
 // Directed navigation uses the same legal lanes/turns as traffic. Lane changes
@@ -118,7 +125,7 @@ export class RoadGraph {
     }
   }
   private link(a:number,b:number,penalty=0){this.nodes[a].edges.push({to:b,cost:Math.max(.01,distance(this.nodes[a],this.nodes[b]))+penalty});}
-  closest(x:number,z:number){let best=0,d=Infinity;this.nodes.forEach((n,i)=>{const nd=Math.hypot(n.x-x,n.z-z);if(nd<d){d=nd;best=i;}});return best;}
+  closest(x:number,z:number,height?:number){let best=0,d=Infinity;this.nodes.forEach((n,i)=>{const nd=Math.hypot(n.x-x,n.z-z)+(height===undefined?0:Math.abs(n.y-height)*4);if(nd<d){d=nd;best=i;}});return best;}
   route(from:{x:number;z:number;y?:number;yaw?:number},to:{x:number;z:number;y?:number}):V3[]{
     const source=LANE_GRAPH.nearest(from,from.yaw),goal=LANE_GRAPH.nearest(to),sourceIds=this.pathNodes.get(source.path.id)!,goalIds=this.pathNodes.get(goal.path.id)!;
     const a=sourceIds.find(id=>this.nodes[id].s>=source.progress)??sourceIds.at(-1)!,b=goalIds.reduce((best,id)=>Math.abs(this.nodes[id].s-goal.progress)<Math.abs(this.nodes[best].s-goal.progress)?id:best,goalIds[0]);

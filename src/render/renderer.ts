@@ -5,7 +5,7 @@ import type { Vehicle } from '../sim/physics';
 import type { CarVisual } from './car';
 import { configureLocalResources, localShaderOptions } from './local-resources';
 import { lightingEnvironment } from './lighting-environment';
-import { cloudField,skyPixels,SKY_WIDTH,SKY_HEIGHT } from './atmosphere';
+import { cloudField,skyPixels,solarLighting,SKY_WIDTH,SKY_HEIGHT } from './atmosphere';
 import { LocalReflections } from './local-reflections';
 import { createShowroom } from './showroom';
 import { cameraMounts } from './camera-mounts';
@@ -31,6 +31,8 @@ export class Renderer {
     this.contactMaterial=new StandardMaterial('contact-occlusion',scene);this.contactMaterial.diffuseTexture=shadowTexture;this.contactMaterial.emissiveTexture=shadowTexture;this.contactMaterial.useAlphaFromDiffuseTexture=true;this.contactMaterial.disableLighting=true;this.contactMaterial.emissiveColor=Color3.White();this.contactMaterial.zOffset=-1;this.contactMaterial.backFaceCulling=false;
     this.sky=MeshBuilder.CreateSphere('atmosphere',{diameter:13000,segments:24,sideOrientation:Mesh.BACKSIDE},scene);this.sky.infiniteDistance=true;this.sky.isPickable=false;this.sky.applyFog=false;const skyMat=new StandardMaterial('sky-gradient',scene);skyMat.disableLighting=true;skyMat.emissiveColor=Color3.White();skyMat.backFaceCulling=false;this.sky.material=skyMat;const pos=this.sky.getVerticesData(VertexBuffer.PositionKind)!,colors:number[]=[];for(let i=0;i<pos.length;i+=3){const h=clamp(pos[i+1]/3500,0,1);const bottom=new Color3(.96,.77,.50),top=new Color3(.22,.43,.63),c=Color3.Lerp(bottom,top,Math.pow(h,.6));colors.push(c.r,c.g,c.b,1);}this.sky.setVerticesData(VertexBuffer.ColorKind,colors,true);
     this.skyGradient=RawTexture.CreateRGBATexture(new Uint8Array(SKY_WIDTH*SKY_HEIGHT*4),SKY_WIDTH,SKY_HEIGHT,scene,false,false,Texture.BILINEAR_SAMPLINGMODE);this.skyGradient.wrapU=Texture.WRAP_ADDRESSMODE;this.skyGradient.wrapV=Texture.CLAMP_ADDRESSMODE;this.skyGradient.gammaSpace=true;skyMat.emissiveColor=Color3.Black();skyMat.emissiveTexture=this.skyGradient;this.sky.useVertexColors=false;const skyUvs:number[]=[],sphereUvs=this.sky.getVerticesData(VertexBuffer.UVKind)!;for(let i=0;i<pos.length;i+=3)skyUvs.push(sphereUvs[i/3*2],clamp(pos[i+1]/6500,0,1));this.sky.setVerticesData(VertexBuffer.UVKind,skyUvs);
+    // Sphere U=0 faces +X and increases toward -Z: azimuth = PI/2 - U*2PI.
+    this.skyGradient.uScale=-1;this.skyGradient.uOffset=.25;
     this.sunDisc=MeshBuilder.CreateSphere('sun-disc',{diameter:100,segments:16},scene);this.sunDisc.isPickable=false;this.sunDisc.applyFog=false;const sm=new StandardMaterial('sun-glow',scene);sm.disableLighting=true;sm.emissiveColor=new Color3(1,.90,.61);this.sunDisc.material=sm;
     const gallery=createShowroom(scene);this.showroom=gallery.root;this.floorReflection=gallery.reflection;this.galleryEnvironment=gallery.environment;
     for(const [name,p,power,color]of [['studio-key',new Vector3(-4,-994,4),900,new Color3(1,.86,.70)],['studio-fill',new Vector3(4,-996,-3),480,new Color3(.68,.82,1)]] as const){const lamp=new SpotLight(name,p,new Vector3(0,-999,0).subtract(p).normalize(),1.8,1,scene);lamp.diffuse=color;lamp.falloffType=Light.FALLOFF_GLTF;lamp.intensity=power;lamp.range=22;this.studioLights.push(lamp);}
@@ -57,12 +59,14 @@ export class Renderer {
   prepareReflections(car:CarVisual,settings:Settings,garage:boolean,clock:number){this.reflections.update({position:car.root.position,garage,clock,stamp:`${Math.round(settings.time*4)}:${settings.weather}`},settings.quality,[car.paint,car.glass]);}
   applySettings(settings:Settings){const profiles={Low:[1280,720,1024],Medium:[1600,900,1536],High:[1920,1080,2048],Ultra:[2560,1440,4096]},profile=profiles[settings.quality],scale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(scale/settings.resolution);this.shadow.getShadowMap()?.resize(profile[2]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}
   update(vehicle:Vehicle,visual:CarVisual,settings:Settings,dt:number,garage:boolean,clock:number,wetness:number,alpha=1){
-    const time=settings.time;const day=clamp(Math.sin((time-5.5)/25*Math.PI*2)*1.5+.38,.035,1),golden=1-clamp(Math.abs(time-17.5)/3,0,1);const overcast=settings.weather==='Rain'?.6:settings.weather==='Overcast'?.4:settings.weather==='Cloudy'?.18:0;
-    this.ambient.intensity=garage?.35:.26+day*.77;this.sun.intensity=(.10+day*3.1)*(1-overcast);this.sun.diffuse=Color3.Lerp(new Color3(.96,.96,.89),new Color3(1,.79,.57),golden);this.scene.environmentIntensity=garage?.65:.18+day*.68;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;
-    this.sun.direction.set(.55,-Math.max(.12,day*.6),-.65).normalize();this.scene.fogColor=Color3.Lerp(new Color3(.055,.08,.13),new Color3(.65,.70,.71),day);this.scene.fogDensity=.00025+wetness*.0006;
+    const time=settings.time,solar=solarLighting(time),day=solar.daylight,golden=solar.golden;const overcast=settings.weather==='Rain'?.72:settings.weather==='Overcast'?.55:settings.weather==='Cloudy'?.20:0;
+    this.ambient.intensity=garage?.35:.32+day*.60;this.sun.intensity=garage?2.8:day*(2.8+golden*.9)*(1-overcast);this.sun.diffuse=Color3.Lerp(new Color3(.96,.96,.89),new Color3(1,.66,.34),golden);this.scene.environmentIntensity=garage?.65:.22+day*.78;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;
+    this.scene.imageProcessingConfiguration.exposure=garage?1.1:1.12+day*.06+golden*.15;
+    if(garage)this.sun.direction.set(.55,-.6,-.65).normalize();else this.sun.direction.set(-solar.direction.x,-Math.max(.02,solar.direction.y),-solar.direction.z).normalize();
+    const daytimeFog=Color3.Lerp(new Color3(.62,.70,.79),new Color3(.82,.68,.50),golden*(1-overcast));this.scene.fogColor=Color3.Lerp(new Color3(.035,.05,.08),daytimeFog,day);this.scene.fogDensity=.00018+golden*.000035+wetness*.0006;
     this.sky.visibility=1;const stamp=`${Math.round(time*50)}:${settings.weather}`;
     if(stamp!==this.skyStamp){this.skyStamp=stamp;this.skyGradient.update(skyPixels(time,settings.weather,this.clouds));}
-    this.sunDisc.position.copyFrom(this.camera.position).addInPlace(this.sun.direction.scale(-5000));this.sunDisc.setEnabled(day>.05&&overcast<.5);
+    this.sunDisc.position.copyFrom(this.camera.position).addInPlace(this.sun.direction.scale(-5000));this.sunDisc.setEnabled(solar.elevation>0&&overcast<.5);
     this.showroom.setEnabled(garage);
     // Planar reflection is confined to the gallery; driving never pays for this pass.
     this.floorReflection.renderList=garage?this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.name!=='car-contact-shadow'&&(mesh.metadata?.floorReflection||(()=>{let node=mesh.parent;while(node){if(node.metadata?.kairosCar)return true;node=node.parent;}return false;})())):[];
@@ -75,7 +79,7 @@ export class Renderer {
       visual.root.position.copyFrom(Vector3.Lerp(vehicle.previousPosition,vehicle.node.position,alpha));visual.root.rotationQuaternion=Quaternion.Slerp(vehicle.previousRotation,vehicle.node.rotationQuaternion!,alpha);visual.update(vehicle.state);
       const p=visual.root.position,yaw=vehicle.state.yaw,forward=new Vector3(Math.sin(yaw),0,Math.cos(yaw)),right=new Vector3(Math.cos(yaw),0,-Math.sin(yaw));const mode=settings.camera;
       let target=p.add(new Vector3(0,.65,0)),desired:Vector3;
-      if(mode<2){const dist=mode===0?7.1:4.9;desired=p.subtract(forward.scale(dist)).add(new Vector3(0,mode===0?2.7:1.85,0));target.addInPlace(forward.scale(3));}
+      if(mode<2){const dist=mode===0?6.5:4.9;desired=p.subtract(forward.scale(dist)).add(new Vector3(0,mode===0?1.65:1.25,0));target=p.add(new Vector3(0,.38,0)).add(forward.scale(4.2));}
       else{const mounts=cameraMounts(vehicle.definition),mount=mode===2?mounts.cockpit:mode===3?mounts.hood:mounts.bumper;desired=p.add(forward.scale(mount.z)).add(right.scale(mount.x)).add(new Vector3(0,mount.y,0));target=desired.add(forward.scale(30));}
       visual.glass.alpha=mode===2?.13:.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;
       if(mode<2){const origin=p.add(new Vector3(0,.8,0)),hit=vehicle.world.engine.raycast(origin,desired,{collideWith:1});if(hit.hasHit)desired=Vector3.Lerp(origin,hit.hitPointWorld,Math.max(.1,1-.25/Math.max(.25,hit.hitDistance)));}

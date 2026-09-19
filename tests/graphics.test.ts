@@ -9,9 +9,19 @@ import { cameraMounts } from '../src/render/camera-mounts';
 import { mountainMesh,mountainHeight,meadowColor } from '../src/world/landscape';
 import { buildArchitecture,type BuildingStyle } from '../src/world/architecture';
 import { MeshDataBuilder } from '../src/world/mesh-data';
-import { cloudField,skyPixels,windowLighting } from '../src/render/atmosphere';
+import { cloudField,skyPixels,solarLighting,windowLighting } from '../src/render/atmosphere';
+import { buildServicePavilion } from '../src/world/service-pavilion';
 
 describe('original graphics assets',()=>{
+  it('shares a lower warm evening sun and turns direct sunlight off at night',()=>{
+    const noon=solarLighting(12),evening=solarLighting(17.4),night=solarLighting(0);expect(evening.elevation).toBeLessThan(noon.elevation*.25);expect(evening.golden).toBeGreaterThan(.5);expect(noon.golden).toBe(0);expect(night.daylight).toBe(0);
+    for(const t of [0,6,12,17.4,22,24]){const s=solarLighting(t);expect(Math.hypot(s.direction.x,s.direction.y,s.direction.z)).toBeCloseTo(1,8);expect(s.daylight).toBeGreaterThanOrEqual(0);expect(s.daylight).toBeLessThanOrEqual(1);}
+  });
+  it('batches detailed service pavilions and their terrace with bounded original geometry',()=>{
+    const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},paving=new MeshDataBuilder();buildServicePavilion(b,paving,{x:0,y:12,z:0,yaw:0});let total=0;
+    for(const g of [...Object.values(b),paving]){const data=g.finish();total+=data.indices.length/3;expect([...data.positions,...data.normals,...data.colors!].every(Number.isFinite)).toBe(true);expect(data.colors?.length).toBe(data.positions.length/3*4);for(let i=0;i<data.positions.length;i+=3){expect(Math.abs(data.positions[i])).toBeLessThanOrEqual(13.01);expect(Math.abs(data.positions[i+2])).toBeLessThanOrEqual(12.51);}}
+    expect(total).toBeLessThan(2200);expect(b.glass.uvs.filter((_,i)=>i%2===0).every(u=>u===.75)).toBe(true);expect(paving.indices.length).toBeGreaterThan(0);
+  });
   it('generates reproducible albedo and finite normalized normal maps',()=>{
     for(const kind of ['asphalt','meadow','concrete','stone','bark','gravel','water'] as const){const a=surfacePixels(kind,32),b=surfacePixels(kind,32);expect(a).toEqual(b);expect(a.color.length).toBe(32*32*4);expect(new Set(a.color).size).toBeGreaterThan(kind==='stone'?5:12);for(let i=0;i<a.normal.length;i+=4){const n=[0,1,2].map(c=>a.normal[i+c]/255*2-1);expect(Math.hypot(...n)).toBeCloseTo(1,1);expect(a.normal[i+3]).toBe(255);}}
   });

@@ -7,7 +7,8 @@ export const cellKey=(cx:number,cz:number)=>`${cx},${cz}`;
 export const cellCoordinates=(p:Pick<V3,'x'|'z'>)=>({cx:Math.floor(p.x/CELL_SIZE),cz:Math.floor(p.z/CELL_SIZE)});
 export function cellManifest(cx:number,cz:number):WorldCellManifest{
   const x=cx*CELL_SIZE,z=cz*CELL_SIZE;
-  return {id:cellKey(cx,cz),cx,cz,bounds:[x,z,x+CELL_SIZE,z+CELL_SIZE],seed:hash(cx,cz),version:1,assets:[],dependencies:[],roadIds:ROADS.filter(r=>r.points.some(p=>p.x>=x-20&&p.x<x+CELL_SIZE+20&&p.z>=z-20&&p.z<z+CELL_SIZE+20)).map(r=>r.id),layers:['terrain','surface']};
+  const points=ROADS.map(road=>({road,points:road.points.filter(p=>p.x>=x-20&&p.x<x+CELL_SIZE+20&&p.z>=z-20&&p.z<z+CELL_SIZE+20)})).filter(r=>r.points.length);
+  return {id:cellKey(cx,cz),cx,cz,bounds:[x,z,x+CELL_SIZE,z+CELL_SIZE],seed:hash(cx,cz),version:1,assets:[],dependencies:[],roadIds:points.map(r=>r.road.id),layers:[...new Set(['terrain','surface',...points.flatMap(r=>r.points.map(p=>p.layer??'surface'))])]};
 }
 export interface CellDemand {id:string;cx:number;cz:number;priority:number;collision:boolean;detail:boolean;owners:Set<string>}
 export interface StreamActor {id:string;position:V3;velocity:V3}

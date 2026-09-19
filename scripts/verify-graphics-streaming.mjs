@@ -34,4 +34,7 @@ try{
   await page.evaluate(async()=>{await window.kairos.action('home');await window.advanceTime(0);});checks.push('return-to-showroom releases world cells');assert.equal(await page.evaluate(()=>window.kairos.world.cells.size),0);
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);checks.push('no page errors or external requests');
   await fs.writeFile(`${output}/report.json`,JSON.stringify({checks,initial,hold,resources,race,errors,external},null,2));console.log(JSON.stringify({checks,resources:resources.map(({stream,...r})=>({...r,cells:stream.ready})),errors,external},null,2));
+}catch(error){
+  await page.screenshot({path:`${output}/failure.png`}).catch(()=>{});
+  await fs.writeFile(`${output}/failure.json`,JSON.stringify({error:String(error),errors,external,url:page.url(),loading:await page.locator('#loading-message').textContent({timeout:1000}).catch(()=>null)},null,2));throw error;
 }finally{await browser.close();}

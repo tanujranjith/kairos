@@ -4,9 +4,9 @@ import HavokPhysics from '@babylonjs/havok';
 import havokUrl from '@babylonjs/havok/lib/esm/HavokPhysics.wasm?url';
 import type { VehicleDefinition, VehicleState, InputFrame, Settings, Customization, V3 } from '../core/types';
 import { clamp, approach } from '../core/math';
-import { nearestRoad, terrainHeight, inLake, onJunctionSurface } from '../content/world';
+import { nearestRoadAt, terrainHeight, inLake } from '../content/world';
 import { tireForces } from './tire';
-import { inHandlingCourse } from '../content/handling-course';
+import { contactForTriangle,SURFACE_GRIP } from './contacts';
 
 export const FIXED_DT=1/120;
 export const neutralInput=():InputFrame=>({throttle:0,brake:0,steer:0,handbrake:false,shift:0,reverse:false});
@@ -61,9 +61,7 @@ export class Vehicle {
     if(this.shiftTimer>0)throttle*=.12;
     if(s.fuel<=0||s.rpm>d.redline)throttle=0;
     s.absActive=false;s.tcActive=false;
-    const near=nearestRoad(this.node.position.x,this.node.position.z,undefined,1),onRoad=inHandlingCourse(this.node.position.x,this.node.position.z)||near.distance<near.road.width*.5+1||onJunctionSurface(this.node.position);
-    s.surface=onRoad?'Asphalt':inLake(this.node.position.x,this.node.position.z)?'Water':'Grass';
-    const surfaceMu=onRoad?1:.46;const wetMu=1-wetness*(d.class==='ROAD'?.28:.4);
+    const wetMu=1-wetness*(d.class==='ROAD'?.28:.4);
     const rest=.32+d.travel*.5;
     const downforce=.5*1.225*d.downforce*speed*speed*this.setup.aero;
     this.body.applyForce(this.up.scale(-downforce),this.node.position);
@@ -75,11 +73,12 @@ export class Vehicle {
       const origin=Vector3.TransformCoordinates(local,matrix),to=origin.subtract(this.up.scale(rest+d.wheelRadius));
       this.hit.reset();this.world.engine.raycastToRef(origin,to,this.hit,{ignoreBody:this.body,collideWith:1,shouldHitTriggers:false});
       wheel.contact=this.hit.hasHit;const prevCompression=wheel.compression;
-      if(!wheel.contact){wheel.compression=0;wheel.load=0;wheel.omega+=((driven.includes(i)?torque*ratio*throttle/driven.length:0)-wheel.omega*1.2)*dt/1.8;wheel.angle+=wheel.omega*dt;continue;}
+      if(!wheel.contact){wheel.surface='Air';wheel.layer='air';wheel.roadId=undefined;wheel.compression=0;wheel.load=0;wheel.omega+=((driven.includes(i)?torque*ratio*throttle/driven.length:0)-wheel.omega*1.2)*dt/1.8;wheel.angle+=wheel.omega*dt;continue;}
       contacts++;
       const compression=clamp(rest-(this.hit.hitDistance-d.wheelRadius),0,rest);
       wheel.compression=compression;
       const contact=this.hit.hitPointWorld.clone(),r=contact.subtract(this.node.position),velocity=this.linear.add(Vector3.Cross(this.angular,r));
+      const material=contactForTriangle(this.hit.body?.transformNode.metadata,this.hit.triangleIndex);wheel.surface=material.surface==='Grass'&&inLake(contact.x,contact.z)?'Water':material.surface;wheel.layer=material.layer;wheel.roadId=material.roadId;const surfaceMu=SURFACE_GRIP[wheel.surface];
       const normal=this.hit.hitNormalWorld;const compressionVelocity=-Vector3.Dot(velocity,this.up);
       const antiRoll=(prevCompression-s.wheels[i^1].compression)*d.spring*.2;
       const load=clamp(compression*d.spring+compressionVelocity*d.damper+antiRoll,0,d.mass*9.81*1.8);
@@ -124,6 +123,7 @@ export class Vehicle {
       if(Math.abs(longitudinal)<.5&&input.brake>.2){const gravityAlong=Vector3.Dot(new Vector3(0,-9.81,0),fwd)*d.mass/4;this.body.applyForce(fwd.scale(-gravityAlong),contact);}
     }
     s.grounded=contacts>1;
+    const touching=s.wheels.filter(w=>w.contact),surfaces=new Set(touching.map(w=>w.surface)),layers=new Set(touching.map(w=>w.layer));s.surface=surfaces.size===1?touching[0].surface!:(contacts?'Mixed':'Air');s.layer=layers.size===1?touching[0].layer:(contacts?'mixed':'air');
     if(settings.esc&&contacts>1&&speed>4){const sideSpeed=Vector3.Dot(this.linear,this.right);this.body.applyTorque(this.up.scale(-this.angular.y*Math.abs(sideSpeed)*d.mass*.045));}
     if(contacts&&speed>.05)this.body.applyForce(this.linear.scale(-d.mass*9.81*.013/Math.max(speed,1)),this.node.position);
     s.fuel=Math.max(0,s.fuel-dt*(.00012+throttle*d.power*(d.class==='ROAD'?.00003:.00008))*(s.rpm/d.redline+.3));
@@ -135,7 +135,7 @@ export class Vehicle {
     const fwd=Vector3.TransformNormal(Vector3.Forward(),this.node.computeWorldMatrix(true));s.speed=Vector3.Dot(this.linear,fwd);s.distance+=Math.abs(s.speed)*dt;
     const delta=Math.abs(this.lastSpeed)-Math.abs(s.speed);if(delta>5)s.damage=clamp(s.damage+delta*.003,0,1);this.lastSpeed=s.speed;
   }
-  safeSpawn(){const p=this.node.position;const r=nearestRoad(p.x,p.z);return {position:{x:r.point.x,y:r.point.y,z:r.point.z},yaw:r.point.yaw};}
+  safeSpawn(){const r=nearestRoadAt(this.node.position);return {position:{x:r.point.x,y:r.point.y,z:r.point.z},yaw:r.point.yaw};}
   needsRecovery(){return this.node.position.y<terrainHeight(this.node.position.x,this.node.position.z)-8||Math.abs(this.node.position.x)>2300||Math.abs(this.node.position.z)>2300||!Number.isFinite(this.node.position.x);}
   dispose(){this.body.dispose();this.shape.dispose();this.node.dispose();}
 }

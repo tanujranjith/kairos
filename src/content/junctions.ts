@@ -30,7 +30,6 @@ export const ROAD_JUNCTIONS:JunctionDefinition[]=[
   junction('foundry-harbor',-960,-840,['industrial','city4'],['industrial']),
   junction('cedar-expressway',-1250,-370,['crossway','city3'],['crossway'],'merge',24),
   junction('lakeshore-parkway',-835,-1683,['ring','lakeshore'],['ring'],'merge',24),
-  junction('ridgeway-parkway',924,1545,['ring','pass'],['ring'],'merge',24),
   junction('harbor-parkway',-1068,-1640,['ring','city4'],['ring'],'merge',24),
   junction('harbor-expressway',-904,-402,['crossway','city4'],['crossway'],'merge',34),
   junction('ridgeway-crossing',970,1037,['northbridge','pass'],['northbridge']),
