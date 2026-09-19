@@ -1,5 +1,6 @@
 import type { Road, RoadPoint, NearestRoad, Landmark, V3 } from '../core/types';
 import { clamp, distance, lerp, smooth, wrap } from '../core/math';
+import { HANDLING, handlingTerrainBlend, inHandlingCourse } from './handling-course';
 
 export const CELL_SIZE=256;
 export const WORLD_SIZE=4096;
@@ -42,7 +43,8 @@ export const ROADS:Road[]=[
   makeRoad('circuitlink','Aster Circuit Access',[[1050,-210],[900,-360],[720,-470],[500,-650],[470,-1050]],9,'road',false,2,17),
   makeRoad('circuit','Aster International',[[680,-1500,17],[1260,-1500,17],[1550,-1350,19],[1590,-950,24],[1470,-620,27],[1200,-490,26],[1000,-650,23],[1160,-920,23],[900,-1130,20],[570,-940,18],[400,-1140,17],[470,-1410,17]],14,'circuit',true,2,75),
   makeRoad('pit','Aster Pit Lane',[[510,-1450,17],[660,-1460,17],[960,-1460,17],[1260,-1460,17],[1390,-1410,18]],7,'pit',false,1,16.67),
-  makeRoad('test','Handling Grounds',[[-1620,1420,18],[-1220,1450,18],[-1050,1510,18],[-1180,1590,18],[-1540,1580,18],[-1660,1530,18]],14,'test',true,2,20)
+  makeRoad('testaccess','Northstar Access',[[-650,1660,landHeight(-650,1660)+.13],[-840,1690,HANDLING.height],[-1010,1740,HANDLING.height]],8,'road',false,2,14),
+  makeRoad('test','Northstar Skidpad',Array.from({length:24},(_,i):Anchor=>{const a=i/24*Math.PI*2;return [HANDLING.skidpad.x+Math.sin(a)*HANDLING.skidpad.radius,HANDLING.skidpad.z+Math.cos(a)*HANDLING.skidpad.radius,HANDLING.height];}),14,'test',true,2,20)
 ];
 export const CIRCUIT=ROADS.find(r=>r.id==='circuit')!;
 export const PIT=ROADS.find(r=>r.id==='pit')!;
@@ -64,10 +66,12 @@ export function pointAt(road:Road,s:number,offset=0):RoadPoint {
 export function terrainHeight(x:number,z:number) {
   if(inLake(x,z))return 2.5;
   const near=nearestRoad(x,z,undefined,1),blend=1-smooth((near.distance-near.road.width*.5-2)/20);
-  return lerp(landHeight(x,z)+Math.sin(x*.017)*Math.sin(z*.019)*1.3,near.point.y-.16,blend);
+  const natural=lerp(landHeight(x,z)+Math.sin(x*.017)*Math.sin(z*.019)*1.3,near.point.y-.16,blend);
+  return lerp(natural,HANDLING.height-.16,handlingTerrainBlend(x,z));
 }
 export const LANDMARKS:Landmark[]=[
   {id:'home',name:'The Lakeside House',type:'garage',x:-380,z:110,description:'Your starting point. A space to make every car yours.'},
+  {id:'handling',name:HANDLING.name,type:'handling',x:-1010,z:1740,description:'A flat proving ground with skidpad, slalom, braking lane, ride bumps, banking, gradient, curb and launch ramp.'},
   {id:'aster',name:'Aster International',type:'circuit',x:960,z:-1460,description:'A flowing technical circuit beneath the mountains.'},
   {id:'westbrook',name:'Westbrook Service',type:'service',x:-960,z:-940,description:'Refuel and restore your vehicle.'},
   {id:'summitservice',name:'Summit Service',type:'service',x:650,z:1480,description:'A welcome stop above the valley.'},
@@ -84,7 +88,7 @@ export const LANDMARKS:Landmark[]=[
   {id:'drift1',name:'Ridgeway Drift',type:'drift',x:1140,z:950,description:'Drift zone · link the mountain bends'},
   {id:'drift2',name:'Foundry Drift',type:'drift',x:-1280,z:-630,description:'Drift zone · keep the car in balance'}
 ];
-export function regionAt(x:number,z:number) { if(x>300&&z<-460)return 'ASTER MOTORSPORT PARK';if(z>1000&&x>300)return 'RIDGEWAY PASS';if(x<-700&&z<-750)return 'WESTBROOK';if(x<-650&&z<-250)return 'THE FOUNDRY';if(z>600&&x>-350&&x<600)return 'PINECREST FOREST';if(x<0&&z>-200)return 'LAKE AURELIA';return 'REDWOOD VALLEY'; }
+export function regionAt(x:number,z:number) { if(inHandlingCourse(x,z,32))return 'NORTHSTAR HANDLING GROUNDS';if(x>300&&z<-460)return 'ASTER MOTORSPORT PARK';if(z>1000&&x>300)return 'RIDGEWAY PASS';if(x<-700&&z<-750)return 'WESTBROOK';if(x<-650&&z<-250)return 'THE FOUNDRY';if(z>600&&x>-350&&x<600)return 'PINECREST FOREST';if(x<0&&z>-200)return 'LAKE AURELIA';return 'REDWOOD VALLEY'; }
 
 // Graph edges follow sampled road geometry. Links only connect nearby compatible elevations.
 export interface NavNode { x:number;z:number;y:number;edges:{to:number;cost:number}[];road:string }

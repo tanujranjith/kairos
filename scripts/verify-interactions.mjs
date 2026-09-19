@@ -24,4 +24,13 @@ await page.keyboard.press('Escape');await page.click('[data-action="screen"][dat
 await page.selectOption('[data-setting="weather"]','Clear');await page.locator('[data-setting="time"]').fill('22');await page.locator('[data-setting="time"]').dispatchEvent('change');await page.click('[data-action="resume"]');await capture('night');
 await page.evaluate(async()=>{const g=window.kairos;await g.store.write(g.save);});await page.reload();await page.waitForFunction(()=>window.kairos?.ui,null,{timeout:60000});
 const saved=await page.evaluate(()=>({car:window.kairos.save.selected,paint:window.kairos.save.customization.velara.paint,units:window.kairos.save.settings.units}));assert.deepEqual(saved,{car:'velara',paint:'#215e89',units:'km/h'});
-assert.deepEqual(errors,[]);assert.deepEqual(external,[]);await fs.writeFile('output/interaction/report.json',JSON.stringify({checks:['six cars','customization','settings','map routing','acceleration','pause clock','five cameras','reset','reverse','night','save reload','external hosts blocked'],saved,errors,external},null,2));await browser.close();console.log('Interaction checks passed');
+await page.evaluate(()=>{window.advanceTime(0);window.kairos.save.settings.time=17.4;window.kairos.save.settings.camera=0;});
+await page.click('#start-handling');await page.evaluate(()=>window.advanceTime(1000));
+assert.equal(await page.locator('#minimap [data-map-layer="handling"]').count(),1);
+await page.keyboard.down('ArrowUp');await page.evaluate(()=>window.advanceTime(2000));await page.keyboard.up('ArrowUp');
+await page.keyboard.press('KeyR');await page.evaluate(()=>window.advanceTime(1000));
+const courseReset=await page.evaluate(()=>window.kairos.player.state.position);
+assert.ok(Math.hypot(courseReset.x+1930,courseReset.z-1940)<.5,'Reset stays on the private course');
+assert.equal(await page.evaluate(()=>window.kairos.traffic.length),0);
+await capture('handling-reset');
+assert.deepEqual(errors,[]);assert.deepEqual(external,[]);await fs.writeFile('output/interaction/report.json',JSON.stringify({checks:['six cars','customization','settings','map routing','acceleration','pause clock','five cameras','reset','reverse','night','save reload','handling map','handling reset','private course has no traffic','external hosts blocked'],saved,courseReset,errors,external},null,2));await browser.close();console.log('Interaction checks passed');

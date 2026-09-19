@@ -21,6 +21,21 @@ All six had ground contact. These results demonstrate differentiated acceleratio
 
 ## Browser checks
 
+### September 19 handling, controller and sound checks
+
+- Pure suite: **46 passing tests**, including precise partial-tile terrain clipping at the course boundary. TypeScript strict check and production build pass. The existing large-entry-chunk warning remains visible; it is not a performance-budget pass.
+- Handling suite: **13 passing checks**, including a fresh second run. Six-car 0–100 times, dry/wet/worn braking, skidpad RMS, banking and barrier endpoints matched between these two runs (zero observed difference for the recorded comparisons). Tolerances, physical dimensions and measured figures are in [Northstar's validation notes](handling-course.md). This is controlled simulation, not an FPS benchmark.
+- Interface suite: fifteen flow checks pass, now including course entry, map overlay and course-local reset. The provided web-game skill client completed independent input bursts, and its screenshot and state JSON were opened/inspected after integration. Vehicle remained on four contacts; no page-error artifact was produced.
+- Controller suite: **21 browser checks** pass with synthetic standard-gamepad snapshots. Actual settings, select/range/checkbox controls, paint/wheel palettes, map markers, gamepad driving, pause/reconnect and race-results return are exercised. A stalled audio-permission promise does not stall entry to driving. Physical controller, rumble and OS dialogs are not certified.
+- Audio suite: eight audible layer/scene renders plus mute, pause, pause transition, shift and engine-reference renders use the live synthesis graph through `OfflineAudioContext`. Every sample was finite; largest tested absolute peak was 0.352 (below digital clipping), mute/pause were exactly silent, and pause-transition tail settled to zero. Cockpit/tunnel processing and the persistent shift envelope changed rendered PCM as expected. This is signal verification, not a claim of acoustic realism or hardware latency.
+- A separate strict-autoplay startup test started with **no document user activation**, entered the drive while sound remained suspended, and then resumed the actual audio context on a trusted keyboard event. Initial test attempts accidentally granted user activation through Playwright evaluation; the final test uses explicit no-gesture CDP evaluation and asserts inactive startup.
+
+### Earlier baseline delivery and platform checks
+
+The September 19 rebuilt production bundle also passed both local delivery paths, including Free Drive and Northstar. Cold-browser-cache startup was 3.033s (forced WebGL2) / 2.414s (automatic request), with 4,481,082 bytes transferred and JS heap samples approximately 71 / 82MB. There were no page errors, failed requests, third-party requests or exposed development hooks. These runs were unthrottled localhost on the development host. Installed Edge re-passed WebGPU and WebGL2 with identical 12.101111m/s two-second acceleration and four contacts. Earlier baseline numbers follow for comparison; no actual-laptop performance conclusion follows from either set.
+
+With browser network emulation set to 25Mbps download / 5Mbps upload and 40ms latency, the final production page (after paint/boundary corrections) reached its usable start button in **6.045s / 4.495s**, transferring 4,481,261 bytes through the two drives. JS heap samples were approximately 58 / 88MB. An earlier run before those small corrections took 4.114s / 4.046s; concurrent verification affects development-host timings. Both final runs passed with no page errors, failed or external requests. See `output/delivery-25mbps/report.json`. These are controlled development-host cold-browser-cache samples, not an HTTPS deployment test, real connection measurement or target-laptop cold-start certification.
+
 - Six-vehicle selection, paint customization, settings, route selection, acceleration, reverse, reset, pause clock, five cameras, night lighting and save/reload exercised through browser inputs.
 - External HTTP(S) hosts were blocked during interaction and production delivery checks: no unexpected external requests or page errors.
 - Production test hooks (`advanceTime`, `kairos`) were absent as intended.
@@ -48,4 +63,4 @@ Both player races had zero penalties after the pit-lane exclusion fix. The six p
 
 ## Still required
 
-Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; p95 frame time; separate physics/AI/GPU timing; resident process and GPU memory; controlled 25Mbps cold download; real-time 30-minute endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. No target-budget pass is claimed for these unmeasured items.
+Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; p95 frame time; separate physics/AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); real-time 30-minute endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. No target-budget pass is claimed for these unmeasured items.

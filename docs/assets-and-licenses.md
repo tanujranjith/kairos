@@ -6,7 +6,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
 | Paint, glass, asphalt noise, environment cubemap, signs | Original procedural materials/textures |
-| Engine, tire, wind and impact audio | Original Web Audio synthesis |
+| Engine, transmission, tire, road, wind, rain, impact and tunnel audio | Original Web Audio synthesis and seeded procedural noise; no recorded samples |
 | Four supplied PNG references and context markdown | User-provided design references; not included in the production build |
 | Babylon.js core, loaders, serializers 9.27.1 | Apache-2.0; included license text and Babylon NOTICE |
 | Havok WebAssembly 1.3.14 | MIT according to the installed package LICENSE; included as Havok-MIT.txt |

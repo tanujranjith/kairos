@@ -23,6 +23,8 @@ Open the local URL in hardware-accelerated Chrome or Edge. `?renderer=webgl` for
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.
 
+**Handling course** in the sidebar opens Northstar's traffic-free proving ground with the selected car. It contains braking lanes, a slalom, three skidpad rings, measured bumps, a banked road, a gradient, a curb and a launch ramp. It is also connected to the public road network. Reset inside the course returns to its braking lane. See [course layout and measured tests](docs/handling-course.md).
+
 | Action | Keyboard | Xbox-style controller |
 |---|---|---|
 | Accelerate / brake | W / S or ↑ / ↓ | RT / LT |
@@ -40,6 +42,8 @@ Choose one of six unlocked original vehicles in the garage, then Free Drive or M
 
 Settings contain key remapping, assists, units, weather, time, graphics, traffic and sound. Save data is versioned IndexedDB data on this browser and origin; use export/import to transfer it. An unavailable database leaves the game playable in memory and displays a warning. Clearing browser data removes local saves.
 
+In menus, controller D-pad / left stick up-down moves focus, left-right changes selects/sliders or cycles paint colors, A confirms and B/Menu returns. Keyboard Tab/Shift+Tab moves focus, Enter/Space activates, and Escape returns. Focus survives settings changes; held buttons must be released after connecting or entering a menu. If browser autoplay is blocked, click or press a key once to enable audio; driving does not wait for sound permission. Native save-file dialogs still require the operating system's controls.
+
 ## Validation and development
 
 `window.render_game_to_text()`, `window.advanceTime(ms)`, and `window.kairos` exist only in development/test builds. The controlled-time hook suspends normal stepping. Call `window.kairos.resumeRealTime()` to resume. One fixed accumulator owns the 120 Hz simulation.
@@ -50,6 +54,10 @@ node scripts/inspect.mjs "http://127.0.0.1:5187/?renderer=webgl" garage
 node scripts/verify-racing.mjs
 node scripts/verify-weekend.mjs
 node scripts/verify-physics.mjs
+node scripts/verify-handling.mjs
+node scripts/inspect-handling.mjs
+node scripts/verify-controller-navigation.mjs
+node scripts/verify-audio.mjs
 node scripts/verify-interactions.mjs
 node scripts/verify-storage.mjs
 node scripts/verify-browsers.mjs msedge
@@ -59,6 +67,8 @@ node scripts/build-assets.mjs
 The web-game client is an unmodified copy of the supplied skill client. Supplementary scripts inspect full HTML HUDs and run physical race traces. Artifacts go in `output/`. Headless Chromium may use SwiftShader: its timings are **not** integrated-GPU laptop performance measurements.
 
 The verification scripts use the dev server on port 5187. `verify-delivery.mjs` requires the production preview on port 5192. Browser binaries must be available to Playwright. `build-assets.mjs` rebuilds the original compressed car models through the dev-only exporter; the generated models are already included. `npm run build` also copies third-party runtime notices into `dist/licenses/`.
+
+`node scripts/verify-delivery.mjs --25mbps` adds browser-emulated 25Mbps download / 5Mbps upload with 40ms latency and a cold browser cache. Its separate `output/delivery-25mbps/` results are development-host network emulation, not an actual-laptop or Internet deployment benchmark.
 
 See [architecture and tuning](docs/architecture.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. The art, advanced traffic/streaming systems, full rule/interaction fault matrix, and target-laptop performance still need work.
 

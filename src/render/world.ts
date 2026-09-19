@@ -4,13 +4,11 @@ import { hash, rng, clamp } from '../core/math';
 import type { PhysicsWorld } from '../sim/physics';
 import type { PhysicsBody, PhysicsShape } from '@babylonjs/core';
 import type { V3, Quality } from '../core/types';
+import { inHandlingCourse, terrainOutsideHandling } from '../content/handling-course';
+import { createHandlingCell } from './handling-course';
+import { Geometry } from './geometry';
+import { TUNNELS } from '../content/structures';
 
-class Geometry {
-  positions:number[]=[];indices:number[]=[];uvs:number[]=[];colors:number[]=[];
-  quad(a:V3,b:V3,c:V3,d:V3,color?:number[]){const n=this.positions.length/3;for(const p of [a,b,c,d]){this.positions.push(p.x,p.y,p.z);this.uvs.push(p.x/12,p.z/12);if(color)this.colors.push(...color);}this.indices.push(n,n+2,n+1,n+1,n+2,n+3);}
-  box(x:number,y:number,z:number,w:number,h:number,l:number,yaw=0){const n=this.positions.length/3,cos=Math.cos(yaw),sin=Math.sin(yaw);for(const [dx,dy,dz]of [[-w/2,0,-l/2],[w/2,0,-l/2],[-w/2,h,-l/2],[w/2,h,-l/2],[-w/2,0,l/2],[w/2,0,l/2],[-w/2,h,l/2],[w/2,h,l/2]]){this.positions.push(x+dx*cos+dz*sin,y+dy,z-dx*sin+dz*cos);this.uvs.push(dx/5,dy/5);}for(const face of [[0,2,1,1,2,3],[4,5,6,5,7,6],[0,4,2,4,6,2],[1,3,5,3,7,5],[2,6,3,3,6,7],[0,1,4,1,5,4]])for(const i of face)this.indices.push(n+i);}
-  mesh(name:string,scene:Scene,mat:Material){if(!this.positions.length)return null;for(let i=0;i<this.indices.length;i+=3){const swap=this.indices[i+1];this.indices[i+1]=this.indices[i+2];this.indices[i+2]=swap;}const mesh=new Mesh(name,scene),data=new VertexData(),normals:number[]=[];VertexData.ComputeNormals(this.positions,this.indices,normals);data.positions=this.positions;data.indices=this.indices;data.normals=normals;data.uvs=this.uvs;if(this.colors.length)data.colors=this.colors;data.applyToMesh(mesh);mesh.material=mat;mesh.receiveShadows=true;mesh.isPickable=false;return mesh;}
-}
 interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[]}
 export class WorldRenderer {
   cells=new Map<string,Cell>();root:TransformNode;backdrop:Mesh;water:Mesh;
@@ -22,6 +20,9 @@ export class WorldRenderer {
     this.root=new TransformNode('world',scene);
     const mat=(name:string,hex:string)=>{const m=new PBRMaterial(name,scene);m.albedoColor=Color3.FromHexString(hex);m.roughness=.97;m.metallic=0;return m;};
     this.terrain=mat('meadow','#777c48');this.shoulder=mat('gravel','#9f967a');this.marking=mat('road-paint','#e8e4d1');this.yellow=mat('centerline','#d6b96d');this.curb=mat('red-curbs','#a94435');this.wall=mat('stone-buildings','#c2ba9f');this.roof=mat('roof-metal','#555b59');this.glass=mat('architectural-glass','#344c54');this.foliage=mat('pine-needles','#344b2f');this.trunk=mat('tree-bark','#594939');
+    // A millimetric physical separation alone loses depth precision at long range.
+    // Raster bias keeps paint above the asphalt without moving contact geometry.
+    for(const paint of [this.marking,this.yellow,this.curb]){paint.zOffset=-2;paint.zOffsetUnits=-2;}
     const tex=new DynamicTexture('asphalt-noise',256,scene,true),ctx=tex.getContext(),random=rng(18);ctx.fillStyle='#777777';ctx.fillRect(0,0,256,256);for(let i=0;i<22000;i++){const v=90+random()*70;ctx.fillStyle=`rgb(${v},${v},${v})`;ctx.fillRect(random()*256,random()*256,1,1);}tex.update();tex.uScale=1;tex.vScale=1;tex.anisotropicFilteringLevel=8;
     tex.wrapU=tex.wrapV=Texture.WRAP_ADDRESSMODE;
     this.road=new PBRMaterial('asphalt',scene);this.road.albedoColor=new Color3(.31,.33,.32);this.road.albedoTexture=tex;this.road.roughness=.92;this.road.metallic=.04;
@@ -57,10 +58,13 @@ export class WorldRenderer {
     const cell:Cell={key,cx,cz,meshes:[],colliders:[]},x0=cx*CELL_SIZE,z0=cz*CELL_SIZE;this.cells.set(key,cell);
     const attach=(mesh:Mesh|null,collision=false)=>{if(!mesh)return;mesh.parent=this.root;cell.meshes.push(mesh);if(collision)cell.colliders.push(this.physics.addStaticMesh(mesh));};
     const terrain=new Geometry(),step=16;
-    for(let x=x0;x<x0+CELL_SIZE;x+=step)for(let z=z0;z<z0+CELL_SIZE;z+=step)terrain.quad({x,y:terrainHeight(x,z),z},{x:x+step,y:terrainHeight(x+step,z),z},{x,y:terrainHeight(x,z+step),z:z+step},{x:x+step,y:terrainHeight(x+step,z+step),z:z+step});
+    for(let x=x0;x<x0+CELL_SIZE;x+=step)for(let z=z0;z<z0+CELL_SIZE;z+=step)for(const [left,bottom,right,top] of terrainOutsideHandling([x,z,x+step,z+step])){
+      terrain.quad({x:left,y:terrainHeight(left,bottom),z:bottom},{x:right,y:terrainHeight(right,bottom),z:bottom},{x:left,y:terrainHeight(left,top),z:top},{x:right,y:terrainHeight(right,top),z:top});
+    }
     attach(terrain.mesh(`terrain-${key}`,this.scene,this.terrain),true);
+    createHandlingCell(this.scene,[x0,z0,x0+CELL_SIZE,z0+CELL_SIZE],{road:this.road,white:this.marking,red:this.curb,dark:this.roof},attach);
     const asphalt=new Geometry(),verge=new Geometry(),white=new Geometry(),yellow=new Geometry(),curbs=new Geometry(),rails=new Geometry(),buildings=new Geometry(),roofs=new Geometry(),windows=new Geometry();
-    for(const {road,index}of this.roadCells.get(key)??[]){const a=road.points[index],b=road.points[index+1];const strip=(g:Geometry,offset:number,width:number,y=.0)=>{const p=(v:typeof a,o:number)=>({x:v.x+Math.cos(v.yaw)*o,y:v.y+y,z:v.z-Math.sin(v.yaw)*o});g.quad(p(a,offset-width/2),p(a,offset+width/2),p(b,offset-width/2),p(b,offset+width/2));};
+    for(const {road,index}of this.roadCells.get(key)??[]){const a=road.points[index],b=road.points[index+1];if(road.kind==='test'&&inHandlingCourse(a.x,a.z))continue;const strip=(g:Geometry,offset:number,width:number,y=.0)=>{const p=(v:typeof a,o:number)=>({x:v.x+Math.cos(v.yaw)*o,y:v.y+y,z:v.z-Math.sin(v.yaw)*o});g.quad(p(a,offset-width/2),p(a,offset+width/2),p(b,offset-width/2),p(b,offset+width/2));};
       strip(asphalt,0,road.width,.025);strip(verge,0,road.width+3,-.015);
       for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046);
       if(road.kind==='circuit'){if(index%2===0)for(const side of [-1,1])strip(curbs,side*(road.width*.5+.4),.85,.045);}
@@ -71,13 +75,13 @@ export class WorldRenderer {
       if((road.kind==='highway'||a.z>950||inLake(a.x,a.z))&&index%2===0){for(const side of [-1,1]){const offset=side*(road.width*.5+1);const x=a.x+Math.cos(a.yaw)*offset,z=a.z-Math.sin(a.yaw)*offset;rails.box(x,a.y+.65,z,.13,.30,16,a.yaw);rails.box(x,a.y,z,.13,.95,.13,a.yaw);}}
       // Lake crossing is a real elevated deck with piers over lower terrain.
       if(inLake(a.x,a.z)&&index%5===0){rails.box(a.x,a.y-1,a.z,road.width,.85,9,a.yaw);buildings.box(a.x,2,a.z,2,a.y-3,3,a.yaw);}
-      if(road.id==='pass'&&a.s>2350&&a.s<2630&&index%3===0){for(const side of [-1,1])buildings.box(a.x+Math.cos(a.yaw)*side*6,a.y,a.z-Math.sin(a.yaw)*side*6,1,6,25,a.yaw);roofs.box(a.x,a.y+6,a.z,13,1,25,a.yaw);}
+      for(const tunnel of TUNNELS)if(road.id===tunnel.roadId&&a.s>tunnel.start&&a.s<tunnel.end&&index%3===0){const sideOffset=tunnel.innerWidth/2+.5;for(const side of [-1,1])buildings.box(a.x+Math.cos(a.yaw)*side*sideOffset,a.y,a.z-Math.sin(a.yaw)*side*sideOffset,1,tunnel.height,25,a.yaw);roofs.box(a.x,a.y+tunnel.height,a.z,tunnel.innerWidth+2,1,25,a.yaw);}
     }
     attach(verge.mesh(`verge-${key}`,this.scene,this.shoulder));attach(asphalt.mesh(`roads-${key}`,this.scene,this.road),true);attach(white.mesh(`paint-${key}`,this.scene,this.marking));attach(yellow.mesh(`center-${key}`,this.scene,this.yellow));attach(curbs.mesh(`curbs-${key}`,this.scene,this.curb));attach(rails.mesh(`guardrails-${key}`,this.scene,this.roof),true);
     const random=rng(hash(cx,cz)),trees:Matrix[]=[],trunks:Matrix[]=[],rocks:Matrix[]=[];
     const count={Low:32,Medium:48,High:65,Ultra:90}[this.quality];
     for(let i=0;i<count;i++){
-      const x=x0+random()*CELL_SIZE,z=z0+random()*CELL_SIZE,near=nearestRoad(x,z,undefined,1);if(inLake(x,z)||near.distance<near.road.width*.5+5)continue;const y=terrainHeight(x,z);
+      const x=x0+random()*CELL_SIZE,z=z0+random()*CELL_SIZE,near=nearestRoad(x,z,undefined,1);if(inHandlingCourse(x,z,12)||inLake(x,z)||near.distance<near.road.width*.5+5)continue;const y=terrainHeight(x,z);
       const city=x< -650&&z< -650,industrial=x< -850&&z< -300&&z> -780,circuit=x>300&&z< -450;
       if((city||industrial)&&near.distance<95&&i%2===0){const h=city?7+random()*30:8+random()*9,w=12+random()*13,l=12+random()*16;buildings.box(x,y,z,w,h,l);roofs.box(x,y+h,z,w+1,.6,l+1);for(let level=4;level<h-1;level+=3.3){windows.box(x,y+level,z-l*.5-.025,w*.83,1.35,.05);windows.box(x-w*.5-.025,y+level,z,.05,1.35,l*.82);}}
       else if(!circuit&&!industrial){const s=.6+random()*.95,yaw=random()*Math.PI;trees.push(Matrix.Compose(new Vector3(s,s,s),Quaternion.RotationYawPitchRoll(yaw,0,0),new Vector3(x,y+8*s,z)));trunks.push(Matrix.Compose(new Vector3(s,s,s),Quaternion.Identity(),new Vector3(x,y+3.5*s,z)));if(i%5===0)rocks.push(Matrix.Compose(new Vector3(s*1.5,s*.7,s),Quaternion.RotationYawPitchRoll(yaw,0,0),new Vector3(x+5,y+.5,z+3)));}
