@@ -6,6 +6,10 @@ import { VEHICLES } from '../src/content/vehicles';
 import { buildCellBlueprint,blueprintTransfers } from '../src/world/cell-blueprint';
 import { roadCoachwork } from '../src/render/coachwork';
 import { cameraMounts } from '../src/render/camera-mounts';
+import { mountainMesh,mountainHeight,meadowColor } from '../src/world/landscape';
+import { buildArchitecture,type BuildingStyle } from '../src/world/architecture';
+import { MeshDataBuilder } from '../src/world/mesh-data';
+import { cloudField,skyPixels,windowLighting } from '../src/render/atmosphere';
 
 describe('original graphics assets',()=>{
   it('generates reproducible albedo and finite normalized normal maps',()=>{
@@ -32,5 +36,30 @@ describe('original graphics assets',()=>{
   });
   it('places enclosed cockpit eyes below the roof and hood/bumper cameras outside body panels',()=>{
     for(const d of VEHICLES){const mounts=cameraMounts(d);expect(mounts.hood.y).toBeGreaterThan(.24);expect(mounts.bumper.z).toBeGreaterThan(d.length/2+.20);if(d.class!=='FORMULA'){expect(mounts.cockpit.y).toBeLessThan(d.height-(.32+d.wheelRadius)-.10);expect(mounts.cockpit.y).toBeGreaterThan(.25);}}
+  });
+  it('keeps distant mountain geometry outside drivable terrain, upward facing and within its budget',()=>{
+    const data=mountainMesh();expect(data.indices.length/3).toBeLessThanOrEqual(32000);expect(data.colors?.length).toBe(data.positions.length/3*4);
+    for(let i=0;i<data.positions.length;i+=3){const x=data.positions[i],z=data.positions[i+2];expect(Math.max(Math.abs(x),Math.abs(z))).toBeGreaterThanOrEqual(2009.99);expect(data.normals[i+1]).toBeGreaterThan(0);expect(Number.isFinite(data.positions[i+1])).toBe(true);}
+    expect(mountainHeight(2000,0)).toBeLessThan(0);expect(mountainHeight(0,2000)).toBeLessThan(0);
+  });
+  it('uses continuous nonrepeating meadow colours at cell boundaries',()=>{
+    expect(meadowColor(256,100)).toEqual(meadowColor(256,100));expect(meadowColor(256,100)).not.toEqual(meadowColor(268,100));
+    const a=meadowColor(255.999,100),b=meadowColor(256.001,100);expect(Math.max(...a.map((c,i)=>Math.abs(c-b[i])))).toBeLessThan(.001);
+  });
+  it('retains a recessed coarse valley floor beyond streamed cells without another render pass',()=>{
+    const data=mountainMesh(()=>13);expect(data.indices.length/3).toBeLessThan(34000);let floor=0;for(let i=0;i<data.positions.length;i+=3)if(Math.abs(data.positions[i])<1900&&Math.abs(data.positions[i+2])<1900){expect(data.positions[i+1]).toBe(5);floor++;}expect(floor).toBeGreaterThan(1000);
+  });
+  it('produces five bounded architectural styles with complete finite transferable colour buffers',()=>{
+    const counts=new Set<number>();for(const style of ['brick','limestone','office','factory','house'] as BuildingStyle[]){const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},result=buildArchitecture(b,{x:10,y:12,z:10,width:21,depth:16,height:28,yaw:.4,style,seed:4});let total=0;
+      for(const g of Object.values(b)){const d=g.finish();total+=d.indices.length/3;expect(d.colors?.length).toBe(d.positions.length/3*4);expect([...d.positions,...d.normals,...d.colors!].every(Number.isFinite)).toBe(true);expect(Math.max(...d.positions.filter((_,i)=>i%3===1))).toBeLessThanOrEqual(12+result.height+.001);}counts.add(total);expect(total).toBeLessThan(7000);
+      const eave=style==='house'?5.1:style==='brick'?19:28;expect(Math.max(...b.glass.positions.filter((_,i)=>i%3===1))).toBeLessThan(12+eave-.4);
+    }expect(counts.size).toBeGreaterThanOrEqual(4);
+  });
+  it('produces a distinct warm sunset, blue daytime sky, dark night and cloud cover',()=>{
+    const field=cloudField(64,32),clear=skyPixels(12,'Clear',field,64,32),sunset=skyPixels(17.4,'Clear',field,64,32),rain=skyPixels(12,'Rain',field,64,32),night=skyPixels(0,'Clear',field,64,32);
+    expect(clear).not.toEqual(sunset);expect(clear).not.toEqual(rain);const sum=(v:Uint8Array)=>v.reduce((s,n,i)=>i%4===3?s:s+n,0);expect(sum(night)).toBeLessThan(sum(clear)*.1);const top=(31*64+20)*4;expect(clear[top+2]).toBeGreaterThan(clear[top]*2);expect(field).toEqual(cloudField(64,32));
+  });
+  it('batches lit and unlit panes in one glass material and fades occupancy lighting at dusk',()=>{
+    const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()};buildArchitecture(b,{x:0,y:0,z:0,width:21,depth:16,height:24,yaw:0,style:'office',seed:5});const slots=new Set(b.glass.uvs.filter((_,i)=>i%2===0));expect(slots).toEqual(new Set([.25,.75]));expect(windowLighting(12)).toBe(0);expect(windowLighting(22)).toBe(1);expect(windowLighting(18)).toBeCloseTo(.5);expect(windowLighting(24)).toEqual(windowLighting(0));
   });
 });

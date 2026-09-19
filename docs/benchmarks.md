@@ -133,6 +133,30 @@ The gallery reflection adds work to menus; simplified wheel rings and the new bo
 
 Final production cold-cache **25Mbps/40ms browser emulation** reached the start screen in **7.874s / 7.855s**, transferring **11,140,653 bytes** through Free Drive and handling-course entry. JS heap samples were **83,063,364 / 134,852,456 bytes**; no page errors, failed/external requests or exposed development hooks. This is localhost/Chromium/SwiftShader, not actual target-laptop or HTTPS certification. The supplied web-game steering screenshot/state (`output/art-final-input`) was opened: four contacts, 3.711m/s, zero damage and no loading/error state.
 
+## September 19 — environmental graphics continuation
+
+The final environment build has 83 passing tests and a successful strict production build. Seven region/weather/daylight scenarios remain on four contacts; the five architectural families are also captured with a separate inspection camera. The supplied input client screenshot/state was opened: 3.710974m/s, four wheel contacts, zero damage, no loading/error state. Fifteen general interaction checks pass, including pause, five cameras, save/reload and handling entry/reset. Six-car acceleration and cadence/braking match the previous checkpoint.
+
+Final window-emission streaming checks pass delayed/failed collisions, retry without replay, race reservation, home cleanup and three repeated region cycles. City/mountain/lakeshore counts settle identically at **469/66/42**, **324/65/41**, **337/66/42** meshes/materials/textures. The single additional shared texture is the two-pixel window emission atlas. This is bounded short-run evidence, not 30-minute endurance.
+
+Installed Chrome and Edge both pass WebGPU and forced WebGL2 again: **12.101111m/s**, four contacts, no page/external-request errors in all four runs.
+
+The final 66-step Low720p submission audit is again installed Edge / RTX3060 / ANGLE D3D11. Numbers include extra passes and driver submission/synchronization; they are **not actual-laptop FPS, real-time pacing or isolated CPU/GPU timing**.
+
+| Sample | Maximum draw calls | Maximum submitted triangles | Median scene submission |
+|---|---:|---:|---:|
+| Showroom | 162 | 164,246 | 4.7ms |
+| Lakeshore traffic | 235 | 326,038 | 6.5ms |
+| City traffic | 194 | 400,305 | 6.4ms |
+| Wet night | 195 | 400,472 | 6.8ms |
+| Eight-car grid | 276 | 328,074 | 5.0ms |
+
+Architectural detail increases city geometry while the lower-cost outer range reduces the other driving scenes. These sampled Low submission counts remain below 300 draws/500,000 triangles. They do not prove the budgets on every route or hardware profile. Raw reports: `output/scenery`, `output/scenery-final-input`, `output/render-cost`, `output/graphics-streaming`, `output/browsers`.
+
+A final geometry review corrected rows of windows that could overlap an eave and tightened the returned building-height bounds. The 83-test suite, seven-region captures, supplied driving client and submission audit above were rerun after that correction. Four-path browser, general-interaction and streaming reports precede this last geometry-only correction; no renderer, resource-lifecycle, input or physics logic changed afterward.
+
+The final rebuilt production bundle passes both cold-cache 25Mbps/40ms emulated startup paths: **6.887s / 6.740s**, **11,143,058 transferred bytes**, JS heap **132,364,648 / 122,347,584 bytes** through Free Drive and handling-course entry. No page errors, failed/external requests or exposed development hooks. These are localhost/Chromium/SwiftShader samples, not Internet/HTTPS, actual-laptop performance or process-memory certification.
+
 ## Outstanding hardware and deployment acceptance
 
 Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; p95 frame time; separate physics/AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); real-time 30-minute endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. No target-budget pass is claimed for these unmeasured items.

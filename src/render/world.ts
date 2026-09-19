@@ -1,13 +1,13 @@
-import { Scene,Mesh,MeshBuilder,VertexData,StandardMaterial,PBRMaterial,Color3,Vector3,Matrix,Quaternion,Material,DynamicTexture,TransformNode } from '@babylonjs/core';
+import { Scene,Mesh,MeshBuilder,VertexData,StandardMaterial,PBRMaterial,Color3,Vector3,Matrix,Quaternion,Material,DynamicTexture,TransformNode,RawTexture,Texture } from '@babylonjs/core';
 import type { PhysicsBody,PhysicsShape } from '@babylonjs/core';
-import type { Texture } from '@babylonjs/core';
+import { windowLighting } from './atmosphere';
 import { CELL_SIZE,landHeight,LAKE } from '../content/world';
 import { createVegetation } from './vegetation';
 import { surfaceTextures } from './surface-textures';
 import type { PhysicsWorld } from '../sim/physics';
 import type { V3,Quality } from '../core/types';
 import { createHandlingCell } from './handling-course';
-import { Geometry } from './geometry';
+import { mountainMesh } from '../world/landscape';
 import { TrafficScenery,type SignalMesh } from './traffic';
 import { buildCellBlueprint,type CellBlueprint,type CellMesh } from '../world/cell-blueprint';
 import { CellStreamer } from '../world/cell-streamer';
@@ -37,19 +37,21 @@ export class WorldRenderer {
     for(const [material,kind,scale] of [[this.road,'asphalt',3],[this.terrain,'meadow',1],[this.shoulder,'gravel',4],[this.wall,'concrete',1],[this.roof,'stone',1]] as const){
       const maps=surfaceTextures(scene,kind,scale);material.albedoColor=Color3.White();material.albedoTexture=maps.albedo;material.bumpTexture=maps.normal;material.bumpTexture.level=kind==='meadow'?.55:.35;
     }
-    this.road.roughness=.94;this.road.metallic=0;this.glass.albedoColor=Color3.FromHexString('#223840').toLinearSpace();this.glass.metallic=.35;this.glass.roughness=.19;
+    this.road.roughness=.94;this.road.metallic=0;this.glass.albedoColor=Color3.FromHexString('#78909b').toLinearSpace();this.glass.metallic=.15;this.glass.roughness=.25;
+    const windowAtlas=RawTexture.CreateRGBATexture(new Uint8Array([0,0,0,255,255,180,103,255]),2,1,scene,false,false,Texture.NEAREST_SAMPLINGMODE);windowAtlas.name='original-occupied-window-emission';windowAtlas.gammaSpace=true;windowAtlas.wrapU=windowAtlas.wrapV=Texture.CLAMP_ADDRESSMODE;this.glass.emissiveTexture=windowAtlas;
     const vegetation=createVegetation(scene);this.treeMesh=vegetation.tree;this.oakMesh=vegetation.oak;this.trunkMesh=vegetation.trunk;this.oakTrunkMesh=vegetation.oakTrunk;this.grassMesh=vegetation.grass;this.foliage=vegetation.foliage;this.trunk=vegetation.bark;
     const rockMat=mat('weathered-rock','#ffffff'),rockMaps=surfaceTextures(scene,'concrete');rockMat.albedoTexture=rockMaps.albedo;rockMat.bumpTexture=rockMaps.normal;
     this.boulders=MeshBuilder.CreateSphere('rock-source',{diameter:5,segments:8},scene);const rockPos=this.boulders.getVerticesData('position')!;
     for(let i=0;i<rockPos.length;i+=3){const x=rockPos[i],y=rockPos[i+1],z=rockPos[i+2],n=1+.17*Math.sin(x*2.1+z*.7)*Math.cos(y*1.9);rockPos[i]*=n;rockPos[i+1]*=n*.65;rockPos[i+2]*=n;}this.boulders.updateVerticesData('position',rockPos);this.boulders.material=rockMat;this.boulders.isVisible=false;
-    const geom=new Geometry(),step=60;for(let x=-5000;x<5000;x+=step)for(let z=-5000;z<5000;z+=step){const height=(xx:number,zz:number)=>{if(Math.abs(xx)<2100&&Math.abs(zz)<2100)return landHeight(xx,zz)-8;const rim=Math.max(Math.abs(xx),Math.abs(zz));const mountains=(Math.sin(xx*.0021)*Math.cos(zz*.0018)+1.3)*Math.max(0,rim-2000)*.09;return landHeight(xx,zz)+mountains-10;};geom.quad({x,y:height(x,z),z},{x:x+step,y:height(x+step,z),z},{x,y:height(x,z+step),z:z+step},{x:x+step,y:height(x+step,z+step),z:z+step});}const ridgeMat=mat('atmospheric-ridges','#607280');ridgeMat.albedoColor=ridgeMat.albedoColor.toLinearSpace();this.backdrop=geom.mesh('valley-horizon',scene,ridgeMat)!;this.backdrop.parent=this.root;
+    const ridges=mountainMesh(landHeight),ridgeData=new VertexData(),ridgeMat=mat('atmospheric-ridges','#ffffff');
+    Object.assign(ridgeData,ridges);this.backdrop=new Mesh('valley-horizon',scene);ridgeData.applyToMesh(this.backdrop);this.backdrop.material=ridgeMat;this.backdrop.parent=this.root;this.backdrop.isPickable=false;
     this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene),waves=surfaceTextures(scene,'water',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves.normal;water.bumpTexture.level=.12;waves.albedo.dispose();this.water.material=water;
   }
 
   setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);}
   setQuality(q:Quality){if(q===this.quality)return;this.clear();this.quality=q;}
   setWetness(v:number){this.road.roughness=.94-v*.70;this.road.albedoColor.set(1-v*.40,1-v*.40,1-v*.40);}
-  updateSignals(clock:number){const waves=(this.water.material as PBRMaterial).bumpTexture as Texture;waves.uOffset=clock*.008;waves.vOffset=clock*.004;for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
+  updateSignals(clock:number,time=12){this.glass.emissiveColor.setAll(windowLighting(time)*1.1);const waves=(this.water.material as PBRMaterial).bumpTexture as Texture;waves.uOffset=clock*.008;waves.vOffset=clock*.004;for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
   private around(position:V3,detail=true){const {cx,cz}=cellCoordinates(position),result:CellDemand[]=[];for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){const x=cx+dx,z=cz+dz;if(x< -9||x>8||z< -9||z>8)continue;result.push({id:cellKey(x,z),cx:x,cz:z,priority:-1200+dx*dx+dz*dz,collision:true,detail,owners:new Set(['warmup'])});}return result;}
   private commitDemand(){
     const combined=new Map<string,CellDemand>();for(const [key,d]of this.demand)combined.set(key,{...d,owners:new Set(d.owners)});
