@@ -54,6 +54,9 @@ node scripts/inspect.mjs "http://127.0.0.1:5187/?renderer=webgl" garage
 node scripts/verify-racing.mjs
 node scripts/verify-weekend.mjs
 node scripts/verify-physics.mjs
+node scripts/profile-startup.mjs
+node scripts/verify-startup.mjs --repeats=3 --output=output/startup-delivery
+node scripts/verify-startup.mjs --channel=msedge --race --output=output/startup-edge
 node scripts/verify-handling.mjs
 node scripts/verify-traffic.mjs
 node scripts/verify-layers.mjs

@@ -2,6 +2,35 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 19 startup investigation and consolidated engine
+
+The preceding 28.893s / 25.863s cold samples remain failures, not retroactively passes. An initial CPU-profile attempt timed out at 30 seconds; a retained second attempt timed out at 92.647s with about 90.6s main-thread idle (`output/startup-baseline`). That evidence does not establish a scene-generation bottleneck or explain the intermittent stall. Startup now records six production User Timing phases to make future slow samples diagnosable.
+
+With only timing instrumentation added, a successful comparable Chromium/SwiftShader cold 25Mbps/40ms profile reached the menu at 7.182s with 217 completed resource entries (`output/startup-instrumented`). Consolidating Babylon's modules into a hashed engine chunk reduced that to 18 entries and 5.578s in the profiled follow-up (`output/startup-consolidated`). No rendering effects, physics parameters, scenery or vehicle assets were removed. The engine is still large: 7,508.31KB minified / 1,645.30KB gzip; Kairos entry 244.99KB / 87.12KB gzip. The build warning remains.
+
+Six subsequent non-profiled cold-browser-cache checks all functionally passed (`output/delivery-consolidated`):
+
+| Repetition | Forced WebGL2 menu ready | Automatic-request menu ready |
+|---|---:|---:|
+| 1 | 7.258s | 17.134s |
+| 2 | 5.725s | 5.634s |
+| 3 | 5.475s | 5.584s |
+
+Median menu readiness was 5.680s; maximum 17.134s. All six used WebGL2 under SwiftShader, completed real keyboard acceleration in Free Drive and Northstar, and had no page errors, failed requests, external requests or exposed development hooks. Each transferred 11,010,153 bytes through both environments and initially recorded 18 resources. JS heap samples ranged 74,396,864–146,410,684 bytes, not total browser/GPU memory.
+
+**Menu readiness is not cold-to-driving readiness.** The separately measured first click-to-motion took 12.924–14.250s in these software-rendered runs, including cell installation and acceleration. The 17.134s sample spent about 12.365s before the first measured application phase; its intermittent cause remains unproven. These results improve request overhead but do not certify the entire initial-playable 20-second target, target-laptop frame pacing, HTTPS delivery, or eliminate all slow-start risks.
+
+The rebuilt production bundle also passes installed Chrome and Edge through both actual WebGPU and forced WebGL2. Screenshot review caught a weak first race smoke test that accelerated during countdown; it was strengthened to observe countdown, verify eight entrants, wait for GREEN, accelerate without a penalty, then return home. One intervening Chrome run stalled after its showroom screenshot and timed out clicking Free Drive; retain `output/startup-chrome-final/report.json` as a failure. No page/network error explained that stall, and a failure screenshot also timed out. Isolated corrected reruns pass in `output/startup-chrome-clean` and `output/startup-edge-clean`:
+
+| Browser / renderer | Menu ready | First drive click-to-motion |
+|---|---:|---:|
+| Chrome / WebGL2 | 5.478s | 5.068s |
+| Chrome / WebGPU | 5.483s | 7.503s |
+| Edge / WebGL2 | 5.863s | 5.119s |
+| Edge / WebGPU | 5.710s | 7.582s |
+
+All four corrected runs enter Free Drive, Northstar and a clean eight-car race launch, then return to the menu; none has page errors or failed/external requests. WebGPU reports the browser warning that `powerPreference` is ignored on Windows. Each transfers 11,011,087 bytes through these flows; JS heap samples 139–205MB are not whole-browser memory. This is a race-start smoke check, not a new full-race/weekend acceptance run. Opened actual final production gameplay/race/course screenshots. Strict production build, all 90 tests and whitespace checks pass. The supplied unmodified web-game client also passes its final input sequence (`output/startup-final-input`): 3.710974m/s, four Lakeshore asphalt contacts, zero damage, no loading/error state or error artifact; screenshot and state inspected.
+
 ## Numerical driving checks
 
 The same four-second Velara acceleration input was run with displayed-frame cadences of 60, 30 and 20Hz while physics stayed at 120Hz. All three returned **23.060786 m/s**. Braking to below 1m/s took **33.08–33.10m**; the difference is the sampling boundary. Rendering was deliberately disabled during these numerical checks. This is not an FPS measurement.

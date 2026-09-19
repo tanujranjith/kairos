@@ -37,9 +37,10 @@ export class Kairos {
   private manual=false;private accumulator=0;private testAccumulator=0;private last=performance.now();private aiClock=0;private saveClock=0;private uiClock=0;private routeClock=0;private serviceTimer=0;private lastInput=neutralInput();private autoTestDriver=false;private lastDamage=0;private speedTraps=new Map<string,number>();private showcase:CarVisual[]=[];private physicsMs=0;private frameTimes:number[]=[];private overloads=0;private cameraClock=0;
   get vehicle(){return this.player;}
   async init(){
+    let phase=performance.now();const timed=(name:string)=>{const end=performance.now();performance.measure(`kairos:startup:${name}`,{start:phase,end});phase=end;};
     this.save=await this.store.open();const canvas=document.querySelector<HTMLCanvasElement>('#game')!;
-    this.renderer=await Renderer.create(canvas);this.physics=await PhysicsWorld.create(this.renderer.scene);this.world=new WorldRenderer(this.renderer.scene,this.physics);this.trafficSystem=new TrafficRuntime(this.physics,this.world,this.renderer.scene);
-    await loadCarAssets(this.renderer.scene,VEHICLES.map(v=>v.id));
+    timed('storage');this.renderer=await Renderer.create(canvas);timed('renderer');this.physics=await PhysicsWorld.create(this.renderer.scene);timed('physics');this.world=new WorldRenderer(this.renderer.scene,this.physics);this.trafficSystem=new TrafficRuntime(this.physics,this.world,this.renderer.scene);timed('world');
+    await loadCarAssets(this.renderer.scene,VEHICLES.map(v=>v.id));timed('vehicles');
     const spawn=this.freeSpawn();this.player=new Vehicle(this.physics,vehicleById(this.save.selected),'player',spawn,spawn.yaw,this.store.customization(this.save,this.save.selected));this.visual=createCar(this.renderer.scene,this.player.definition,this.player.setup);this.renderer.registerCar(this.visual);
     this.world.setEnabled(false);this.input=new Input(()=>this.save.settings);this.input.onAction=action=>this.handleInputAction(action);
     this.ui=new Interface(document.querySelector<HTMLElement>('#ui')!,()=>this.view(),(action,value)=>void this.action(action,value));this.store.onError=message=>this.toast(message,12);this.applySettings();this.ui.render();
@@ -52,7 +53,7 @@ export class Kairos {
     if(import.meta.env.DEV||import.meta.env.MODE==='test'){
       window.render_game_to_text=()=>JSON.stringify(this.snapshot());window.advanceTime=(ms)=>this.advanceTime(ms);window.kairos=this;
     }
-    document.querySelector('#loading')?.remove();if(this.store.error)this.toast(this.store.error,10);
+    timed('interface');document.querySelector('#loading')?.remove();if(this.store.error)this.toast(this.store.error,10);
     window.addEventListener('gamepaddisconnected',()=>{this.input.clear();if(this.screen==='drive')this.setScreen('pause');this.toast('Controller disconnected. Reconnect it or continue with the keyboard.',10);});
   }
   private freeSpawn(){return pointAt(ROADS.find(r=>r.id==='lakeshore')!,1790,2.1);}

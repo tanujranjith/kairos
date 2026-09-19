@@ -14,6 +14,12 @@
 
 Coordinates are meters, Y up, +Z forward at yaw zero, +X right. Time is seconds and angles are radians. Vehicle data uses kg, Nm, meters and SI simulation values; display converts speeds to mph/km/h. Catalog horsepower and claimed top-speed labels are tuning intent, not certified measured performance.
 
+## Production startup
+
+Vite groups Babylon/core and glTF loader modules into one hashed engine chunk; Kairos code remains separate. This avoids hundreds of tiny preload requests (particularly costly on HTTP/1.1) without removing shader helpers or lowering rendering quality. The engine chunk remains large; download, parse, device initialization and first-drive streaming still require independent measurement. All helper URLs stay local.
+
+Startup emits six bounded `performance.measure` entries named `kairos:startup:*` for storage, renderer, physics, world resources, vehicles and interface. These contain only elapsed timing, expose no game-control API and are available in production diagnostics. `scripts/profile-startup.mjs` captures CPU samples, requests, long tasks and pending failures. `scripts/verify-startup.mjs` repeats cold-cache 25Mbps/40ms UI-to-driving checks without development hooks, with optional installed-browser and race-entry checks. Menu readiness and input-to-motion are recorded separately; neither proves target-laptop frame pacing.
+
 ## Physics
 
 The application manually advances Havok at 120 Hz. Babylon's automatic physics step is disabled. Real-time catch-up is bounded to eight steps; hidden tabs pause and inputs are cleared. Rendering interpolates the preceding and current physical poses. Controlled-time testing bypasses the real-time accumulator and prevents double stepping.
