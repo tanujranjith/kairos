@@ -9,7 +9,7 @@ import { cellManifest,cellKey } from './cell-manifest';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData}
-export interface CellInstance {kind:'pine'|'oak'|'trunk'|'rock';position:V3;scale:V3;yaw:number}
+export interface CellInstance {kind:'pine'|'oak'|'trunk'|'oakTrunk'|'rock';position:V3;scale:V3;yaw:number}
 export interface CellSign {id:string;name:string;position:V3;yaw:number}
 export interface CellBlueprint {manifest:WorldCellManifest;meshes:CellMesh[];instances:CellInstance[];signs:CellSign[];bytes:number}
 const roadCells=new Map<string,{road:typeof ROADS[number];index:number}[]>();
@@ -51,7 +51,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       }
       roofs.box(x+w*.2,y+h+.35,z,2.1,1.0,2.4);roofs.box(x-w*.21,y+h+.35,z-l*.15,1.4,.7,1.7);
     }
-    else if(!circuit&&!industrial){const s=.65+random()*.72,yaw=random()*Math.PI;instances.push({kind:z>900||i%4===0?'pine':'oak',position:{x,y:y+8*s,z},scale:{x:s,y:s,z:s},yaw},{kind:'trunk',position:{x,y:y+6*s,z},scale:{x:s,y:s,z:s},yaw:0});if(i%5===0)instances.push({kind:'rock',position:{x:x+5,y:y+.5,z:z+3},scale:{x:s*1.5,y:s*.7,z:s},yaw});}
+    else if(!circuit&&!industrial){const s=.65+random()*.72,yaw=random()*Math.PI,pine=z>900||i%4===0;instances.push({kind:pine?'pine':'oak',position:{x,y:y+8*s,z},scale:{x:s,y:s,z:s},yaw},{kind:pine?'trunk':'oakTrunk',position:{x,y:y+6*s,z},scale:{x:s,y:s,z:s},yaw});if(i%5===0)instances.push({kind:'rock',position:{x:x+5,y:y+.5,z:z+3},scale:{x:s*1.5,y:s*.7,z:s},yaw});}
   }
   for(const landmark of LANDMARKS){if(Math.floor(landmark.x/CELL_SIZE)!==cx||Math.floor(landmark.z/CELL_SIZE)!==cz)continue;const n=nearestRoad(landmark.x,landmark.z),x=n.point.x+Math.cos(n.point.yaw)*(n.road.width*.5+7),z=n.point.z-Math.sin(n.point.yaw)*(n.road.width*.5+7),y=terrainHeight(x,z);
     if(landmark.type==='service'||landmark.type==='garage'){buildings.box(x,y,z,12,4,8);roofs.box(x,y+4,z,16,.25,12);for(const side of [-1,1]){windows.box(x+side*3.2,y+.5,z-4.03,4.5,2.8,.06);roofs.box(x+side*6.7,y,z-4.8,.16,4.2,.16);}roofs.box(x,y+3.4,z-4.1,12,.22,.3);}signs.push({id:landmark.id,name:landmark.name,position:{x,y,z},yaw:n.point.yaw});

@@ -4,6 +4,7 @@ import { Vector3, Quaternion, Color3 } from '@babylonjs/core';
 import { Renderer } from './render/renderer';
 import { WorldRenderer } from './render/world';
 import { createCar, type CarVisual } from './render/car';
+import { createLodCar } from './render/car-lod';
 import { loadCarAssets } from './render/car-assets';
 import { PhysicsWorld, Vehicle, FIXED_DT, neutralInput } from './sim/physics';
 import { RaceManager, insidePitLane } from './sim/race';
@@ -86,7 +87,7 @@ export class Kairos {
     this.startAudio();this.prepareDrive();this.mode=this.raceConfig.kind;this.world.clear();this.race.start(this.raceConfig,stage);const playerSlot=this.raceConfig.position-1,d=vehicleById(this.raceConfig.vehicleClass==='FORMULA'?'apex':'gtx');
     const grid=(slot:number)=>pointAt(CIRCUIT,CIRCUIT.length-18-Math.floor(slot/2)*14,(slot%2===0?-1:1)*3),p=grid(playerSlot);
     await this.world.prepare('racing',Array.from({length:this.raceConfig.entrants},(_,slot)=>grid(slot)));if(ticket!==this.loadingTicket)return;this.changeCar(d.id,p);
-    for(let i=1;i<this.raceConfig.entrants;i++){const slot=i-1>=playerSlot?i:i-1,spawn=grid(slot),vehicle=new Vehicle(this.physics,d,`racer-${i}`,spawn,spawn.yaw),visual=createCar(this.renderer.scene,d,{paint:['#ba5239','#65908f','#cdc9bb','#365a92','#dea658','#6b667d','#8cbaad'][i%7],wheels:'#9caaac',livery:1,brakeBias:.6,aero:1},true);this.renderer.registerCar(visual);this.opponents.push({vehicle,visual,input:neutralInput(),retired:false,stuck:0,pit:false,service:0});}
+    for(let i=1;i<this.raceConfig.entrants;i++){const slot=i-1>=playerSlot?i:i-1,spawn=grid(slot),vehicle=new Vehicle(this.physics,d,`racer-${i}`,spawn,spawn.yaw),visual=createLodCar(this.renderer.scene,d,{paint:['#ba5239','#65908f','#cdc9bb','#365a92','#dea658','#6b667d','#8cbaad'][i%7],wheels:'#9caaac',livery:1,brakeBias:.6,aero:1});this.renderer.registerCar(visual);this.opponents.push({vehicle,visual,input:neutralInput(),retired:false,stuck:0,pit:false,service:0});}
     this.setScreen('drive');this.toast(stage===0?'Aster International · Find your braking points.':stage===1?'Qualifying · Your fastest valid lap sets the grid.':'Race · Make the moment count.',5);
   },()=>this.startRace(stage));}
   private resetPlayer(){
@@ -168,8 +169,8 @@ export class Kairos {
     this.world.updateSignals(this.clock);
     this.world.setEnabled(!this.garage);if(!this.garage&&!this.transitioning)this.world.update(this.player.state.position,this.player.state.velocity,[...this.opponents,...this.traffic].map(o=>({id:o.vehicle.id,position:o.vehicle.state.position,velocity:o.vehicle.state.velocity})));this.world.setWetness(this.wetness);
     this.renderer.update(this.player,this.visual,this.save.settings,dt,this.garage,this.cameraClock,this.wetness,alpha);
-    for(const o of [...this.opponents,...this.traffic]){o.visual.root.setEnabled(!this.garage&&distance(o.vehicle.state.position,this.player.state.position)<650);o.visual.root.position.copyFrom(Vector3.Lerp(o.vehicle.previousPosition,o.vehicle.node.position,alpha));o.visual.root.rotationQuaternion=Quaternion.Slerp(o.vehicle.previousRotation,o.vehicle.node.rotationQuaternion!,alpha);o.visual.update(o.vehicle.state);}
-    this.showcase.forEach(c=>c.root.setEnabled(this.garage));this.renderer.render();this.audio.update(this.player.state,this.player.definition,this.lastInput.throttle,this.save.settings.volume,this.screen==='drive'&&!this.loading,this.save.settings.camera===2,this.wetness,this.save.settings.weather==='Rain');
+    for(const o of [...this.opponents,...this.traffic]){o.visual.root.setEnabled(!this.garage&&distance(o.vehicle.state.position,this.player.state.position)<650);o.visual.root.position.copyFrom(Vector3.Lerp(o.vehicle.previousPosition,o.vehicle.node.position,alpha));o.visual.root.rotationQuaternion=Quaternion.Slerp(o.vehicle.previousRotation,o.vehicle.node.rotationQuaternion!,alpha);o.visual.selectDetail?.(Vector3.Distance(o.visual.root.position,this.renderer.camera.position),this.save.settings.quality);o.visual.update(o.vehicle.state);this.renderer.registerCar(o.visual,o.vehicle.state.grounded);}
+    this.showcase.forEach(c=>c.root.setEnabled(this.garage));this.renderer.prepareReflections(this.visual,this.save.settings,this.garage,this.cameraClock);this.renderer.render();this.audio.update(this.player.state,this.player.definition,this.lastInput.throttle,this.save.settings.volume,this.screen==='drive'&&!this.loading,this.save.settings.camera===2,this.wetness,this.save.settings.weather==='Rain');
     if(this.player.state.damage>this.lastDamage){this.audio.impact((this.player.state.damage-this.lastDamage)*5);this.input.rumble((this.player.state.damage-this.lastDamage)*8);this.lastDamage=this.player.state.damage;}
     this.uiClock+=dt;if(this.uiClock>.1){this.uiClock=0;this.ui.update();}this.menuNavigation.update();this.loadingOverlay.update();
   }

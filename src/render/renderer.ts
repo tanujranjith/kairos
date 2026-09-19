@@ -6,15 +6,18 @@ import type { CarVisual } from './car';
 import { configureLocalResources, localShaderOptions } from './local-resources';
 import { lightingEnvironment } from './lighting-environment';
 import { surfaceTextures, noise } from './surface-textures';
+import { LocalReflections } from './local-reflections';
 
 export class Renderer {
   scene:Scene;camera:FreeCamera;sun:DirectionalLight;ambient:HemisphericLight;shadow:ShadowGenerator;sky:Mesh;sunDisc:Mesh;
   showroom:TransformNode;rendererName:string;lightsEnabled=true;private skyGradient:RawTexture;private shadowParts=new Set<Mesh>();private headlights:SpotLight[]=[];private cameraPosition=new Vector3();private look=new Vector3();private wasGarage=true;private rain:LinesMesh;private rainPositions:Float32Array;
   private outdoorEnvironment:ReturnType<typeof lightingEnvironment>;private studioEnvironment:ReturnType<typeof lightingEnvironment>;private pipeline:DefaultRenderingPipeline;private contactMaterial:StandardMaterial;private skyStamp='';private clouds=new Float32Array(512*128);
+  reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
     this.scene=new Scene(engine);const scene=this.scene;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
     scene.imageProcessingConfiguration.toneMappingEnabled=true;scene.imageProcessingConfiguration.toneMappingType=ImageProcessingConfiguration.TONEMAPPING_ACES;scene.imageProcessingConfiguration.exposure=1.1;scene.imageProcessingConfiguration.contrast=1.07;
+    this.reflections=new LocalReflections(scene);
     this.camera=new FreeCamera('driver-camera',new Vector3(0,2,-8),scene);this.camera.minZ=.08;this.camera.maxZ=9000;this.camera.fov=.80;this.camera.inputs.clear();
     this.ambient=new HemisphericLight('sky-light',new Vector3(0,1,0),scene);this.ambient.intensity=1.15;this.ambient.diffuse=new Color3(.8,.87,.98);this.ambient.groundColor=new Color3(.22,.20,.15);
     this.sun=new DirectionalLight('sun',new Vector3(.55,-.38,-.65),scene);this.sun.intensity=2.4;this.sun.diffuse=new Color3(1,.79,.52);this.sun.shadowMinZ=1;this.sun.shadowMaxZ=220;
@@ -22,12 +25,13 @@ export class Renderer {
     this.pipeline=new DefaultRenderingPipeline('kairos-photographic',true,scene,[this.camera]);this.pipeline.fxaaEnabled=true;this.pipeline.bloomThreshold=1.15;this.pipeline.bloomWeight=.12;this.pipeline.bloomKernel=32;this.pipeline.bloomScale=.5;
     this.outdoorEnvironment=lightingEnvironment(scene);this.studioEnvironment=lightingEnvironment(scene,true);scene.environmentTexture=this.outdoorEnvironment;
     const shadowTexture=new DynamicTexture('original-contact-occlusion',128,scene,true),sctx=shadowTexture.getContext(),gradient=sctx.createRadialGradient(64,64,12,64,64,62);gradient.addColorStop(0,'rgba(0,0,0,.58)');gradient.addColorStop(.55,'rgba(0,0,0,.30)');gradient.addColorStop(1,'rgba(0,0,0,0)');sctx.fillStyle=gradient;sctx.fillRect(0,0,128,128);shadowTexture.update();shadowTexture.hasAlpha=true;
-    this.contactMaterial=new StandardMaterial('contact-occlusion',scene);this.contactMaterial.diffuseTexture=shadowTexture;this.contactMaterial.useAlphaFromDiffuseTexture=true;this.contactMaterial.disableLighting=true;this.contactMaterial.emissiveColor=Color3.White();this.contactMaterial.zOffset=-1;this.contactMaterial.backFaceCulling=false;
+    this.contactMaterial=new StandardMaterial('contact-occlusion',scene);this.contactMaterial.diffuseTexture=shadowTexture;this.contactMaterial.emissiveTexture=shadowTexture;this.contactMaterial.useAlphaFromDiffuseTexture=true;this.contactMaterial.disableLighting=true;this.contactMaterial.emissiveColor=Color3.White();this.contactMaterial.zOffset=-1;this.contactMaterial.backFaceCulling=false;
     this.sky=MeshBuilder.CreateSphere('atmosphere',{diameter:13000,segments:24,sideOrientation:Mesh.BACKSIDE},scene);this.sky.infiniteDistance=true;this.sky.isPickable=false;this.sky.applyFog=false;const skyMat=new StandardMaterial('sky-gradient',scene);skyMat.disableLighting=true;skyMat.emissiveColor=Color3.White();skyMat.backFaceCulling=false;this.sky.material=skyMat;const pos=this.sky.getVerticesData(VertexBuffer.PositionKind)!,colors:number[]=[];for(let i=0;i<pos.length;i+=3){const h=clamp(pos[i+1]/3500,0,1);const bottom=new Color3(.96,.77,.50),top=new Color3(.22,.43,.63),c=Color3.Lerp(bottom,top,Math.pow(h,.6));colors.push(c.r,c.g,c.b,1);}this.sky.setVerticesData(VertexBuffer.ColorKind,colors,true);
     for(let y=0;y<128;y++)for(let x=0;x<512;x++){const u=x/512,v=y/128;this.clouds[y*512+x]=noise(u*16,v*8,16)*.58+noise(u*32,v*16,32)*.27+noise(u*64,v*32,64)*.15;}
     this.skyGradient=RawTexture.CreateRGBATexture(new Uint8Array(512*128*4),512,128,scene,false,false,Texture.BILINEAR_SAMPLINGMODE);skyMat.emissiveColor=Color3.Black();skyMat.emissiveTexture=this.skyGradient;this.sky.useVertexColors=false;const skyUvs:number[]=[],sphereUvs=this.sky.getVerticesData(VertexBuffer.UVKind)!;for(let i=0;i<pos.length;i+=3)skyUvs.push(sphereUvs[i/3*2],clamp(pos[i+1]/6500,0,1));this.sky.setVerticesData(VertexBuffer.UVKind,skyUvs);
     this.sunDisc=MeshBuilder.CreateSphere('sun-disc',{diameter:100,segments:16},scene);this.sunDisc.isPickable=false;this.sunDisc.applyFog=false;const sm=new StandardMaterial('sun-glow',scene);sm.disableLighting=true;sm.emissiveColor=new Color3(1,.90,.61);this.sunDisc.material=sm;
     this.showroom=this.makeShowroom();
+    for(const [name,p,power,color]of [['studio-key',new Vector3(-4,-994,4),900,new Color3(1,.86,.70)],['studio-fill',new Vector3(4,-996,-3),480,new Color3(.68,.82,1)]] as const){const lamp=new SpotLight(name,p,new Vector3(0,-999,0).subtract(p).normalize(),1.8,1,scene);lamp.diffuse=color;lamp.falloffType=Light.FALLOFF_GLTF;lamp.intensity=power;lamp.range=22;this.studioLights.push(lamp);}
     for(const side of [-1,1]){const light=new SpotLight(`headlamp-${side}`,Vector3.Zero(),Vector3.Forward(),.85,3,scene);light.diffuse=new Color3(.82,.91,1);light.falloffType=Light.FALLOFF_GLTF;light.intensity=0;light.range=100;this.headlights.push(light);}
     this.rain=MeshBuilder.CreateLineSystem('rain',{lines:Array.from({length:250},()=>[new Vector3(),new Vector3(0,-1,0)]),updatable:true},scene);this.rain.color=new Color3(.7,.78,.85);this.rain.isPickable=false;this.rain.setEnabled(false);this.rainPositions=new Float32Array(1500);
     window.addEventListener('resize',()=>this.engine.resize());
@@ -61,7 +65,17 @@ export class Renderer {
     const signtex=new DynamicTexture('showroom-wordmark',{width:1024,height:256},this.scene,false);signtex.drawText('K A I R O S',null,158,'300 100px sans-serif','#dce5e4','transparent',true);const signMat=new StandardMaterial('wordmark-material',this.scene);signMat.diffuseTexture=signtex;signMat.diffuseTexture.hasAlpha=true;signMat.useAlphaFromDiffuseTexture=true;signMat.emissiveColor=new Color3(.45,.45,.45);const sign=MeshBuilder.CreatePlane('showroom-wordmark',{width:10,height:2.5,sideOrientation:Mesh.DOUBLESIDE},this.scene);sign.position.set(0,4,-12);sign.rotation.y=Math.PI;sign.material=signMat;sign.parent=root;
     root.position.y=-1000;return root;
   }
-  registerCar(car:CarVisual){const contact=MeshBuilder.CreateGround('car-contact-shadow',{width:2.55,height:5.2},this.scene);contact.parent=car.root;contact.position.y=-.63;contact.material=this.contactMaterial;contact.isPickable=false;for(const part of car.parts){this.shadowParts.add(part);part.onDisposeObservable.addOnce(()=>{this.shadowParts.delete(part);this.shadow.removeShadowCaster(part);});}}
+  registerCar(car:CarVisual,grounded=true){
+    const existing=this.registeredCars.get(car);if(existing){existing.isVisible=grounded;return;}
+    car.root.metadata={...car.root.metadata,kairosCar:true};
+    const patches:Mesh[]=[];
+    const patch=(width:number,height:number,x:number,z:number,y:number)=>{const mesh=MeshBuilder.CreateGround('contact-patch',{width,height},this.scene);mesh.position.set(x,y,z);mesh.material=this.contactMaterial;patches.push(mesh);};
+    patch(2.55,5.2,0,0,-car.groundOffset+.006);
+    for(const wheel of car.wheels)patch(.65,1.05,wheel.position.x,wheel.position.z,-car.groundOffset+.007);
+    const contact=Mesh.MergeMeshes(patches,true,true)!;contact.name='car-contact-shadow';contact.parent=car.root;contact.material=this.contactMaterial;contact.isPickable=false;contact.isVisible=grounded;this.registeredCars.set(car,contact);
+    for(const part of car.parts){this.shadowParts.add(part);part.onDisposeObservable.addOnce(()=>{this.shadowParts.delete(part);this.shadow.removeShadowCaster(part);});}
+  }
+  prepareReflections(car:CarVisual,settings:Settings,garage:boolean,clock:number){this.reflections.update({position:car.root.position,garage,clock,stamp:`${Math.round(settings.time*4)}:${settings.weather}`},settings.quality,[car.paint,car.glass]);}
   applySettings(settings:Settings){const profiles={Low:[1280,720,1024],Medium:[1600,900,1536],High:[1920,1080,2048],Ultra:[2560,1440,4096]},profile=profiles[settings.quality],scale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(scale/settings.resolution);this.shadow.getShadowMap()?.resize(profile[2]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}
   update(vehicle:Vehicle,visual:CarVisual,settings:Settings,dt:number,garage:boolean,clock:number,wetness:number,alpha=1){
     const time=settings.time;const day=clamp(Math.sin((time-5.5)/25*Math.PI*2)*1.5+.38,.035,1),golden=1-clamp(Math.abs(time-17.5)/3,0,1);const overcast=settings.weather==='Rain'?.6:settings.weather==='Overcast'?.4:settings.weather==='Cloudy'?.18:0;
@@ -74,9 +88,11 @@ export class Renderer {
       }this.skyGradient.update(pixels);
     }this.sunDisc.position.copyFrom(this.camera.position).addInPlace(this.sun.direction.scale(-5000));this.sunDisc.setEnabled(day>.05&&overcast<.5);
     this.showroom.setEnabled(garage);
+    this.registerCar(visual,garage||vehicle.state.grounded);
+    this.studioLights.forEach(light=>light.setEnabled(garage));this.headlights.forEach(light=>light.setEnabled(!garage));
     if(garage){visual.glass.alpha=1;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_OPAQUE;}
     this.headlights.forEach((light,i)=>{const f=new Vector3(Math.sin(vehicle.state.yaw),-.08,Math.cos(vehicle.state.yaw)),r=new Vector3(Math.cos(vehicle.state.yaw),0,-Math.sin(vehicle.state.yaw));light.position.copyFrom(vehicle.node.position).addInPlace(f.scale(vehicle.definition.length*.48)).addInPlace(r.scale(i===0?-.55:.55));light.direction.copyFrom(f);light.intensity=!garage&&this.lightsEnabled?(day<.28?650:1):0;});
-    if(garage){const a=-.7+Math.sin(clock*.07)*.12;visual.root.position.set(0,-999.26,0);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(.2,0,0);this.camera.position.set(Math.sin(a)*8.5,-997.50,Math.cos(a)*8.5);this.camera.setTarget(new Vector3(0,-999.05,0));this.camera.fov=.59;this.sun.position.set(30,-960,30);this.scene.fogDensity=.0003;this.wasGarage=true;}
+    if(garage){const a=-.7+Math.sin(clock*.07)*.12;visual.wheels.forEach(w=>{w.position.y=-.32;w.rotation.set(0,0,0);w.rotationQuaternion=null;});visual.root.position.set(0,-1000+.105+.32+vehicle.definition.wheelRadius,0);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(.2,0,0);this.camera.position.set(Math.sin(a)*8.5,-997.50,Math.cos(a)*8.5);this.camera.setTarget(new Vector3(0,-999.05,0));this.camera.fov=.59;this.sun.position.copyFrom(visual.root.position).subtractInPlace(this.sun.direction.scale(90));this.scene.fogDensity=.0003;this.wasGarage=true;}
     else{
       visual.root.position.copyFrom(Vector3.Lerp(vehicle.previousPosition,vehicle.node.position,alpha));visual.root.rotationQuaternion=Quaternion.Slerp(vehicle.previousRotation,vehicle.node.rotationQuaternion!,alpha);visual.update(vehicle.state);
       const p=visual.root.position,yaw=vehicle.state.yaw,forward=new Vector3(Math.sin(yaw),0,Math.cos(yaw)),right=new Vector3(Math.cos(yaw),0,-Math.sin(yaw));const mode=settings.camera;

@@ -91,6 +91,26 @@ The sequential production cold-browser-cache checks with 25Mbps/40ms emulation r
 - Installed Edge passes WebGPU and WebGL2: four wheel contacts and 12.101111m/s after two seconds, no page/external-request errors. The supplied skill client was run and its actual gameplay screenshots/state inspected; supplemental full-UI captures cover showroom, day, city, wet night and race grid. Reports are in `output/graphics-streaming`, `output/graphics-upgrade-input`, `output/worker-recovery` and `output/browsers`.
 - Production cold-cache **25Mbps / 40ms** emulation reached the start screen in **5.132s / 4.968s**, transferring **5,959,312 bytes** through Free Drive and handling entry. JS heap samples were **118,480,664 / 110,969,436 bytes**. No page/failed/external requests; development hooks absent. This remains localhost/Chromium/SwiftShader evidence, not laptop, GPU/process-memory or HTTPS certification. New car assets are larger and normal-mapped/alpha foliage adds rendering cost: the 30FPS Low target is not yet measured on the target machine.
 
+## September 19 — local reflections, LOD and second foliage pass
+
+The rendering audit uses installed Edge, forced WebGL2, **NVIDIA GeForce RTX 3060 / ANGLE D3D11**, Low, 1280×720. It samples 66 controlled 30Hz steps per scene, including reflection capture frames. These are short development-host draw-submission measurements, not a real-time route, integrated-laptop FPS proof or GPU-memory measurement. `SceneInstrumentation` counts draw calls including render targets; active-index counts below also include extra submissions (the line-system count is rounded).
+
+| Sample | Maximum draw calls | Maximum submitted triangles | Median scene submission time |
+|---|---:|---:|---:|
+| Showroom | 126 | 146,870 | 2.9ms |
+| Lakeshore with traffic | 235 | 371,700 | 6.9ms |
+| City with traffic | 189 | 374,773 | 5.2ms |
+| Wet night | 190 | 374,780 | 6.2ms |
+| Eight-car grid / countdown | 285 | 426,870 | 4.9ms |
+
+An initial version exceeded the budgets: 333 draw calls in lakeshore traffic and 607,350 submitted triangles at the grid. Tuning the Low visual-detail threshold and capture budget reduced geometry; spreading double-buffered reflections over six displayed frames removed the six-face draw spike. Both raw reports remain in `output/render-cost/`. No hidden physics/AI grip or power changes were used. Submission time includes driver synchronization and is not isolated CPU work or GPU time.
+
+The six GLB rigs and six livery rigs pass repeated detail switches with stable roots, four animated pivots, matching paint and no mesh/material/node growth after disposal. Typical distant geometry falls from approximately 40–46k triangles to 13–16k. Reflection checks cover actual first-frame showroom architecture, feedback exclusion, cached idle frames, one face per displayed frame, retention of the old complete cube until replacement, and repeated preset resource disposal. A readback/disposed-texture race and an initial sky-only capture were found and fixed; those earlier checks are not counted as final passes. Reports/screenshots: `output/render-detail/`.
+
+74 pure tests pass. Installed Edge passes WebGPU and WebGL2 with four wheel contacts and 12.101111m/s after two seconds, no page errors or external requests. Six-car physics, 60/30/20Hz cadence/braking, general interaction and all eleven traffic regressions pass unchanged. The supplied web-game input client was rerun and its actual screenshots/state inspected after both foliage passes. Three streaming cycles settle at identical city/mountain/lakeshore resource counts of 468/54/33, 326/53/32 and 343/54/33 meshes/materials/textures. Loading freeze, failed-generation retry, race reservation and return-home cleanup pass. These short checks still do not establish 30-minute endurance.
+
+The final production cold-cache 25Mbps/40ms smoke passes both requested renderer paths and Free Drive/handling entry: **15.870s / 5.483s** readiness, **6,789,276 transferred bytes**, **73,653,112 / 127,555,448 bytes JS heap**, no page/failed/external requests, development hooks absent. Both LOD libraries are now in the startup payload. Readiness varied materially between runs; this is browser network emulation on the development host, not a target-laptop cold-start guarantee. The final supplied-client steering capture (`output/reflections-final-input`) shows four wheel contacts, 3.711m/s, zero damage and no loading/error state.
+
 ## Remaining acceptance work
 
 Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; p95 frame time; separate physics/AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); real-time 30-minute endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. No target-budget pass is claimed for these unmeasured items.

@@ -4,7 +4,8 @@ import { VEHICLES } from '../content/vehicles';
 import { inHandlingCourse } from '../content/handling-course';
 import { distance } from '../core/math';
 import type { InputFrame, V3 } from '../core/types';
-import { createCar, type CarVisual } from '../render/car';
+import { type CarVisual } from '../render/car';
+import { createLodCar } from '../render/car-lod';
 import type { WorldRenderer } from '../render/world';
 import { PhysicsWorld, Vehicle, neutralInput } from '../sim/physics';
 import { samplePath } from '../sim/lane-graph';
@@ -45,7 +46,7 @@ export class TrafficRuntime {
     if(actor.physical)return;
     const path=TRAFFIC_GRAPH.paths.get(actor.agent.pathId)!,sample=samplePath(path,actor.agent.progress),p={...sample,x:actor.observation.position.x,z:actor.observation.position.z,yaw:actor.observation.yaw},def=VEHICLES[[0,2,3][actor.agent.index%3]];
     if(!this.world.readyAround(p)){actor.pendingPromotion=true;this.world.requestAround(p);return;}actor.pendingPromotion=false;
-    const vehicle=new Vehicle(this.physics,def,actor.agent.id,p,p.yaw),visual=createCar(this.scene,def,{paint:['#bac7c4','#9bafbc','#936951','#d9d3c2','#425762'][actor.agent.index%5],wheels:'#82929c',livery:0,brakeBias:.6,aero:1},true);
+    const vehicle=new Vehicle(this.physics,def,actor.agent.id,p,p.yaw),visual=createLodCar(this.scene,def,{paint:['#bac7c4','#9bafbc','#936951','#d9d3c2','#425762'][actor.agent.index%5],wheels:'#82929c',livery:0,brakeBias:.6,aero:1});
     const speed=actor.observation.speed;vehicle.body.setLinearVelocity(new Vector3(Math.sin(p.yaw)*speed,0,Math.cos(p.yaw)*speed));
     vehicle.state.speed=speed;vehicle.state.wheels.forEach(w=>w.omega=speed/def.wheelRadius);
     actor.physical={vehicle,visual,input:neutralInput(),agent:actor.agent};this.promotions++;this.peakPhysical=Math.max(this.peakPhysical,this.cars.length);

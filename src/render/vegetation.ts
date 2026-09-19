@@ -1,4 +1,4 @@
-import { Mesh, MeshBuilder, VertexData, Vector3, Color3, PBRMaterial, DynamicTexture, Texture, type Scene } from '@babylonjs/core';
+import { Mesh, MeshBuilder, VertexData, Vector3, Quaternion, Color3, PBRMaterial, DynamicTexture, Texture, type Scene } from '@babylonjs/core';
 import { rng } from '../core/math';
 import { surfaceTextures } from './surface-textures';
 
@@ -13,7 +13,7 @@ export function createVegetation(scene:Scene){
     else for(let j=0;j<14;j++){const t=j/14,nx=x+(ex-x)*t,ny=y+(ey-y)*t;for(const side of [-1,1]){const a=angle+side*.8,len=10+random()*13;ctx.strokeStyle=`rgb(${82+random()*36},${108+random()*45},${46+random()*31})`;ctx.lineWidth=2.7;ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(nx+Math.cos(a)*len,ny+Math.sin(a)*len);ctx.stroke();}}
   };
   branch(256,492,435,-Math.PI/2,0);atlas.update();atlas.hasAlpha=true;atlas.wrapU=atlas.wrapV=Texture.CLAMP_ADDRESSMODE;atlas.anisotropicFilteringLevel=4;
-  foliage.albedoTexture=atlas;foliage.albedoColor=Color3.White();foliage.emissiveColor=new Color3(.035,.05,.015);foliage.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHATEST;foliage.alphaCutOff=.28;foliage.backFaceCulling=false;foliage.twoSidedLighting=true;foliage.roughness=1;foliage.metallic=0;foliage.forceDepthWrite=true;
+  foliage.albedoTexture=atlas;foliage.useAlphaFromAlbedoTexture=true;foliage.albedoColor=Color3.White();foliage.emissiveColor=new Color3(.035,.05,.015);foliage.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHATEST;foliage.alphaCutOff=.40;foliage.backFaceCulling=false;foliage.twoSidedLighting=true;foliage.roughness=1;foliage.metallic=0;foliage.forceDepthWrite=true;
   const positions:number[]=[],indices:number[]=[],uvs:number[]=[],colors:number[]=[],normals:number[]=[];
   const card=(center:Vector3,right:Vector3,up:Vector3,tint:number)=>{
     const first=positions.length/3;
@@ -33,16 +33,31 @@ export function createVegetation(scene:Scene){
   VertexData.ComputeNormals(positions,indices,normals);const tree=new Mesh('fir-source',scene),data=new VertexData();Object.assign(data,{positions,indices,uvs,normals,colors});data.applyToMesh(tree);tree.material=foliage;tree.isVisible=false;tree.receiveShadows=true;
   const bark=new PBRMaterial('fir-bark',scene),maps=surfaceTextures(scene,'bark');bark.albedoTexture=maps.albedo;bark.bumpTexture=maps.normal;bark.roughness=1;bark.metallic=0;
   const trunk=MeshBuilder.CreateCylinder('fir-trunk-source',{diameterTop:.10,diameterBottom:.58,height:12,tessellation:9},scene);trunk.position.y=0;trunk.material=bark;trunk.isVisible=false;
-  const leaves=new DynamicTexture('original-oak-leaves',256,scene,true),leafctx=leaves.getContext() as CanvasRenderingContext2D;leafctx.clearRect(0,0,256,256);
-  for(let i=0;i<2800;i++){const a=random()*Math.PI*2,r=Math.sqrt(random()),x=128+Math.cos(a)*r*116,y=128+Math.sin(a)*r*117,light=.66+random()*.45+(1-y/256)*.18;leafctx.fillStyle=`rgb(${Math.round(115*light)},${Math.round(136*light)},${Math.round(66*light)})`;leafctx.beginPath();leafctx.ellipse(x,y,2+random()*4,1.5+random()*2,random()*Math.PI,0,Math.PI*2);leafctx.fill();}leaves.update();leaves.hasAlpha=true;
+  const leaves=new DynamicTexture('original-oak-leaves',512,scene,true),leafctx=leaves.getContext() as CanvasRenderingContext2D;leafctx.clearRect(0,0,512,512);
+  // Irregular branch sprays leave actual sky holes and ragged edges, rather than solid circular cards.
+  for(let spray=0;spray<19;spray++){
+    const a=spray*2.399,r=Math.sqrt(random())*169,cx=256+Math.cos(a)*r,cy=249+Math.sin(a)*r*.91;
+    leafctx.strokeStyle='#5b5933';leafctx.lineWidth=2;leafctx.beginPath();leafctx.moveTo(256,473);leafctx.quadraticCurveTo(239,300,cx,cy);leafctx.stroke();
+    for(let i=0;i<77;i++){
+      const angle=random()*Math.PI*2,rad=Math.sqrt(random())*(39+random()*31),x=cx+Math.cos(angle)*rad,y=cy+Math.sin(angle)*rad*.76,light=.65+random()*.51+(1-y/512)*.16;
+      leafctx.fillStyle=`rgb(${Math.round(86*light)},${Math.round(108*light)},${Math.round(44*light)})`;
+      leafctx.beginPath();leafctx.ellipse(x,y,3+random()*4,1.6+random()*2.8,angle,0,Math.PI*2);leafctx.fill();
+    }
+  }
+  leaves.update();leaves.hasAlpha=true;leaves.wrapU=leaves.wrapV=Texture.CLAMP_ADDRESSMODE;leaves.anisotropicFilteringLevel=4;
   const oakMaterial=foliage.clone('valley-oak-leaves');oakMaterial.albedoTexture=leaves;oakMaterial.emissiveColor=new Color3(.028,.036,.009);
   const oak=new Mesh('oak-source',scene),op:number[]=[],oi:number[]=[],ou:number[]=[],on:number[]=[],oc:number[]=[];
-  for(let cluster=0;cluster<13;cluster++){
-    const a=cluster*2.399,r=cluster===12?0:2.1+random()*.8,c=new Vector3(Math.sin(a)*r,-1+random()*3.2+(cluster===12?2:0),Math.cos(a)*r),width=3.7+random(),height=3+random();
-    for(let plane=0;plane<3;plane++){const angle=plane*Math.PI/3+a,right=new Vector3(Math.cos(angle),0,Math.sin(angle)),first=op.length/3;
-      for(const [u,v]of [[0,0],[1,0],[0,1],[1,1]]){const p=c.add(right.scale((u-.5)*width)).add(new Vector3(0,(v-.5)*height,0)),n=p.subtract(new Vector3(0,-1,0)).normalize();op.push(p.x,p.y,p.z);ou.push(u,v);on.push(n.x,n.y,n.z);const tint=.78+cluster*.016;oc.push(tint,tint,tint,1);}oi.push(first,first+1,first+2,first+1,first+3,first+2);
+  for(let cluster=0;cluster<25;cluster++){
+    const a=cluster*2.399,r=cluster>20?1:2.0+random()*1.7,c=new Vector3(Math.sin(a)*r,-1.4+random()*3.7+(cluster>20?1.4:0),Math.cos(a)*r),width=2.9+random()*1.4,height=2.6+random()*1.2;
+    for(let plane=0;plane<3;plane++){const angle=plane*Math.PI/3+a,right=new Vector3(Math.cos(angle),0,Math.sin(angle)),up=new Vector3(Math.sin(angle)*.24,1,Math.cos(angle)*.24),first=op.length/3;
+      for(const [u,v]of [[0,0],[1,0],[0,1],[1,1]]){const p=c.add(right.scale((u-.5)*width)).add(up.scale((v-.5)*height)),n=p.subtract(new Vector3(0,-2,0)).normalize();op.push(p.x,p.y,p.z);ou.push(u,v);on.push(n.x,n.y,n.z);const tint=.82+random()*.16;oc.push(tint,tint,tint,1);}oi.push(first,first+1,first+2,first+1,first+3,first+2);
     }
   }
   const od=new VertexData();Object.assign(od,{positions:op,indices:oi,uvs:ou,normals:on,colors:oc});od.applyToMesh(oak);oak.material=oakMaterial;oak.isVisible=false;oak.receiveShadows=true;
-  return {tree,oak,trunk,foliage,bark};
+  const branches:Mesh[]=[];
+  const limb=(from:Vector3,to:Vector3,diameter:number)=>{const direction=to.subtract(from),mesh=MeshBuilder.CreateCylinder('oak-limb',{height:direction.length(),diameterBottom:diameter,diameterTop:diameter*.34,tessellation:6},scene);mesh.position.copyFrom(Vector3.Center(from,to));mesh.rotationQuaternion=Quaternion.Identity();Quaternion.FromUnitVectorsToRef(Vector3.Up(),direction.normalize(),mesh.rotationQuaternion);mesh.material=bark;branches.push(mesh);};
+  limb(new Vector3(0,-6,0),new Vector3(.16,1.5,.1),.60);
+  for(let i=0;i<7;i++){const a=i*2.399,start=new Vector3(0,-2.7+i*.4,0),end=new Vector3(Math.sin(a)*(2.7+random()),1+random()*1.6,Math.cos(a)*(2.7+random()));limb(start,end,.23);limb(Vector3.Lerp(start,end,.65),end.add(new Vector3(Math.cos(a),1.2,-Math.sin(a))),.105);}
+  const oakTrunk=Mesh.MergeMeshes(branches,true,true)!;oakTrunk.name='oak-trunk-source';oakTrunk.material=bark;oakTrunk.isVisible=false;
+  return {tree,oak,trunk,oakTrunk,foliage,bark};
 }
