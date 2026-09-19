@@ -111,6 +111,28 @@ The six GLB rigs and six livery rigs pass repeated detail switches with stable r
 
 The final production cold-cache 25Mbps/40ms smoke passes both requested renderer paths and Free Drive/handling entry: **15.870s / 5.483s** readiness, **6,789,276 transferred bytes**, **73,653,112 / 127,555,448 bytes JS heap**, no page/failed/external requests, development hooks absent. Both LOD libraries are now in the startup payload. Readiness varied materially between runs; this is browser network emulation on the development host, not a target-laptop cold-start guarantee. The final supplied-client steering capture (`output/reflections-final-input`) shows four wheel contacts, 3.711m/s, zero damage and no loading/error state.
 
-## Remaining acceptance work
+## September 19 — coachwork, gallery and environment refinement
+
+Final build and strict check pass; **77 tests** cover the existing systems plus body/roof normals, scale-safe camera mounts and deterministic grass. Six GLB/livery pairs retain four pivots, customization and stable resource disposal. Five camera views, all six car selections, livery variants, animated water and an intentionally blocked HDR request pass browser checks. The optional photo failure preserves the generated gallery and grounded Free Drive. Actual screenshots were opened and inspected; a reversed-surface bug and cameras positioned at/inside the new roof/hood were corrected before the final checks.
+
+All six acceleration traces and 60/30/20Hz cadence/braking results match the previous checkpoint: Velara 23.060786m/s after the acceleration interval, 33.08–33.10m braking. Menu/control/save interactions pass. Three city/mountain/lakeshore streaming cycles settle identically at **454/66/41**, **324/65/40**, and **336/66/41** scene meshes/materials/textures. Delayed/failed collisions, retry without replay, race reservation and return-home disposal pass; this still is not 30-minute endurance.
+
+**Installed Chrome and Edge both pass WebGPU and forced WebGL2**: 12.101111m/s, four contacts, no page errors or external requests in all four runs. The previous installed-Chrome launch limitation did not recur in this run. Reports: `output/browsers`.
+
+The final submission audit uses installed Edge / RTX 3060 / ANGLE D3D11, Low 1280×720, the same 66 controlled steps per sample. It includes the gallery mirror and local capture passes. These are development-host submissions, not integrated-GPU FPS, isolated CPU/GPU timings or process memory.
+
+| Sample | Maximum draw calls | Maximum submitted triangles | Median scene submission |
+|---|---:|---:|---:|
+| Showroom | 162 | 164,246 | 4.2ms |
+| Lakeshore traffic | 235 | 348,784 | 7.2ms |
+| City traffic | 188 | 351,651 | 6.7ms |
+| Wet night | 189 | 351,658 | 6.8ms |
+| Eight-car grid | 277 | 351,332 | 4.4ms |
+
+The gallery reflection adds work to menus; simplified wheel rings and the new body topology reduce race geometry versus the prior 426,870-triangle grid sample. The photographic `.env` adds 4,726,025 bytes to initial content. Its original HDR is retained outside the production directory.
+
+Final production cold-cache **25Mbps/40ms browser emulation** reached the start screen in **7.874s / 7.855s**, transferring **11,140,653 bytes** through Free Drive and handling-course entry. JS heap samples were **83,063,364 / 134,852,456 bytes**; no page errors, failed/external requests or exposed development hooks. This is localhost/Chromium/SwiftShader, not actual target-laptop or HTTPS certification. The supplied web-game steering screenshot/state (`output/art-final-input`) was opened: four contacts, 3.711m/s, zero damage and no loading/error state.
+
+## Outstanding hardware and deployment acceptance
 
 Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; p95 frame time; separate physics/AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); real-time 30-minute endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. No target-budget pass is claimed for these unmeasured items.

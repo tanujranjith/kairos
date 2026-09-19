@@ -57,8 +57,9 @@ export class LocalReflections {
     const position=new Vector3(sample.position.x,sample.position.y+.45,sample.position.z);
     const distance=(mesh:AbstractMesh)=>{mesh.computeWorldMatrix();const box=mesh.getBoundingInfo().boundingBox;return Math.hypot(Math.max(box.minimumWorld.x-position.x,0,position.x-box.maximumWorld.x),Math.max(box.minimumWorld.y-position.y,0,position.y-box.maximumWorld.y),Math.max(box.minimumWorld.z-position.z,0,position.z-box.maximumWorld.z));};
     const excluded=(mesh:AbstractMesh)=>{let node:TransformNode|null=mesh;while(node){if(node.metadata?.kairosCar)return true;node=node.parent as TransformNode|null;}return false;};
-    const candidates=this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.visibility>0&&mesh.getTotalIndices()>0&&!excluded(mesh)&&mesh.name!=='rain'&&!/floor-joint|floor-inlay/.test(mesh.name)&&(mesh.infiniteDistance||distance(mesh)<100));
-    candidates.sort((a,b)=>(a.infiniteDistance?-1:distance(a))-(b.infiniteDistance?-1:distance(b)));
+    const background=(mesh:AbstractMesh)=>mesh.infiniteDistance||mesh.metadata?.environmentBackground;
+    const candidates=this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.visibility>0&&mesh.getTotalIndices()>0&&!excluded(mesh)&&mesh.name!=='rain'&&!/floor-joint|floor-inlay/.test(mesh.name)&&(background(mesh)||distance(mesh)<100));
+    candidates.sort((a,b)=>(background(a)?-1:distance(a))-(background(b)?-1:distance(b)));
     const list:AbstractMesh[]=[];let triangles=0;
     for(const mesh of candidates){const cost=mesh.getTotalIndices()/3*Math.max(1,mesh.hasThinInstances?(mesh as import('@babylonjs/core').Mesh).thinInstanceCount:1);if(list.length>=profile.meshes||triangles+cost>profile.triangles)continue;list.push(mesh);triangles+=cost;}
     // Late-arriving scenery should replace an early, mostly sky-only capture.

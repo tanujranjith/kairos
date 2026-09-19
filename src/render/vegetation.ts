@@ -59,5 +59,10 @@ export function createVegetation(scene:Scene){
   limb(new Vector3(0,-6,0),new Vector3(.16,1.5,.1),.60);
   for(let i=0;i<7;i++){const a=i*2.399,start=new Vector3(0,-2.7+i*.4,0),end=new Vector3(Math.sin(a)*(2.7+random()),1+random()*1.6,Math.cos(a)*(2.7+random()));limb(start,end,.23);limb(Vector3.Lerp(start,end,.65),end.add(new Vector3(Math.cos(a),1.2,-Math.sin(a))),.105);}
   const oakTrunk=Mesh.MergeMeshes(branches,true,true)!;oakTrunk.name='oak-trunk-source';oakTrunk.material=bark;oakTrunk.isVisible=false;
-  return {tree,oak,trunk,oakTrunk,foliage,bark};
+  const grassTexture=new DynamicTexture('original-meadow-grass',256,scene,true),gc=grassTexture.getContext() as CanvasRenderingContext2D;gc.clearRect(0,0,256,256);
+  for(let i=0;i<125;i++){const x=20+random()*216,top=25+random()*170,lean=(random()-.5)*85;gc.strokeStyle=`rgb(${92+random()*52},${101+random()*43},${48+random()*31})`;gc.lineWidth=1+random()*2.5;gc.beginPath();gc.moveTo(x,255);gc.quadraticCurveTo(x+lean*.3,top+65,x+lean,top);gc.stroke();if(i%8===0){gc.strokeStyle='#a89e6d';gc.lineWidth=2;for(let k=0;k<5;k++){gc.beginPath();gc.moveTo(x+lean,top+k*4);gc.lineTo(x+lean+(k%2?4:-4),top+k*4-5);gc.stroke();}}}
+  grassTexture.update();grassTexture.hasAlpha=true;grassTexture.wrapU=grassTexture.wrapV=Texture.CLAMP_ADDRESSMODE;
+  const grassMat=foliage.clone('meadow-grass');grassMat.albedoTexture=grassTexture;grassMat.emissiveColor.set(.03,.035,.01);grassMat.alphaCutOff=.42;
+  const grassCards:Mesh[]=[];for(let i=0;i<3;i++){const card=MeshBuilder.CreatePlane('grass-card',{width:2.7,height:.65,sideOrientation:Mesh.DOUBLESIDE},scene);card.position.y=.325;card.rotation.y=i*Math.PI/3;card.material=grassMat;grassCards.push(card);}const grass=Mesh.MergeMeshes(grassCards,true,true)!;grass.name='grass-source';grass.isVisible=false;
+  return {tree,oak,trunk,oakTrunk,grass,foliage,bark};
 }

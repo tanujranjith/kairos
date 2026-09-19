@@ -5,14 +5,17 @@ import type { Vehicle } from '../sim/physics';
 import type { CarVisual } from './car';
 import { configureLocalResources, localShaderOptions } from './local-resources';
 import { lightingEnvironment } from './lighting-environment';
-import { surfaceTextures, noise } from './surface-textures';
+import { noise } from './surface-textures';
 import { LocalReflections } from './local-reflections';
+import { createShowroom } from './showroom';
+import { cameraMounts } from './camera-mounts';
+import type { MirrorTexture,BaseTexture } from '@babylonjs/core';
 
 export class Renderer {
   scene:Scene;camera:FreeCamera;sun:DirectionalLight;ambient:HemisphericLight;shadow:ShadowGenerator;sky:Mesh;sunDisc:Mesh;
   showroom:TransformNode;rendererName:string;lightsEnabled=true;private skyGradient:RawTexture;private shadowParts=new Set<Mesh>();private headlights:SpotLight[]=[];private cameraPosition=new Vector3();private look=new Vector3();private wasGarage=true;private rain:LinesMesh;private rainPositions:Float32Array;
   private outdoorEnvironment:ReturnType<typeof lightingEnvironment>;private studioEnvironment:ReturnType<typeof lightingEnvironment>;private pipeline:DefaultRenderingPipeline;private contactMaterial:StandardMaterial;private skyStamp='';private clouds=new Float32Array(512*128);
-  reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];
+  reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];private floorReflection:MirrorTexture;private galleryEnvironment:BaseTexture;
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
     this.scene=new Scene(engine);const scene=this.scene;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
@@ -30,7 +33,7 @@ export class Renderer {
     for(let y=0;y<128;y++)for(let x=0;x<512;x++){const u=x/512,v=y/128;this.clouds[y*512+x]=noise(u*16,v*8,16)*.58+noise(u*32,v*16,32)*.27+noise(u*64,v*32,64)*.15;}
     this.skyGradient=RawTexture.CreateRGBATexture(new Uint8Array(512*128*4),512,128,scene,false,false,Texture.BILINEAR_SAMPLINGMODE);skyMat.emissiveColor=Color3.Black();skyMat.emissiveTexture=this.skyGradient;this.sky.useVertexColors=false;const skyUvs:number[]=[],sphereUvs=this.sky.getVerticesData(VertexBuffer.UVKind)!;for(let i=0;i<pos.length;i+=3)skyUvs.push(sphereUvs[i/3*2],clamp(pos[i+1]/6500,0,1));this.sky.setVerticesData(VertexBuffer.UVKind,skyUvs);
     this.sunDisc=MeshBuilder.CreateSphere('sun-disc',{diameter:100,segments:16},scene);this.sunDisc.isPickable=false;this.sunDisc.applyFog=false;const sm=new StandardMaterial('sun-glow',scene);sm.disableLighting=true;sm.emissiveColor=new Color3(1,.90,.61);this.sunDisc.material=sm;
-    this.showroom=this.makeShowroom();
+    const gallery=createShowroom(scene);this.showroom=gallery.root;this.floorReflection=gallery.reflection;this.galleryEnvironment=gallery.environment;
     for(const [name,p,power,color]of [['studio-key',new Vector3(-4,-994,4),900,new Color3(1,.86,.70)],['studio-fill',new Vector3(4,-996,-3),480,new Color3(.68,.82,1)]] as const){const lamp=new SpotLight(name,p,new Vector3(0,-999,0).subtract(p).normalize(),1.8,1,scene);lamp.diffuse=color;lamp.falloffType=Light.FALLOFF_GLTF;lamp.intensity=power;lamp.range=22;this.studioLights.push(lamp);}
     for(const side of [-1,1]){const light=new SpotLight(`headlamp-${side}`,Vector3.Zero(),Vector3.Forward(),.85,3,scene);light.diffuse=new Color3(.82,.91,1);light.falloffType=Light.FALLOFF_GLTF;light.intensity=0;light.range=100;this.headlights.push(light);}
     this.rain=MeshBuilder.CreateLineSystem('rain',{lines:Array.from({length:250},()=>[new Vector3(),new Vector3(0,-1,0)]),updatable:true},scene);this.rain.color=new Color3(.7,.78,.85);this.rain.isPickable=false;this.rain.setEnabled(false);this.rainPositions=new Float32Array(1500);
@@ -41,29 +44,6 @@ export class Renderer {
     if(!forceGL&&await WebGPUEngine.IsSupportedAsync){let gpu:WebGPUEngine|undefined;try{gpu=new WebGPUEngine(canvas,{antialias:true,powerPreference:'high-performance',...localShaderOptions});await gpu.initAsync();engine=gpu;}catch(e){console.warn('WebGPU unavailable; using WebGL2',e);gpu?.dispose();}}
     if(!engine){const gl=new Engine(canvas,true,{preserveDrawingBuffer:true,stencil:true,powerPreference:'high-performance',disableWebGL2Support:false});if(gl.webGLVersion<2){gl.dispose();throw new Error('Kairos needs hardware-accelerated WebGL2 or WebGPU. Enable browser hardware acceleration, then reload.');}engine=gl;}
     return new Renderer(engine,canvas);
-  }
-  private makeShowroom(){const root=new TransformNode('showroom',this.scene),floorMat=new PBRMaterial('showroom-stone',this.scene);floorMat.albedoColor=Color3.White();floorMat.roughness=.26;floorMat.metallic=.24;const stone=surfaceTextures(this.scene,'stone',14);floorMat.albedoTexture=stone.albedo;floorMat.bumpTexture=stone.normal;floorMat.bumpTexture.level=.15;
-    const floor=MeshBuilder.CreateGround('showroom-floor',{width:80,height:70},this.scene);floor.position.y=-.02;floor.material=floorMat;floor.receiveShadows=true;floor.parent=root;
-    const stage=MeshBuilder.CreateCylinder('turntable',{height:.16,diameter:7.6,tessellation:80},this.scene);stage.position.y=.025;stage.material=floorMat;stage.receiveShadows=true;stage.parent=root;
-    const metal=new PBRMaterial('showroom-metal',this.scene);metal.albedoColor=new Color3(.11,.14,.15);metal.metallic=.7;metal.roughness=.36;
-    const glow=new StandardMaterial('showroom-warm-light',this.scene);glow.emissiveColor=new Color3(1,.68,.34);glow.disableLighting=true;
-    const ring=MeshBuilder.CreateTorus('turntable-light',{diameter:7.6,thickness:.025,tessellation:100},this.scene);ring.position.y=.115;ring.material=glow;ring.parent=root;
-    for(let x=-16;x<=16;x+=8){const pillar=MeshBuilder.CreateBox('showroom-column',{width:.32,height:10,depth:.32},this.scene);pillar.position.set(x,5,-11);pillar.material=metal;pillar.parent=root;}
-    const beam=MeshBuilder.CreateBox('showroom-beam',{width:45,height:.4,depth:.5},this.scene);beam.position.set(0,10,-11);beam.material=metal;beam.parent=root;
-    for(let x=-20;x<=20;x+=4){const line=MeshBuilder.CreateBox('floor-joint',{width:.013,height:.005,depth:50},this.scene);line.position.set(x,.006,0);line.material=metal;line.parent=root;}
-    const overhead=MeshBuilder.CreateTorus('ceiling-light',{diameter:13,thickness:.08,tessellation:80},this.scene);overhead.position.y=7;overhead.material=glow;overhead.parent=root;
-    const wall=new PBRMaterial('gallery-concrete',this.scene),walls=surfaceTextures(this.scene,'concrete',2);wall.albedoTexture=walls.albedo;wall.bumpTexture=walls.normal;wall.roughness=.94;wall.metallic=0;
-    const panel=(name:string,w:number,h:number,d:number,x:number,y:number,z:number,material:PBRMaterial|StandardMaterial)=>{const mesh=MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},this.scene);mesh.position.set(x,y,z);mesh.material=material;mesh.parent=root;mesh.receiveShadows=true;return mesh;};
-    panel('gallery-ceiling',42,.30,23,0,9,-1,metal);panel('gallery-back-wall',44,9,.4,0,4.5,-16,wall);
-    for(const x of [-18,-10,10,18]){panel('architectural-pier',1.3,9,2,x,4.5,-10,wall);panel('pier-uplight',1.4,.035,.08,x,.12,-8.94,glow);}
-    for(const x of [-9,0,9]){panel('ceiling-softbox',.22,.06,16,x,8.78,0,glow);panel('floor-inlay',.015,.008,27,x,.014,0,metal);}
-    for(let z=-12;z<=12;z+=4)panel('cross-floor-joint',38,.005,.012,0,.012,z,metal);
-    for(const x of [-6,6]){const display=MeshBuilder.CreateCylinder('secondary-plinth',{diameter:5.5,height:.12,tessellation:64},this.scene);display.position.set(x,.02,-5);display.material=floorMat;display.parent=root;display.receiveShadows=true;}
-    const glass=new PBRMaterial('gallery-glazing',this.scene);glass.albedoColor=new Color3(.045,.07,.08);glass.metallic=.18;glass.roughness=.10;
-    for(let x=-20;x<=20;x+=4){panel('window-mullion',.075,8,.075,x,4,-10.5,metal);if(Math.abs(x)>6)panel('gallery-window',3.92,7.8,.018,x+2,4,-10.6,glass);}
-
-    const signtex=new DynamicTexture('showroom-wordmark',{width:1024,height:256},this.scene,false);signtex.drawText('K A I R O S',null,158,'300 100px sans-serif','#dce5e4','transparent',true);const signMat=new StandardMaterial('wordmark-material',this.scene);signMat.diffuseTexture=signtex;signMat.diffuseTexture.hasAlpha=true;signMat.useAlphaFromDiffuseTexture=true;signMat.emissiveColor=new Color3(.45,.45,.45);const sign=MeshBuilder.CreatePlane('showroom-wordmark',{width:10,height:2.5,sideOrientation:Mesh.DOUBLESIDE},this.scene);sign.position.set(0,4,-12);sign.rotation.y=Math.PI;sign.material=signMat;sign.parent=root;
-    root.position.y=-1000;return root;
   }
   registerCar(car:CarVisual,grounded=true){
     const existing=this.registeredCars.get(car);if(existing){existing.isVisible=grounded;return;}
@@ -79,7 +59,7 @@ export class Renderer {
   applySettings(settings:Settings){const profiles={Low:[1280,720,1024],Medium:[1600,900,1536],High:[1920,1080,2048],Ultra:[2560,1440,4096]},profile=profiles[settings.quality],scale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(scale/settings.resolution);this.shadow.getShadowMap()?.resize(profile[2]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}
   update(vehicle:Vehicle,visual:CarVisual,settings:Settings,dt:number,garage:boolean,clock:number,wetness:number,alpha=1){
     const time=settings.time;const day=clamp(Math.sin((time-5.5)/25*Math.PI*2)*1.5+.38,.035,1),golden=1-clamp(Math.abs(time-17.5)/3,0,1);const overcast=settings.weather==='Rain'?.6:settings.weather==='Overcast'?.4:settings.weather==='Cloudy'?.18:0;
-    this.ambient.intensity=.26+day*.77;this.sun.intensity=(.10+day*3.1)*(1-overcast);this.sun.diffuse=Color3.Lerp(new Color3(.96,.96,.89),new Color3(1,.79,.57),golden);this.scene.environmentIntensity=garage?1.15:.18+day*.68;this.scene.environmentTexture=garage?this.studioEnvironment:this.outdoorEnvironment;
+    this.ambient.intensity=garage?.35:.26+day*.77;this.sun.intensity=(.10+day*3.1)*(1-overcast);this.sun.diffuse=Color3.Lerp(new Color3(.96,.96,.89),new Color3(1,.79,.57),golden);this.scene.environmentIntensity=garage?.65:.18+day*.68;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;
     this.sun.direction.set(.55,-Math.max(.12,day*.6),-.65).normalize();this.scene.fogColor=Color3.Lerp(new Color3(.055,.08,.13),new Color3(.65,.70,.71),day);this.scene.fogDensity=.00025+wetness*.0006;
     this.sky.visibility=1;const stamp=`${Math.round(time*50)}:${settings.weather}`;
     if(stamp!==this.skyStamp){this.skyStamp=stamp;const pixels=new Uint8Array(512*128*4);
@@ -88,18 +68,20 @@ export class Renderer {
       }this.skyGradient.update(pixels);
     }this.sunDisc.position.copyFrom(this.camera.position).addInPlace(this.sun.direction.scale(-5000));this.sunDisc.setEnabled(day>.05&&overcast<.5);
     this.showroom.setEnabled(garage);
+    // Planar reflection is confined to the gallery; driving never pays for this pass.
+    this.floorReflection.renderList=garage?this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.name!=='car-contact-shadow'&&(mesh.metadata?.floorReflection||(()=>{let node=mesh.parent;while(node){if(node.metadata?.kairosCar)return true;node=node.parent;}return false;})())):[];
     this.registerCar(visual,garage||vehicle.state.grounded);
     this.studioLights.forEach(light=>light.setEnabled(garage));this.headlights.forEach(light=>light.setEnabled(!garage));
-    if(garage){visual.glass.alpha=1;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_OPAQUE;}
+    if(garage){visual.glass.alpha=.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;}
     this.headlights.forEach((light,i)=>{const f=new Vector3(Math.sin(vehicle.state.yaw),-.08,Math.cos(vehicle.state.yaw)),r=new Vector3(Math.cos(vehicle.state.yaw),0,-Math.sin(vehicle.state.yaw));light.position.copyFrom(vehicle.node.position).addInPlace(f.scale(vehicle.definition.length*.48)).addInPlace(r.scale(i===0?-.55:.55));light.direction.copyFrom(f);light.intensity=!garage&&this.lightsEnabled?(day<.28?650:1):0;});
-    if(garage){const a=-.7+Math.sin(clock*.07)*.12;visual.wheels.forEach(w=>{w.position.y=-.32;w.rotation.set(0,0,0);w.rotationQuaternion=null;});visual.root.position.set(0,-1000+.105+.32+vehicle.definition.wheelRadius,0);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(.2,0,0);this.camera.position.set(Math.sin(a)*8.5,-997.50,Math.cos(a)*8.5);this.camera.setTarget(new Vector3(0,-999.05,0));this.camera.fov=.59;this.sun.position.copyFrom(visual.root.position).subtractInPlace(this.sun.direction.scale(90));this.scene.fogDensity=.0003;this.wasGarage=true;}
+    if(garage){const a=-.58+Math.sin(clock*.07)*.08;visual.wheels.forEach(w=>{w.position.y=-.32;w.rotation.set(0,0,0);w.rotationQuaternion=null;});visual.root.position.set(0,-1000+.105+.32+vehicle.definition.wheelRadius,0);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(.2,0,0);this.camera.position.set(Math.sin(a)*8.5,-998.32,Math.cos(a)*8.5);this.camera.setTarget(new Vector3(0,-999.12,0));this.camera.fov=.59;this.sun.position.copyFrom(visual.root.position).subtractInPlace(this.sun.direction.scale(90));this.scene.fogDensity=.0003;this.wasGarage=true;}
     else{
       visual.root.position.copyFrom(Vector3.Lerp(vehicle.previousPosition,vehicle.node.position,alpha));visual.root.rotationQuaternion=Quaternion.Slerp(vehicle.previousRotation,vehicle.node.rotationQuaternion!,alpha);visual.update(vehicle.state);
       const p=visual.root.position,yaw=vehicle.state.yaw,forward=new Vector3(Math.sin(yaw),0,Math.cos(yaw)),right=new Vector3(Math.cos(yaw),0,-Math.sin(yaw));const mode=settings.camera;
       let target=p.add(new Vector3(0,.65,0)),desired:Vector3;
       if(mode<2){const dist=mode===0?7.1:4.9;desired=p.subtract(forward.scale(dist)).add(new Vector3(0,mode===0?2.7:1.85,0));target.addInPlace(forward.scale(3));}
-      else{const cockpit=mode===2;desired=p.add(forward.scale(cockpit?-.32:mode===3?vehicle.definition.length*.31:vehicle.definition.length*.51)).add(new Vector3(0,cockpit?.58:mode===3?.18:-.12));if(cockpit&&vehicle.definition.class!=='FORMULA')desired.subtractInPlace(right.scale(.34));target=desired.add(forward.scale(30));}
-      visual.glass.alpha=mode===2?.13:1;visual.glass.transparencyMode=mode===2?PBRMaterial.PBRMATERIAL_ALPHABLEND:PBRMaterial.PBRMATERIAL_OPAQUE;
+      else{const mounts=cameraMounts(vehicle.definition),mount=mode===2?mounts.cockpit:mode===3?mounts.hood:mounts.bumper;desired=p.add(forward.scale(mount.z)).add(right.scale(mount.x)).add(new Vector3(0,mount.y,0));target=desired.add(forward.scale(30));}
+      visual.glass.alpha=mode===2?.13:.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;
       if(mode<2){const origin=p.add(new Vector3(0,.8,0)),hit=vehicle.world.engine.raycast(origin,desired,{collideWith:1});if(hit.hasHit)desired=Vector3.Lerp(origin,hit.hitPointWorld,Math.max(.1,1-.25/Math.max(.25,hit.hitDistance)));}
       if(this.wasGarage||mode>=2||Vector3.Distance(this.cameraPosition,desired)>40){this.cameraPosition.copyFrom(desired);this.look.copyFrom(target);}else{Vector3.LerpToRef(this.cameraPosition,desired,1-Math.exp(-6*dt),this.cameraPosition);Vector3.LerpToRef(this.look,target,1-Math.exp(-10*dt),this.look);}
       this.camera.position.copyFrom(this.cameraPosition);this.camera.setTarget(this.look);this.camera.fov=approach(this.camera.fov,.77+clamp(Math.abs(vehicle.state.speed)/120,0,.17),5,dt);this.sun.position.copyFrom(p).subtractInPlace(this.sun.direction.scale(90));this.wasGarage=false;

@@ -1,6 +1,6 @@
 import { RawTexture, Texture, type Scene } from '@babylonjs/core';
 
-export type SurfaceKind='asphalt'|'meadow'|'gravel'|'concrete'|'stone'|'bark';
+export type SurfaceKind='asphalt'|'meadow'|'gravel'|'concrete'|'stone'|'bark'|'water';
 const fract=(v:number)=>v-Math.floor(v);
 const hash=(x:number,y:number)=>fract(Math.sin(x*127.1+y*311.7)*43758.5453);
 export function noise(x:number,y:number,period:number){
@@ -11,19 +11,20 @@ export function noise(x:number,y:number,period:number){
 /** Original, periodic material fields: no photo licensing or third-party runtime downloads. */
 export function surfacePixels(kind:SurfaceKind,size=256){
   const heights=new Float32Array(size*size),color=new Uint8Array(size*size*4),normal=new Uint8Array(size*size*4);
-  const base={asphalt:[69,73,74],meadow:[100,110,64],gravel:[135,128,111],concrete:[159,154,140],stone:[81,88,90],bark:[79,68,52]}[kind];
+  const base={asphalt:[69,73,74],meadow:[100,110,64],gravel:[135,128,111],concrete:[159,154,140],stone:[81,88,90],bark:[79,68,52],water:[45,76,79]}[kind];
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const u=x/size,v=y/size,n=noise(u*8,v*8,8),fine=noise(u*96,v*96,96),grain=hash(x,y);
     let height=n*.4+fine*.45+grain*.15,variation=(n-.5)*.15+(fine-.5)*.18+(grain-.5)*.14;
     if(kind==='asphalt'){height=fine*.65+grain*.35;variation=(fine-.5)*.28+(grain-.5)*.25;if(grain>.97)variation+=.24;}
     if(kind==='meadow'){variation=(n-.5)*.44+(noise(u*24,v*24,24)-.5)*.25+(grain-.5)*.18;height=noise(u*120,v*40,120)*.8+grain*.2;}
     if(kind==='bark'){height=noise(u*32,v*4,32)*.8+fine*.2;variation=(height-.5)*.65;}
-    if(kind==='stone'){const vein=Math.pow(Math.abs(Math.sin((u*8+v*5+n*.8)*Math.PI)),18);variation+=(vein-.2)*.13;height=n*.25+fine*.1;}
+    if(kind==='stone'){variation=(n-.5)*.08+(fine-.5)*.015;height=n*.10+fine*.015;}
+    if(kind==='water'){height=.5+Math.sin((u*9+v*3+noise(u*4,v*4,4)*.45)*Math.PI*2)*.17+Math.sin((u*3-v*11)*Math.PI*2)*.12+Math.sin((u*21+v*17)*Math.PI*2)*.05;variation=(height-.5)*.10;}
     heights[y*size+x]=height;const o=(y*size+x)*4;
     for(let c=0;c<3;c++)color[o+c]=Math.max(0,Math.min(255,base[c]*(1+variation)));
     color[o+3]=255;
   }
-  const strength=kind==='meadow'?1.5:kind==='asphalt'?.7:kind==='bark'?2:1;
+  const strength=kind==='meadow'?1.5:kind==='asphalt'?.7:kind==='bark'?2:kind==='water'?3:1;
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const h=(dx:number,dy:number)=>heights[((y+dy+size)%size)*size+(x+dx+size)%size];
     const dx=(h(-1,0)-h(1,0))*strength,dy=(h(0,-1)-h(0,1))*strength,length=Math.hypot(dx,dy,1),o=(y*size+x)*4;

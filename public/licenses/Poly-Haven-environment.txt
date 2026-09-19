@@ -1,0 +1,9 @@
+Fish Eagle Hill — Greg Zaal / Poly Haven
+Source: https://polyhaven.com/a/fish_eagle_hill
+License: CC0 1.0 Universal (public-domain dedication)
+Publisher license statement: https://polyhaven.com/license
+Full legal code: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Kairos redistributes a prefiltered 512px cubemap derived from the 2K HDR.
+No endorsement by the photographer or Poly Haven is implied.
+Retrieval and checksum are recorded in assets/sources/environment-provenance.json.

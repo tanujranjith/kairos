@@ -1,5 +1,6 @@
 import { Scene,Mesh,MeshBuilder,VertexData,StandardMaterial,PBRMaterial,Color3,Vector3,Matrix,Quaternion,Material,DynamicTexture,TransformNode } from '@babylonjs/core';
 import type { PhysicsBody,PhysicsShape } from '@babylonjs/core';
+import type { Texture } from '@babylonjs/core';
 import { CELL_SIZE,landHeight,LAKE } from '../content/world';
 import { createVegetation } from './vegetation';
 import { surfaceTextures } from './surface-textures';
@@ -18,7 +19,7 @@ interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mes
 export class WorldRenderer {
   cells=new Map<string,Cell>();root:TransformNode;backdrop:Mesh;water:Mesh;
   private terrain:PBRMaterial;private road:PBRMaterial;private shoulder:PBRMaterial;private marking:PBRMaterial;private yellow:PBRMaterial;private curb:PBRMaterial;private wall:PBRMaterial;private roof:PBRMaterial;private glass:PBRMaterial;private foliage:PBRMaterial;private trunk:PBRMaterial;
-  private treeMesh:Mesh;private oakMesh:Mesh;private trunkMesh:Mesh;private oakTrunkMesh:Mesh;private boulders:Mesh;
+  private treeMesh:Mesh;private oakMesh:Mesh;private trunkMesh:Mesh;private oakTrunkMesh:Mesh;private grassMesh:Mesh;private boulders:Mesh;
   private quality:Quality='Low';private enabled=true;private trafficScenery:TrafficScenery;
   private worker=new CellWorkerClient();streamer:CellStreamer<CellBlueprint,Cell>;
   private materialPool=new ResourcePool<Material>(m=>m.dispose(false,true));private rootLeases=new Map<number,{release:()=>void}>();
@@ -37,18 +38,18 @@ export class WorldRenderer {
       const maps=surfaceTextures(scene,kind,scale);material.albedoColor=Color3.White();material.albedoTexture=maps.albedo;material.bumpTexture=maps.normal;material.bumpTexture.level=kind==='meadow'?.55:.35;
     }
     this.road.roughness=.94;this.road.metallic=0;this.glass.albedoColor=Color3.FromHexString('#223840').toLinearSpace();this.glass.metallic=.35;this.glass.roughness=.19;
-    const vegetation=createVegetation(scene);this.treeMesh=vegetation.tree;this.oakMesh=vegetation.oak;this.trunkMesh=vegetation.trunk;this.oakTrunkMesh=vegetation.oakTrunk;this.foliage=vegetation.foliage;this.trunk=vegetation.bark;
+    const vegetation=createVegetation(scene);this.treeMesh=vegetation.tree;this.oakMesh=vegetation.oak;this.trunkMesh=vegetation.trunk;this.oakTrunkMesh=vegetation.oakTrunk;this.grassMesh=vegetation.grass;this.foliage=vegetation.foliage;this.trunk=vegetation.bark;
     const rockMat=mat('weathered-rock','#ffffff'),rockMaps=surfaceTextures(scene,'concrete');rockMat.albedoTexture=rockMaps.albedo;rockMat.bumpTexture=rockMaps.normal;
     this.boulders=MeshBuilder.CreateSphere('rock-source',{diameter:5,segments:8},scene);const rockPos=this.boulders.getVerticesData('position')!;
     for(let i=0;i<rockPos.length;i+=3){const x=rockPos[i],y=rockPos[i+1],z=rockPos[i+2],n=1+.17*Math.sin(x*2.1+z*.7)*Math.cos(y*1.9);rockPos[i]*=n;rockPos[i+1]*=n*.65;rockPos[i+2]*=n;}this.boulders.updateVerticesData('position',rockPos);this.boulders.material=rockMat;this.boulders.isVisible=false;
     const geom=new Geometry(),step=60;for(let x=-5000;x<5000;x+=step)for(let z=-5000;z<5000;z+=step){const height=(xx:number,zz:number)=>{if(Math.abs(xx)<2100&&Math.abs(zz)<2100)return landHeight(xx,zz)-8;const rim=Math.max(Math.abs(xx),Math.abs(zz));const mountains=(Math.sin(xx*.0021)*Math.cos(zz*.0018)+1.3)*Math.max(0,rim-2000)*.09;return landHeight(xx,zz)+mountains-10;};geom.quad({x,y:height(x,z),z},{x:x+step,y:height(x+step,z),z},{x,y:height(x,z+step),z:z+step},{x:x+step,y:height(x+step,z+step),z:z+step});}const ridgeMat=mat('atmospheric-ridges','#607280');ridgeMat.albedoColor=ridgeMat.albedoColor.toLinearSpace();this.backdrop=geom.mesh('valley-horizon',scene,ridgeMat)!;this.backdrop.parent=this.root;
-    this.water=MeshBuilder.CreateGround('lake',{width:LAKE.rx*2.06,height:LAKE.rz*2.06,subdivisions:1},scene);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene);water.albedoColor=new Color3(.15,.29,.32);water.metallic=.6;water.roughness=.19;this.water.material=water;
+    this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene),waves=surfaceTextures(scene,'water',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves.normal;water.bumpTexture.level=.12;waves.albedo.dispose();this.water.material=water;
   }
 
   setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);}
   setQuality(q:Quality){if(q===this.quality)return;this.clear();this.quality=q;}
   setWetness(v:number){this.road.roughness=.94-v*.70;this.road.albedoColor.set(1-v*.40,1-v*.40,1-v*.40);}
-  updateSignals(clock:number){for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
+  updateSignals(clock:number){const waves=(this.water.material as PBRMaterial).bumpTexture as Texture;waves.uOffset=clock*.008;waves.vOffset=clock*.004;for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
   private around(position:V3,detail=true){const {cx,cz}=cellCoordinates(position),result:CellDemand[]=[];for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){const x=cx+dx,z=cz+dz;if(x< -9||x>8||z< -9||z>8)continue;result.push({id:cellKey(x,z),cx:x,cz:z,priority:-1200+dx*dx+dz*dz,collision:true,detail,owners:new Set(['warmup'])});}return result;}
   private commitDemand(){
     const combined=new Map<string,CellDemand>();for(const [key,d]of this.demand)combined.set(key,{...d,owners:new Set(d.owners)});
@@ -94,7 +95,7 @@ export class WorldRenderer {
     else if(!demand.collision&&cell.collision){for(const c of cell.colliders){c.body.dispose();c.shape.dispose();}cell.colliders=[];cell.collision=false;}
     if(demand.detail&&!cell.detail){
       for(const part of blueprint.meshes)if(!part.collision)this.register(cell,this.fromData(part),false,true);
-      for(const kind of ['pine','oak','trunk','oakTrunk','rock'] as const){const entries=blueprint.instances.filter(i=>i.kind===kind);if(!entries.length)continue;const source=kind==='pine'?this.treeMesh:kind==='oak'?this.oakMesh:kind==='trunk'?this.trunkMesh:kind==='oakTrunk'?this.oakTrunkMesh:this.boulders,mesh=source.clone(kind+'-'+cell.key,this.root)!;mesh.makeGeometryUnique();const buffer=new Float32Array(entries.length*16);entries.forEach((entry,i)=>Matrix.Compose(new Vector3(entry.scale.x,entry.scale.y,entry.scale.z),Quaternion.RotationYawPitchRoll(entry.yaw,0,0),new Vector3(entry.position.x,entry.position.y,entry.position.z)).copyToArray(buffer,i*16));mesh.thinInstanceSetBuffer('matrix',buffer,16,true);mesh.thinInstanceRefreshBoundingInfo(true);mesh.isPickable=false;mesh.receiveShadows=true;mesh.metadata={worldCaster:kind!=='trunk'&&kind!=='oakTrunk'};this.register(cell,mesh,false,true);}
+      for(const kind of ['pine','oak','trunk','oakTrunk','rock','grass'] as const){const entries=blueprint.instances.filter(i=>i.kind===kind);if(!entries.length)continue;const source=kind==='pine'?this.treeMesh:kind==='oak'?this.oakMesh:kind==='trunk'?this.trunkMesh:kind==='oakTrunk'?this.oakTrunkMesh:kind==='grass'?this.grassMesh:this.boulders,mesh=source.clone(kind+'-'+cell.key,this.root)!;mesh.makeGeometryUnique();const buffer=new Float32Array(entries.length*16);entries.forEach((entry,i)=>Matrix.Compose(new Vector3(entry.scale.x,entry.scale.y,entry.scale.z),Quaternion.RotationYawPitchRoll(entry.yaw,0,0),new Vector3(entry.position.x,entry.position.y,entry.position.z)).copyToArray(buffer,i*16));mesh.thinInstanceSetBuffer('matrix',buffer,16,true);mesh.thinInstanceRefreshBoundingInfo(true);mesh.isPickable=false;mesh.receiveShadows=true;mesh.metadata={worldCaster:kind!=='trunk'&&kind!=='oakTrunk'&&kind!=='grass'};this.register(cell,mesh,false,true);}
       for(const entry of blueprint.signs){const {x,y,z}=entry.position,pole=MeshBuilder.CreateCylinder('signpost-'+entry.id,{diameter:.12,height:3.4,tessellation:6},this.scene);pole.position.set(x,y+1.7,z);pole.material=this.roof;this.register(cell,pole,false,true);
         const sign=MeshBuilder.CreatePlane('sign-'+entry.id,{width:5.5,height:1.45,sideOrientation:Mesh.DOUBLESIDE},this.scene);sign.position.set(x,y+3.05,z);sign.rotation.y=entry.yaw;const material=new StandardMaterial('signmat-'+entry.id,this.scene),texture=new DynamicTexture('signtext-'+entry.id,{width:512,height:128},this.scene,false);texture.drawText(entry.name.toUpperCase(),null,77,'bold 30px sans-serif','#e4ede0','#28443e',true);material.diffuseTexture=texture;material.emissiveColor.set(.12,.12,.12);sign.material=material;sign.metadata={ownedMaterial:true};this.register(cell,sign,false,true);}
     }else if(!demand.detail&&cell.detail){for(const mesh of [...cell.detailMeshes])this.disposeMesh(cell,mesh);cell.detailMeshes=[];}

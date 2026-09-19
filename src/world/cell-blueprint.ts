@@ -9,7 +9,7 @@ import { cellManifest,cellKey } from './cell-manifest';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData}
-export interface CellInstance {kind:'pine'|'oak'|'trunk'|'oakTrunk'|'rock';position:V3;scale:V3;yaw:number}
+export interface CellInstance {kind:'pine'|'oak'|'trunk'|'oakTrunk'|'rock'|'grass';position:V3;scale:V3;yaw:number}
 export interface CellSign {id:string;name:string;position:V3;yaw:number}
 export interface CellBlueprint {manifest:WorldCellManifest;meshes:CellMesh[];instances:CellInstance[];signs:CellSign[];bytes:number}
 const roadCells=new Map<string,{road:typeof ROADS[number];index:number}[]>();
@@ -28,6 +28,10 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     const a=road.points[index],b=road.points[index+1];if(road.kind==='test'&&inHandlingCourse(a.x,a.z))continue;
     const strip=(g:MeshDataBuilder,offset:number,width:number,y=0)=>{const p=(v:typeof a,o:number)=>({x:v.x+Math.cos(v.yaw)*o,y:v.y+y,z:v.z-Math.sin(v.yaw)*o});g.quad(p(a,offset-width/2),p(a,offset+width/2),p(b,offset-width/2),p(b,offset+width/2));};
     const junction=atJunction((a.x+b.x)/2,(a.z+b.z)/2,road.id);
+    if(!junction&&road.kind==='road'&&index%2===0&&!inLake(a.x,a.z)&&!(a.x<-650&&a.z<-300)){
+      const decoration=rng(hash(index,road.id.length*17));
+      for(const side of [-1,1])for(let clump=0;clump<3;clump++){const offset=side*(road.width/2+2.3+decoration()*5),along=decoration()*8,x=a.x+Math.cos(a.yaw)*offset+Math.sin(a.yaw)*along,z=a.z-Math.sin(a.yaw)*offset+Math.cos(a.yaw)*along;if(inLake(x,z)||inHandlingCourse(x,z,12)||atJunction(x,z))continue;const s=.45+decoration()*.7;instances.push({kind:'grass',position:{x,y:terrainHeight(x,z)-.035,z},scale:{x:s,y:.35+decoration()*.3,z:s},yaw:decoration()*Math.PI});}
+    }
     if(!junction){strip(asphalt,0,road.width,.025);strip(verge,0,road.width+3,-.015);for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046);}
     if(road.kind==='circuit'){if(index%2===0)for(const side of [-1,1])strip(curbs,side*(road.width*.5+.4),.85,.045);}
     else if(!junction&&road.kind!=='pit'&&road.kind!=='test'){if(index%3!==0)strip(road.kind==='highway'?white:yellow,0,.12,.046);if(road.lanes===4&&index%3!==0)for(const side of [-1,1])strip(white,side*road.width*.25,.12,.046);}

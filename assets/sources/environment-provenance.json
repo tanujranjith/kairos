@@ -1,0 +1,15 @@
+{
+  "asset": "Fish Eagle Hill",
+  "author": "Greg Zaal",
+  "publisher": "Poly Haven",
+  "assetPage": "https://polyhaven.com/a/fish_eagle_hill",
+  "license": "CC0-1.0",
+  "licensePage": "https://polyhaven.com/license",
+  "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/fish_eagle_hill_2k.hdr",
+  "sourceFile": "fish_eagle_hill_2k.hdr",
+  "sourceBytes": 7168833,
+  "sourceMd5": "af2481ccbf0185140f33271da2ca3496",
+  "retrieved": "2026-09-19",
+  "runtimeFile": "public/environment/fish-eagle-hill.env",
+  "conversion": "scripts/build-environment.mjs: Babylon 512px cubemap, HDR GGX prefiltering, spherical harmonics, lossless PNG RGBD environment container. Original source retained outside public/."
+}
