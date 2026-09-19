@@ -25,6 +25,8 @@ In Free Drive, select **Aster International** on the map to drive through its ac
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.
 
+Pit visits use their own ordered timing route. Stay below **60 km/h (37 mph)**, stop in the service area and select **SERVICE / PIT** for fuel and tires. The HUD displays the limit; speeding incurs a penalty. See [timing and pit verification](docs/race-timing.md).
+
 **Handling course** in the sidebar opens Northstar's traffic-free proving ground with the selected car. It contains braking lanes, a slalom, three skidpad rings, measured bumps, a banked road, a gradient, a curb and a launch ramp. It is also connected to the public road network. Reset inside the course returns to its braking lane. See [course layout and measured tests](docs/handling-course.md).
 
 | Action | Keyboard | Xbox-style controller |
@@ -64,6 +66,7 @@ node scripts/verify-traffic.mjs
 node scripts/verify-layers.mjs
 node scripts/verify-access.mjs
 node scripts/verify-pits.mjs
+node scripts/verify-pit-timing.mjs
 node scripts/verify-scenery.mjs
 node scripts/verify-graphics-streaming.mjs
 node scripts/verify-worker-recovery.mjs

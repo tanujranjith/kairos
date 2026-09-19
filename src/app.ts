@@ -7,7 +7,7 @@ import { createCar, type CarVisual } from './render/car';
 import { createLodCar } from './render/car-lod';
 import { loadCarAssets } from './render/car-assets';
 import { PhysicsWorld, Vehicle, FIXED_DT, neutralInput } from './sim/physics';
-import { RaceManager, insidePitLane } from './sim/race';
+import { RaceManager } from './sim/race';
 import { racingInput } from './sim/ai';
 import { TrafficRuntime } from './runtime/traffic';
 import { WorldLoadingOverlay } from './ui/world-loading';
@@ -154,7 +154,7 @@ export class Kairos {
     for(const t of this.traffic)t.vehicle.preStep(t.input,aiSettings,this.wetness,dt);
     this.physics.step(dt);all.forEach(v=>v.postStep(dt));this.save.distance+=Math.abs(this.player.state.speed)*dt;
     if(this.player.needsRecovery())this.resetPlayer();
-    if(raceActive){const samples=[this.player,...this.opponents.filter(o=>!o.retired).map(o=>o.vehicle)].map(v=>{const n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='circuit'),pit=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='pit');return {id:v.id,progress:n.progress,lateral:n.lateral,speed:Math.abs(v.state.speed),pit:insidePitLane(pit.progress,pit.distance,n.distance)};});this.race.update(dt,samples);const best=this.race.player?.best;if(best&&Number.isFinite(best)){const key=`lap-${this.player.definition.id}`;this.save.records[key]=Math.min(this.save.records[key]??Infinity,best);}if(this.race.state.phase==='finished')this.finishSession();}
+    if(raceActive){const samples=[this.player,...this.opponents.filter(o=>!o.retired).map(o=>o.vehicle)].map(v=>({id:v.id,position:v.state.position,speed:Math.abs(v.state.speed),grounded:v.state.grounded}));this.race.update(dt,samples);const best=this.race.player?.best;if(best&&Number.isFinite(best)){const key=`lap-${this.player.definition.id}`;this.save.records[key]=Math.min(this.save.records[key]??Infinity,best);}if(this.race.state.phase==='finished')this.finishSession();}
     else this.updateActivities(dt);
     if(this.routeClock>3){this.routeClock=0;const s=this.player.state,n=nearestRoadAt(s.position);if(s.grounded&&Math.abs(s.position.y-n.point.y)<3&&n.distance<n.road.width/2&&!this.save.discovered.includes(n.road.id))this.save.discovered.push(n.road.id);if(this.destination){const target=LANDMARKS.find(l=>l.id===this.destination)!;this.route=this.graph.route({...s.position,yaw:s.yaw},landmarkPosition(target));if(s.grounded&&atDestination(s.position,target,30)){if(!this.save.visits.includes(target.id))this.save.visits.push(target.id);this.toast(`Arrived · ${target.name}`);this.destination=null;this.route=[];}}}
     if(this.saveClock>5){this.saveClock=0;void this.store.write(this.save);}return true;

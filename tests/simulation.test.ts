@@ -17,7 +17,7 @@ describe('tire force model',()=>{
 });
 describe('race timing',()=>{
   const create=()=>{const race=new RaceManager();race.start({kind:'Quick Race',laps:3,entrants:4,difficulty:.65,position:1,vehicleClass:'GT'});race.update(3.1,[]);return race;};
-  const sample=(race:RaceManager,progress:number,dt=.1,lateral=0)=>race.update(dt,[{id:'player',progress,lateral,speed:40,pit:false}]);
+  const sample=(race:RaceManager,progress:number,dt=.1,lateral=0)=>race.update(dt,[{id:'player',position:pointAt(CIRCUIT,progress,lateral),grounded:true,speed:40}]);
   const driveLap=(race:RaceManager)=>{for(let s=0;s<CIRCUIT.length;s+=4)sample(race,s);sample(race,0);};
   it('requires an initial forward line crossing and all ordered checkpoints',()=>{const race=create();sample(race,CIRCUIT.length-2);sample(race,1);expect(race.player.lap).toBe(1);expect(race.player.checkpoint).toBe(1);driveLap(race);expect(race.player.lap).toBe(2);expect(race.player.best).toBeGreaterThan(10);expect(race.player.sectors).toEqual([]);});
   it('does not count shortcuts or backwards start crossings',()=>{const race=create();sample(race,CIRCUIT.length-2);sample(race,1);sample(race,CIRCUIT.length-2);sample(race,1);expect(race.player.lap).toBe(1);sample(race,CIRCUIT.length*.6);expect(race.player.valid).toBe(false);expect(race.player.lap).toBe(1);});
@@ -27,7 +27,7 @@ describe('race timing',()=>{
   it('never mistakes a main-track point for pit lane',()=>{for(let s=0;s<CIRCUIT.length;s+=5){const p=pointAt(CIRCUIT,s),pit=nearestRoad(p.x,p.z,r=>r.id==='pit');expect(insidePitLane(pit.progress,pit.distance,0)).toBe(false);}expect(insidePitLane(300,1,40)).toBe(true);expect(insidePitLane(0,1,40)).toBe(false);});
   it('ranks completed laps ahead of a lapped car finishing earlier',()=>{const race=create();Object.assign(race.state.entrants[0],{finished:true,lap:3,finishTime:120});Object.assign(race.state.entrants[1],{finished:true,lap:2,finishTime:115});expect(race.order()[0].id).toBe('player');});
   it('does not credit shortcut distance past an unvisited checkpoint',()=>{const race=create();Object.assign(race.player,{lap:1,checkpoint:1,progress:CIRCUIT.length*.6});expect(validatedRaceDistance(race.player)).toBeCloseTo(CIRCUIT.length/12);});
-  it('applies a false-start penalty once, then resets the rule book on restart',()=>{const race=new RaceManager(),config={kind:'Quick Race' as const,laps:3 as const,entrants:4,difficulty:.5,position:1,vehicleClass:'GT' as const};race.start(config);for(const progress of [4000,4002,4004])race.update(.1,[{id:'player',progress,lateral:0,speed:3,pit:false}]);expect(race.player.penalty).toBe(10);race.start(config);expect(race.player.penalty).toBe(0);});
+  it('applies a false-start penalty once, then resets the rule book on restart',()=>{const race=new RaceManager(),config={kind:'Quick Race' as const,laps:3 as const,entrants:4,difficulty:.5,position:1,vehicleClass:'GT' as const};race.start(config);for(const progress of [4000,4002,4004])race.update(.1,[{id:'player',position:pointAt(CIRCUIT,progress),grounded:true,speed:3}]);expect(race.player.penalty).toBe(10);race.start(config);expect(race.player.penalty).toBe(0);});
 });
 describe('save handling',()=>{
   it('round-trips settings and records',()=>{const save=defaultSave();save.records['lap-gtx']=93.4;save.settings.weather='Rain';save.discovered=['lakeshore'];expect(validateSave(JSON.parse(JSON.stringify(save)))).toEqual(save);});

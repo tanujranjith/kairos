@@ -15,7 +15,7 @@ for(const vehicleClass of ['GT','FORMULA']){
     if(i%5===0||s.screen==='results')console.log(vehicleClass,Math.round(s.race.elapsed),'lap',s.race.entrants[0].lap,'progress',Math.round(s.race.entrants[0].progress),'valid',s.race.entrants[0].valid,s.screen);
     if(s.screen==='results')break;
   }
-  await page.evaluate(async()=>{const g=window.kairos;await g.renderer.scene.whenReadyAsync();g.advanceTime(0);});
+  await page.evaluate(async()=>{const g=window.kairos;await g.renderer.scene.whenReadyAsync();await g.advanceTime(0);});
   await fs.mkdir('output/racing',{recursive:true});await page.screenshot({path:`output/racing/${vehicleClass}.png`});
   const final=await page.evaluate(()=>window.kairos.snapshot());reports.push({vehicleClass,final,trace});
 }

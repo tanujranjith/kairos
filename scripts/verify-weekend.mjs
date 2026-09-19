@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[],reports=[];
+await fs.mkdir('output/weekends',{recursive:true});
 page.on('pageerror',e=>errors.push(String(e)));await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForFunction(()=>window.kairos?.ui,null,{timeout:60000});await page.evaluate(()=>window.advanceTime(0));
 for(const vehicleClass of ['GT','FORMULA']){
   await page.evaluate(async vehicleClass=>{const g=window.kairos;Object.assign(g.raceConfig,{kind:'Race Weekend',vehicleClass,laps:3,entrants:8,position:4});await g.startRace();g.setAutopilot(true);},vehicleClass);
@@ -18,7 +19,7 @@ for(const vehicleClass of ['GT','FORMULA']){
       if(i%10===0||sample.screen==='results')console.log(vehicleClass,'stage',stage,Math.round(sample.time),'lap',sample.player.lap,sample.screen);
       if(sample.screen==='results')break;
     }
-    const final=await page.evaluate(()=>window.kairos.snapshot());assert.equal(final.screen,'results');if(stage===1)assert.ok(final.race.entrants[0].best>0&&final.race.entrants[0].best<300);reports.push({vehicleClass,stage,pitService,final,samples});
+    const final=await page.evaluate(()=>window.kairos.snapshot());assert.equal(final.screen,'results');if(stage===1)assert.ok(final.race.entrants[0].best>0&&final.race.entrants[0].best<300);reports.push({vehicleClass,stage,pitService,final,samples});await page.screenshot({path:`output/weekends/${vehicleClass}-${stage}.png`});
     if(stage<2){await page.click('[data-action="next-session"]');await page.evaluate(()=>window.kairos.setAutopilot(true));assert.equal(await page.evaluate(()=>window.kairos.race.stage),stage+1);}
   }
 }

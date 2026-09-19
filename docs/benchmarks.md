@@ -2,6 +2,34 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 19 directional race/pit timing checkpoint
+
+All 107 pure tests pass. New cases cover finite-width/direction/height crossing, continuous pit progress, stationary service, skipped gates, wrong-height routes, reversing, reset/restart, penalty latching across brief lane departures, and observation-cadence interpolation. Circuit and pit checkpoints now use actual crossing events rather than circuit-nearest projection changes.
+
+`output/pit-timing/report.json` records installed Edge/WebGL2, controlled time, actual session updates and normal vehicle inputs. Both cars start at the ordinary grid, drive the circuit, enter through the authored connector, stop for service, rejoin and complete the next lap. No movement correction is applied; only fuel/wear are fault-injected at the service stop.
+
+| Car | Maximum pit-route tracking error | Timed lap including service | Warnings / penalties / damage |
+|---|---:|---:|---|
+| GT | 0.638m | 191.787s | 0 / 0 / 0 |
+| Formula | 0.780m | 175.766s | 0 / 0 / 0 |
+
+Both runs complete all 24 pit gates with every sampled lap state valid, fuel restored above 99.99L / 109.99L and every tire above 99% remaining. Actual pit/service/rejoin screenshots were opened; the HUD limit appears during the visit and clears after rejoining. The first rig failed with 27.16m lane error after braking too late at entry. That trace remains in `late-braking-failure.json`; preview braking fixed the input sequence without moving cars directly or weakening assertions. This is one-car functional evidence, not automatic AI strategy, contested rejoin, real-time endurance or laptop performance acceptance.
+
+The final supplied-client input capture (`output/pit-timing-final-input`) has four asphalt contacts, 3.710974m/s, zero damage, eleven physical traffic cars and no loading/error artifact. Both eight-car quick races finish all eight entrants: 387.783s GT / 300.075s Formula session elapsed, no player penalty/damage, two GT warnings and zero Formula warnings. Best laps are 113.628s / 95.204s with interpolated crossing times.
+
+Both complete eight-car weekends also pass practice, qualifying, service, next-session transitions and three-lap race results, with eight finishers in each final race. Race elapsed is 390.375s GT / 331.800s Formula; both players have zero warnings, penalties and damage. Qualifying best laps are 113.945s / 95.203s. The weekend service step deliberately starts in the box and resets afterward; only the separate new rig demonstrates the complete input-only visit. Earlier AI timeouts remain historical failures, not erased by this pass. Opened actual results captures; general interactions and all 21 controller-navigation checks pass. These are controlled-time checks, not real-time endurance.
+
+Strict TypeScript and the production build pass; the existing large Babylon chunk warning remains. No car mesh, lighting, terrain or physics parameter was changed in this timing checkpoint.
+
+Final review added an outside-painted-lane/active-pit-route speed assertion and closed that penalty loophole. All 107 tests, the build and both complete physical pit visits re-pass. The final supplied-client capture is `output/pit-timing-rule-final-input`, with the same 3.710974m/s/four-contact/zero-damage result. Final rebuilt production checks pass installed Edge and Chrome through actual WebGPU and forced WebGL2, cold browser cache, emulated 25Mbps/40ms, all third-party runtime hosts blocked and development hooks absent. Free Drive, Northstar, clean eight-car countdown/launch and return-home flows pass without page/failed/external requests.
+
+| Browser | WebGL2 menu ready / click-to-motion | WebGPU menu ready / click-to-motion |
+|---|---:|---:|
+| Edge | 6.359s / 4.870s | 5.966s / 8.024s |
+| Chrome | 5.382s / 5.513s | 5.356s / 6.637s |
+
+Each final run transfers 11,013,488 bytes through the checked flows. JS heaps range about 136–164MB; this is not whole-process or GPU memory. WebGPU emits only the known Windows `powerPreference` warning. Reports/captures are in `output/pit-timing-final-delivery-edge` and `output/pit-timing-final-delivery-chrome`. These samples do not resolve the historical intermittent startup stalls, certify the secondary laptop, establish 30-minute real-time endurance or constitute HTTPS deployment. The local preview on port 5192 contains this build.
+
 ## September 19 Aster access and paddock checkpoint
 
 `output/circuit-access/report.json` records installed Edge/WebGL2, controlled-time input-only physics traversals. Collision data is installed synchronously for this geometry test, so it is not streaming or FPS acceptance.
