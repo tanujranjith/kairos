@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "license": "Original Kairos content",
+  "models": [
+    {
+      "id": "aeris",
+      "lod": 0,
+      "file": "aeris-lod0.glb",
+      "bytes": 59464
+    },
+    {
+      "id": "aeris",
+      "lod": 1,
+      "file": "aeris-lod1.glb",
+      "bytes": 56520
+    },
+    {
+      "id": "velara",
+      "lod": 0,
+      "file": "velara-lod0.glb",
+      "bytes": 60048
+    },
+    {
+      "id": "velara",
+      "lod": 1,
+      "file": "velara-lod1.glb",
+      "bytes": 57104
+    },
+    {
+      "id": "crest",
+      "lod": 0,
+      "file": "crest-lod0.glb",
+      "bytes": 59500
+    },
+    {
+      "id": "crest",
+      "lod": 1,
+      "file": "crest-lod1.glb",
+      "bytes": 56556
+    },
+    {
+      "id": "nova",
+      "lod": 0,
+      "file": "nova-lod0.glb",
+      "bytes": 59444
+    },
+    {
+      "id": "nova",
+      "lod": 1,
+      "file": "nova-lod1.glb",
+      "bytes": 56500
+    },
+    {
+      "id": "gtx",
+      "lod": 0,
+      "file": "gtx-lod0.glb",
+      "bytes": 60140
+    },
+    {
+      "id": "gtx",
+      "lod": 1,
+      "file": "gtx-lod1.glb",
+      "bytes": 57196
+    },
+    {
+      "id": "apex",
+      "lod": 0,
+      "file": "apex-lod0.glb",
+      "bytes": 53264
+    },
+    {
+      "id": "apex",
+      "lod": 1,
+      "file": "apex-lod1.glb",
+      "bytes": 50320
+    }
+  ]
+}
