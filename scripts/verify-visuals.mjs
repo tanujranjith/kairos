@@ -11,7 +11,7 @@ for(const id of ['velara','gtx','apex'])for(const livery of [0,1,2]){
   await page.evaluate(async({id,livery})=>{const g=window.kairos;await g.action('select-car',id);await g.action('custom',JSON.stringify({key:'livery',value:livery}));g.setScreen('customize');},{id,livery});
   assert.equal(await page.evaluate(id=>window.kairos.save.customization[id].livery,id),livery);await capture(`${id}-livery-${livery}`);
 }
-await page.evaluate(async()=>{const g=window.kairos;g.save.selected='velara';g.save.settings.time=17.4;await g.startDrive();g.advanceTime(1000);});await capture('day');
+await page.evaluate(async()=>{const g=window.kairos;g.save.selected='velara';g.save.settings.time=17.4;await g.startDrive();await g.advanceTime(1000);});await capture('day');
 await page.evaluate(()=>{window.kairos.renderer.scene.shadowsEnabled=false;});await capture('day-no-shadows');
 await page.evaluate(()=>{window.kairos.renderer.scene.shadowsEnabled=true;});
 await page.evaluate(()=>{const s=window.kairos.renderer.scene;s.getMaterialByName('meadow').albedoTexture=null;s.getMaterialByName('asphalt').albedoTexture=null;});await capture('day-no-ground-textures');

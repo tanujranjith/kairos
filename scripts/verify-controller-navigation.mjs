@@ -225,25 +225,25 @@ try {
     // A blocked Web Audio resume promise must never block a gamepad-started session.
     const original=game.audio.start.bind(game.audio);window.restoreAudioStart=()=>{game.audio.start=original;};
     game.audio.start=()=>new Promise(()=>{});
-    liveMenu.seek('#start-handling');liveMenu.tap(0);
+    liveMenu.seek('#start-handling');liveMenu.tap(0);await game.transitionPromise;
   });
   assert.equal(await page.evaluate(()=>window.kairos.screen),'drive');
   checks.push('controller activates handling-course entry even if audio permission is pending');
-  await page.evaluate(()=>{
+  await page.evaluate(async()=>{
     window.restoreAudioStart();
     window.gamepadButtons=[];window.virtualPadConnected=true;
     Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>window.virtualPadConnected?[{connected:true,index:0,id:'virtual-driving-pad',axes:[0,0],buttons:Array.from({length:17},(_,i)=>({pressed:window.gamepadButtons.includes(i),value:window.gamepadButtons.includes(i)?1:0,touched:false}))}]:[]});
-    window.advanceTime(1000);window.gamepadButtons=[7];window.advanceTime(2000);window.gamepadButtons=[];
+    await window.advanceTime(1000);window.gamepadButtons=[7];await window.advanceTime(2000);window.gamepadButtons=[];
   });
   assert.ok(await page.evaluate(()=>window.kairos.player.state.speed)>5);
-  await page.evaluate(()=>{window.gamepadButtons=[9];window.advanceTime(30);window.advanceTime(1000);});
+  await page.evaluate(async()=>{window.gamepadButtons=[9];await window.advanceTime(30);await window.advanceTime(1000);});
   assert.equal(await page.evaluate(()=>window.kairos.screen),'pause');
-  await page.evaluate(()=>{window.virtualPadConnected=false;window.dispatchEvent(new Event('gamepaddisconnected'));window.advanceTime(0);window.virtualPadConnected=true;window.gamepadButtons=[1,9];window.advanceTime(1000);});
+  await page.evaluate(async()=>{window.virtualPadConnected=false;window.dispatchEvent(new Event('gamepaddisconnected'));window.advanceTime(0);window.virtualPadConnected=true;window.gamepadButtons=[1,9];await window.advanceTime(1000);});
   assert.equal(await page.evaluate(()=>window.kairos.screen),'pause');
-  await page.evaluate(()=>{window.gamepadButtons=[];window.advanceTime(16);window.gamepadButtons=[1];window.advanceTime(16);window.gamepadButtons=[];window.advanceTime(16);});
+  await page.evaluate(async()=>{window.gamepadButtons=[];await window.advanceTime(16);window.gamepadButtons=[1];await window.advanceTime(16);window.gamepadButtons=[];await window.advanceTime(16);});
   assert.equal(await page.evaluate(()=>window.kairos.screen),'drive');
   checks.push('actual frame polling: trigger drives; Menu pauses; held reconnect buttons cannot resume; fresh B resumes');
-  await page.evaluate(()=>{delete navigator.getGamepads;window.kairos.setScreen('pause');liveMenu.seek('[data-action="home"]');liveMenu.tap(0);liveMenu.seek('[data-action="screen"][data-value="motorsport"]');liveMenu.tap(0);liveMenu.seek('#start-race');liveMenu.tap(0);});
+  await page.evaluate(async()=>{delete navigator.getGamepads;window.kairos.setScreen('pause');liveMenu.seek('[data-action="home"]');liveMenu.tap(0);liveMenu.seek('[data-action="screen"][data-value="motorsport"]');liveMenu.tap(0);liveMenu.seek('#start-race');liveMenu.tap(0);await window.kairos.transitionPromise;});
   assert.equal(await page.evaluate(()=>window.kairos.screen),'drive');
   assert.equal(await page.evaluate(()=>window.kairos.mode),'Quick Race');
   await page.evaluate(()=>{window.kairos.setScreen('pause');liveMenu.seek('[data-action="end-session"]');liveMenu.tap(0);});

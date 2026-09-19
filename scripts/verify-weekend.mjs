@@ -9,12 +9,12 @@ for(const vehicleClass of ['GT','FORMULA']){
   for(let stage=0;stage<3;stage++){
     let pitService=null;
     if(stage===0){
-      pitService=await page.evaluate(async()=>{const g=window.kairos;g.setAutopilot(false);g.teleport(960,-1460,'pit');g.advanceTime(1000);g.player.state.fuel=5;g.player.state.wheels.forEach(w=>w.wear=.4);await g.action('service');g.advanceTime(6100);const result={fuel:g.player.state.fuel,tire:g.player.state.wheels[0].wear,message:g.message};await g.action('reset');g.setAutopilot(true);return result;});
+      pitService=await page.evaluate(async()=>{const g=window.kairos;g.setAutopilot(false);g.teleport(960,-1460,'pit');await g.advanceTime(1000);g.player.state.fuel=5;g.player.state.wheels.forEach(w=>w.wear=.4);await g.action('service');await g.advanceTime(6100);const result={fuel:g.player.state.fuel,tire:g.player.state.wheels[0].wear,message:g.message};await g.action('reset');g.setAutopilot(true);return result;});
       assert.ok(pitService.fuel>90);assert.ok(pitService.tire>.99);
     }
     const samples=[];
     for(let i=0;i<42;i++){
-      const sample=await page.evaluate(()=>{const g=window.kairos;g.advanceTime(15000);return {screen:g.screen,phase:g.race.state.phase,time:g.race.state.elapsed,player:g.race.player,cells:g.world.cells.size,meshes:g.renderer.scene.meshes.length,materials:g.renderer.scene.materials.length,textures:g.renderer.scene.textures.length,physicsBatchMs:g.snapshot().physicsMs};});samples.push(sample);
+      const sample=await page.evaluate(async()=>{const g=window.kairos;await g.advanceTime(15000);return {screen:g.screen,phase:g.race.state.phase,time:g.race.state.elapsed,player:g.race.player,cells:g.world.cells.size,meshes:g.renderer.scene.meshes.length,materials:g.renderer.scene.materials.length,textures:g.renderer.scene.textures.length,physicsBatchMs:g.snapshot().physicsMs};});samples.push(sample);
       if(i%10===0||sample.screen==='results')console.log(vehicleClass,'stage',stage,Math.round(sample.time),'lap',sample.player.lap,sample.screen);
       if(sample.screen==='results')break;
     }

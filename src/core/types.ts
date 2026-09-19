@@ -36,7 +36,7 @@ export interface Road {
   loop: boolean; kind: 'road' | 'highway' | 'circuit' | 'pit' | 'test'; length: number;
 }
 export interface NearestRoad { road: Road; index: number; point: RoadPoint; distance: number; lateral: number; progress: number }
-export interface WorldCellManifest { id: string; cx: number; cz: number; bounds: [number, number, number, number]; seed: number }
+export interface WorldCellManifest { id: string; cx: number; cz: number; bounds: [number, number, number, number]; seed: number; version:1; assets:string[]; dependencies:string[]; roadIds:string[]; layers:string[] }
 export interface Landmark { id: string; name: string; type: 'scenic' | 'garage' | 'service' | 'circuit' | 'speed' | 'trial' | 'drift' | 'handling'; x: number; z: number; description: string; target?: number; end?: { x: number; z: number } }
 export interface RaceSessionConfig { kind: SessionKind; laps: number; entrants: number; difficulty: number; position: number; vehicleClass: VehicleClass }
 export interface RacerProgress { id: string; name: string; lap: number; checkpoint: number; progress: number; lastProgress: number; lapStart: number; best: number; last: number; sectorStart: number; sectors: number[]; valid: boolean; warnings: number; penalty: number; finished: boolean; finishTime: number; pit: boolean }

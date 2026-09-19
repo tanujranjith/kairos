@@ -9,7 +9,7 @@ try {
   await page.evaluate(()=>window.advanceTime(0));await page.click('#start-handling');
   await page.evaluate(async()=>{
     const g=window.kairos;for(let x=-1950;x<-1000;x+=180)for(const z of [1750,1930])g.world.ensure({x,y:18,z});
-    g.advanceTime(1000);await g.renderer.scene.whenReadyAsync();g.advanceTime(0);
+    await g.advanceTime(1000);await g.renderer.scene.whenReadyAsync();g.advanceTime(0);
   });
   await page.screenshot({path:'output/handling-visuals/drive.png'});
   for(const [name,position,target]of [

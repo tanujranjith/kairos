@@ -46,7 +46,7 @@ In menus, controller D-pad / left stick up-down moves focus, left-right changes 
 
 ## Validation and development
 
-`window.render_game_to_text()`, `window.advanceTime(ms)`, and `window.kairos` exist only in development/test builds. The controlled-time hook suspends normal stepping. Call `window.kairos.resumeRealTime()` to resume. One fixed accumulator owns the 120 Hz simulation.
+`window.render_game_to_text()`, `window.advanceTime(ms)`, and `window.kairos` exist only in development/test builds. **Await `advanceTime(ms)`**: it suspends normal stepping and waits for required collision cells without advancing session clocks during loading. Call `window.kairos.resumeRealTime()` to resume. One fixed accumulator owns the 120 Hz simulation.
 
 ```sh
 node scripts/web_game_playwright_client.mjs --url "http://127.0.0.1:5187/?renderer=webgl" --actions-file tests/actions-drive.json --click-selector "#start-drive" --iterations 1 --screenshot-dir output/driving
@@ -56,6 +56,8 @@ node scripts/verify-weekend.mjs
 node scripts/verify-physics.mjs
 node scripts/verify-handling.mjs
 node scripts/verify-traffic.mjs
+node scripts/verify-graphics-streaming.mjs
+node scripts/verify-worker-recovery.mjs
 node scripts/inspect-handling.mjs
 node scripts/verify-controller-navigation.mjs
 node scripts/verify-audio.mjs
@@ -71,7 +73,7 @@ The verification scripts use the dev server on port 5187. `verify-delivery.mjs` 
 
 `node scripts/verify-delivery.mjs --25mbps` adds browser-emulated 25Mbps download / 5Mbps upload with 40ms latency and a cold browser cache. Its separate `output/delivery-25mbps/` results are development-host network emulation, not an actual-laptop or Internet deployment benchmark.
 
-See [architecture and tuning](docs/architecture.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. The art, asynchronous streaming, broad traffic/racing endurance, full interaction/fault matrix, and target-laptop performance still need work.
+See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md), [streaming](docs/streaming.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. Further art polish, streaming performance/endurance, broad traffic/racing stress, the full interaction/fault matrix, and target-laptop performance still need work.
 
 ## Static hosting
 

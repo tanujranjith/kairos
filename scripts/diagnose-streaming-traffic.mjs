@@ -1,0 +1,6 @@
+import { chromium } from 'playwright';
+const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),page=await browser.newPage();
+try{
+  await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForFunction(()=>window.kairos?.ui,null,{timeout:90000});await page.evaluate(()=>window.advanceTime(0));
+  console.log(JSON.stringify(await page.evaluate(async()=>{const g=window.kairos;g.renderer.render=()=>{};g.save.selected='aeris';g.save.settings.traffic=12;await g.startDrive();await g.advanceTime(1000);const samples=[];for(const [x,z,road]of [[-1340,-980,'city3'],[-900,-930,'city1'],[-380,100,'lakeshore']]){g.teleport(x,z,road);for(let i=0;i<14;i++)await g.advanceTime(500);samples.push({clock:g.clock,player:g.player.state.position,count:g.traffic.length,rebalance:g.trafficSystem.rebalanceAt,actors:g.trafficSystem.actors.map(a=>({id:a.agent.id,pending:a.pendingPromotion,physical:!!a.physical,distance:Math.hypot(a.observation.position.x-g.player.state.position.x,a.observation.position.z-g.player.state.position.z),position:a.observation.position,recoveries:a.recoveries}))});}await g.advanceTime(3000);return {samples,after:g.trafficSystem.snapshot()};}),null,2));
+}finally{await browser.close();}

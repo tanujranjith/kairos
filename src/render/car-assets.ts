@@ -15,6 +15,6 @@ export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Custo
   const find=(name:string)=>materials.find(m=>m.name.includes(`${d.id}-${name}`))!;
   const paint=find('paint'),glass=find('glass')??new PBRMaterial('unused-open-wheel-glass',scene),lights=find('headlight')??find('taillight'),tail=find('taillight');if(!materials.includes(glass))materials.push(glass);
   if(!paint||!glass||!lights||!tail||wheels.some(w=>!w)){root.dispose();materials.forEach(m=>m.dispose());return null;}
-  paint.albedoColor=Color3.FromHexString(setup?.paint??d.color);const alloy=find('alloy');if(alloy)alloy.albedoColor=Color3.FromHexString(setup?.wheels??'#b2bac0');parts.forEach(p=>p.isPickable=false);
+  paint.albedoColor=Color3.FromHexString(setup?.paint??d.color).toLinearSpace();const alloy=find('alloy');if(alloy)alloy.albedoColor=Color3.FromHexString(setup?.wheels??'#b2bac0').toLinearSpace();parts.forEach(p=>{p.isPickable=false;p.receiveShadows=true;});
   return {root,wheels,paint,glass,lights,tail,parts,update(s){wheels.forEach((w,i)=>{w.position.y=-(.32+d.travel*.5-s.wheels[i].compression);w.rotation.set(s.wheels[i].angle,i<2?-s.steer:0,0);w.rotationQuaternion=null;});tail.emissiveColor.r=s.absActive?.95:.5;},dispose(){root.dispose();materials.forEach(m=>m.dispose());}};
 }

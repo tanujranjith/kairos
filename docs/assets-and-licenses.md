@@ -5,7 +5,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 | Content | Source / terms |
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
-| Paint, glass, asphalt noise, environment cubemap, signs | Original procedural materials/textures |
+| Paint, glass, albedo/normal material fields, fir/oak foliage atlases, cloudy sky, valley/studio cubemaps, contact darkening, signs | Original procedural materials/textures; source in `src/render`, no external photos or HDR downloads |
 | Engine, transmission, tire, road, wind, rain, impact and tunnel audio | Original Web Audio synthesis and seeded procedural noise; no recorded samples |
 | Four supplied PNG references and context markdown | User-provided design references; not included in the production build |
 | Babylon.js core, loaders, serializers 9.27.1 | Apache-2.0; included license text and Babylon NOTICE |

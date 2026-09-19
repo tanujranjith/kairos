@@ -10,7 +10,7 @@ for(const vehicleClass of ['GT','FORMULA']){
   await page.evaluate(async vehicleClass=>{const g=window.kairos;Object.assign(g.raceConfig,{vehicleClass,laps:3,entrants:8,position:4,kind:'Quick Race'});await g.startRace();g.setAutopilot(true);},vehicleClass);
   const trace=[];
   for(let i=0;i<50;i++){
-    const s=await page.evaluate(()=>{const g=window.kairos;g.advanceTime(15000);return g.snapshot();});
+    const s=await page.evaluate(async()=>{const g=window.kairos;await g.advanceTime(15000);return g.snapshot();});
     trace.push({t:s.race.elapsed,player:s.race.entrants[0],positions:s.opponents.map(o=>({id:o.id,speed:o.speed})),cells:s.cells});
     if(i%5===0||s.screen==='results')console.log(vehicleClass,Math.round(s.race.elapsed),'lap',s.race.entrants[0].lap,'progress',Math.round(s.race.entrants[0].progress),'valid',s.race.entrants[0].valid,s.screen);
     if(s.screen==='results')break;

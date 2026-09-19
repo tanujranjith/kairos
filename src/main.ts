@@ -2,7 +2,7 @@ import './app';
 declare global {
   interface Window {
     render_game_to_text?: () => string;
-    advanceTime?: (ms: number) => void;
+    advanceTime?: (ms: number) => Promise<void>;
     kairos?: import('./app').Kairos;
   }
 }

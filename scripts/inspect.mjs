@@ -18,7 +18,7 @@ if(mode==='garage')await page.click('[data-action="screen"][data-value="garage"]
 if(mode==='race'){
   await page.click('[data-action="screen"][data-value="motorsport"]');await page.click('#start-race');
   await page.waitForFunction(()=>window.kairos?.screen==='drive');
-  await page.evaluate(()=>{window.kairos.setAutopilot(true);window.advanceTime(5000);});
+  await page.evaluate(async()=>{window.kairos.setAutopilot(true);await window.advanceTime(5000);});
   for(let i=0;i<6;i++)await page.evaluate(()=>window.advanceTime(10000));
 }
 if(mode==='map')await page.click('[data-action="screen"][data-value="map"]');

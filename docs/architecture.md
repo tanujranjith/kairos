@@ -5,6 +5,7 @@
 - `src/content`: authored vehicle parameters, road anchors, region height field, landmarks, navigation graph.
 - `src/sim`: Havok world adapter, four-contact physical vehicles, tire solver, traffic/racing decisions, ordered-checkpoint session rules.
 - `src/render`: Babylon initialization, local helper URLs, original car mesh generator, cell scenery, cameras, weather and showroom.
+- `src/world`: pure cell manifests/blueprints, transferable worker protocol, prioritized asynchronous transactions and resource leases.
 - `src/core`: shared contracts, math, controls, audio, versioned save validation.
 - `src/ui`: HTML/CSS menus and HUD, with a read-only view model and action callbacks.
 - `src/app.ts`: lifecycle, one fixed clock, subsystem integration, test hooks.
@@ -25,7 +26,7 @@ Northstar's validation rig creates a fresh physical vehicle per scenario, settle
 
 ## Roads and cells
 
-Spline definitions generate sampled road geometry, markings, contact surfaces and graph points. World cells are 256m. Nearby surface cells are generated before physics reaches them; additional detail queues favor direction/speed. The local implementation generates cells synchronously, so there are no asynchronous network-cell requests to cancel. This simplifies failure handling but cell-generation spikes still need profiling.
+Spline definitions generate sampled road geometry, markings, contact surfaces and graph points. World cells are 256m. A same-origin module worker generates bulk geometry and transfers buffers; main-thread installation creates Babylon/Havok resources. Collision neighborhoods and six-second swept corridors outrank detail. Racing reserves circuit/pit contacts. Fixed simulation waits under a retryable loading overlay if required contacts are unavailable. Stale loads cannot allocate after cancellation. Special course/junction fixtures remain main-thread work; generation/installation spikes still need profiling. See `streaming.md`.
 
 Repeated scenery uses thin instances. Each cell owns unique instance-buffer geometry (sharing it would overwrite every cell's transforms). Materials are shared; cell-owned sign textures are explicitly disposed. Physical AI locations protect their contact cells. Navigation uses A* over directed lanes and explicitly authored turn connectors shared with traffic. Incompatible-height junctions are rejected; generalized elevation-span topology and layer-aware wheel contacts are still incomplete. See `traffic.md` for scheduling, priorities, signals, lane changes and physical/distant resource ownership.
 
@@ -39,7 +40,7 @@ One gameplay canvas, native WGSL-capable WebGPU first and WebGL2 fallback. Shade
 
 Runtime loads the six compressed LOD0 GLBs as reusable templates, cloning per-car materials for customization. Missing GLBs fall back to the original mesh generator. Custom liveries use that generator to lay ribbons on the body profiles. Exported LOD1 files are retained, but runtime distance-based model swapping is not implemented. All twelve files are original Kairos assets.
 
-Four graphics settings vary resolution caps (720p/900p/1080p/1440p), shadow-map sizes and cell density, never physics or rules. Small procedural ground textures use mipmaps and anisotropic filtering. The sky uses a small generated gradient texture; wetness changes asphalt roughness and physical grip. Headlights use physical falloff, and close chase cameras ray-test against collision geometry. Reflection probes, automatic quality selection, dynamic resolution and KTX2 texture authoring remain separate acceptance work.
+Four graphics settings vary resolution caps (720p/900p/1080p/1440p), shadow-map sizes and cell density, never physics or rules. Original periodic albedo/normal textures use mipmaps and anisotropic filtering. The sky uses a generated cloudy gradient texture updated when lighting changes; wetness changes asphalt roughness and physical grip. Analytic valley/studio cubemaps distinguish outdoor and showroom paint reflections. FXAA runs on all presets; bloom is reserved for Medium and above. Headlights use physical falloff, and close chase cameras ray-test against collision geometry. Local reflection probes, automatic quality selection, dynamic resolution and KTX2 texture authoring remain separate acceptance work. See `graphics.md`.
 
 ## Input and audio
 
@@ -51,6 +52,6 @@ Audio is original Web Audio synthesis: engine harmonics vary with RPM/load and v
 
 ## Debugging and reproducibility
 
-Use F3 for telemetry or the development-only `window.kairos.snapshot()` / `window.render_game_to_text()` interfaces. `advanceTime(ms)` disables normal animation-loop simulation; `resumeRealTime()` restores it. Never treat a multi-second controlled-time batch's `physicsMs` as one real displayed frame. Current telemetry counts active meshes, not all GPU draw passes; it is not a draw-call-budget certification.
+Use F3 for telemetry or the development-only `window.kairos.snapshot()` / `window.render_game_to_text()` interfaces. **Await `advanceTime(ms)`**: it disables normal animation-loop simulation and awaits missing collision data without advancing simulation clocks. Rejected batches discard unconsumed time. `resumeRealTime()` restores normal stepping. Never treat a multi-second controlled-time batch's `physicsMs` as one real displayed frame. Current telemetry counts active meshes, not all GPU draw passes; it is not a draw-call-budget certification.
 
 The pure tire function in `src/sim/tire.ts` can be tested without loading Babylon. `tests/simulation.test.ts` covers road connectivity, combined grip, ordered timing, shortcuts, reverse crossings, track limits, false starts, lapped classifications, finish windows and save validation. Browser scripts complement those rules with actual Havok cars and UI flows. Keep numeric tolerances: repeatability on this build does not imply cross-browser bitwise determinism.
