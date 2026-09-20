@@ -27,6 +27,8 @@ The latest [car-model pass](docs/graphics.md) adds curved glazing, structural wi
 
 City corridors now have original lamp standards, benches, bins, planted beds and shelters. At night, two nearby pooled streetlights illuminate the road and cars; their ownership follows streamed scenery. This is bounded city dressing, not a completed world-art pass or a bus-service feature. The existing handling corrections are unchanged.
 
+Ground materials now blend meadow, dry grass, woodland soil, shore sediment and exposed rock in world coordinates, with smoother lighting and gravel-to-grass transitions. This uses the existing geometry/material passes and preserves physical driving surfaces. Scenery density, terrain joins and broader visual polish remain unfinished; see the current [graphics evidence and limitations](docs/graphics.md).
+
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.

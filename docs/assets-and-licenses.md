@@ -5,6 +5,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 | Content | Source / terms |
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
+| Continuous ground-cover palette, world-space blending fields, shoulder tint and smooth terrain display normals | Original Kairos code in `src/render/ground-material.ts` and `src/world/ground-cover.ts`; reuses existing original surface textures, with no new external asset or runtime host. |
 | City lamp standards, benches, bins, planted beds and shelters | Original geometry/placement in `src/content/streetscape.ts` and `src/world/streetscape.ts`; small plants reuse the original oak atlas. Local light pool in `src/render/street-lighting.ts`. No new texture, third-party or paid asset. |
 | Shared curved cabin/glazing, molded seats and door cards, closed headrests/rear bulkhead, GT harness and cage | Original geometry in `src/render/road-cabin.ts`; existing car materials and local GLB exporter, no external asset or paid content |
 | Continuous body profiles/normals, fitted arch trim and open Formula intake throats | Original source in `src/render/profile-curve.ts`, `coachwork.ts` and `formula-coachwork.ts`; twelve regenerated GLBs, no new external assets or paid content |

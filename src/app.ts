@@ -187,10 +187,10 @@ export class Kairos {
     this.uiClock+=dt;if(this.uiClock>.1){this.uiClock=0;this.ui.update();}if(!this.preparingPresentation)this.menuNavigation.update();this.loadingOverlay.update();
   }
   advanceTime(ms:number){
-    this.manual=true;if(ms<=0){this.draw(0,1);this.ui.update();return Promise.resolve();}
+    this.manual=true;if(ms<=0){renderPreparationFrame(this.renderer.engine,()=>this.draw(0,1));this.ui.update();return Promise.resolve();}
     const run=async()=>{if(this.transitioning)await this.transitionPromise;if(this.loadError)throw new Error(this.loadError);this.testAccumulator+=Math.max(0,ms)/1000;const start=performance.now();
       try{while(this.testAccumulator>=FIXED_DT-1e-9){if(!this.step()){await this.world.waitForSurfaces(this.streamingPositions());if(this.loadError)throw new Error(this.loadError);continue;}this.testAccumulator-=FIXED_DT;}}catch(error){this.testAccumulator=0;throw error;}
-      this.physicsMs=performance.now()-start;this.draw(ms/1000,1);this.ui.update();
+      this.physicsMs=performance.now()-start;renderPreparationFrame(this.renderer.engine,()=>this.draw(ms/1000,1));this.ui.update();
     };
     const pending=this.advanceQueue.catch(()=>{}).then(run);this.advanceQueue=pending;return pending;
   }

@@ -11,6 +11,16 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Continuous ground cover — September 20
+
+`ground-material.ts` adds native GLSL and WGSL hooks to the existing PBR ground material. World-coordinate fields blend grass, dry meadow, woodland litter, exposed shoulder soil, shoreline sediment and steep rock. Existing close-detail textures remain; no cell-sized splat texture, mesh or extra render pass is allocated. The recessed valley floor shares the broad field so unloading detailed scenery does not substitute a different grass pattern. Distant mountain rock remains on its existing material path.
+
+`world/ground-cover.ts` packs road-distance and woodland controls into the existing vertex-color buffer. Bridge height and city-road checks suppress inappropriate loose-earth borders. Gravel shoulder tint comes from its actual contact metadata; concrete bridge/city shoulders stay distinct. A second operation derives smooth visual normals from the height field, with caching for duplicated vertices. Physical vertices, indices, triangle order and surface metadata remain unchanged; Havok computes collision faces from positions and indices, not this display-normal attribute.
+
+The first actual WebGPU run exposed an expired swap-chain texture in controlled-time testing. `advanceTime` now submits each standalone draw through the same begin/end-frame helper as showroom preparation. Zero-time frames keep session clocks fixed. The failed report remains under `output/ground-cover/webgpu`; the corrected native-renderer runs are retained separately. Unit checks alone do not certify the shader: `verify-ground-cover.mjs` opens eight region/light/weather views, drives, returns home and rejects console/GPU errors on each backend. Wider art density, natural geometry, tree silhouettes and sky still need substantial work.
+
+Final181tests, both native-renderer eight-view checks, real-road/layer/cadence regression, streaming lifecycle, supplied input and four production Chrome/Edge renderer flows pass. The isolated Low geometry sample remains below300draws/500,000triangles. GPU timing is available on the development RTX3060, but no target-laptop performance claim is made. Actual diagnostic screenshots still show ground-detail bands and narrow terrain gaps when the backdrop is hidden; the material pass does not repair the existing terrain topology. See [measured scope and retained failures](benchmarks.md).
+
 ### City streetscape and local lighting — September 20
 
 `content/streetscape.ts` places fixtures at shared road-distance stations along four city corridors, excluding junction mouths, road ends and nearby crossings. `world/streetscape.ts` merges original lamp standards, timber benches, bins, raised planted beds and small shelters into the existing wall/roof/glass cell batches. The two plants in each bed reuse the original oak geometry/atlas. Solid geometry follows normal cell collision ownership; low fixture vertices are tested to remain at least 0.90m outside every driving surface. No per-fixture mesh, material or draw call is added.

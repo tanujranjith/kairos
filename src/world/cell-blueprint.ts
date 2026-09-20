@@ -8,7 +8,7 @@ import type { Quality,V3,WorldCellManifest,ContactSurface,ContactRange } from '.
 import { roadSpanAt,roadLayerAt } from '../content/road-layers';
 import { MeshDataBuilder,meshBytes,type MeshData } from './mesh-data';
 import { cellManifest,cellKey } from './cell-manifest';
-import { meadowColor } from './landscape';
+import { applyGroundChannels,smoothGroundNormals,GRAVEL_TINT } from './ground-cover';
 import { buildArchitecture,type BuildingStyle } from './architecture';
 import { buildServicePavilion } from './service-pavilion';
 import { buildPitGarage } from './pit-garage';
@@ -29,7 +29,7 @@ const atJunction=(x:number,z:number,roadId?:string)=>JUNCTIONS.some(j=>(!roadId|
 /** No Babylon/DOM references: deterministic data can be generated in a module worker. */
 export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlueprint{
   const manifest=cellManifest(cx,cz),key=manifest.id,[x0,z0]=manifest.bounds,meshes:CellMesh[]=[],instances:CellInstance[]=[],signs:CellSign[]=[];
-  const add=(name:string,g:MeshDataBuilder,material:CellMaterial,collision=false,contactSurface?:ContactSurface,contactRanges?:ContactRange[])=>{if(!g.positions.length)return;const data=g.finish();if(material==='terrain'){const colors=new Float32Array(data.positions.length/3*4);for(let i=0;i<data.positions.length;i+=3)colors.set(meadowColor(data.positions[i],data.positions[i+2]),i/3*4);data.colors=colors;}meshes.push({name:`${name}-${key}`,material,collision,data,contactSurface:contactSurface??(collision?{surface:'Concrete',layer:'structure'}:undefined),contactRanges});};
+  const add=(name:string,g:MeshDataBuilder,material:CellMaterial,collision=false,contactSurface?:ContactSurface,contactRanges?:ContactRange[])=>{if(!g.positions.length)return;const data=g.finish();if(material==='terrain'){applyGroundChannels(data);smoothGroundNormals(data);}meshes.push({name:`${name}-${key}`,material,collision,data,contactSurface:contactSurface??(collision?{surface:'Concrete',layer:'structure'}:undefined),contactRanges});};
   const terrain=new MeshDataBuilder();
   for(let x=x0;x<x0+CELL_SIZE;x+=16)for(let z=z0;z<z0+CELL_SIZE;z+=16)for(const bounds of terrainOutsideHandling([x,z,x+16,z+16]))for(const polygon of terrainOutsideRoads(terrainOutsideJunctions(bounds),bounds))terrain.polygon(polygon.map(p=>({...p,y:terrainHeight(p.x,p.z)})));
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
@@ -56,7 +56,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       for(const side of [-1,1])for(let clump=0;clump<4;clump++){const offset=side*(road.width/2+2.3+decoration()*5),along=decoration()*8,x=a.x+Math.cos(a.yaw)*offset+Math.sin(a.yaw)*along,z=a.z-Math.sin(a.yaw)*offset+Math.cos(a.yaw)*along;if(inLake(x,z)||inHandlingCourse(x,z,12)||atJunction(x,z))continue;const s=.45+decoration()*.7;instances.push({kind:'grass',position:{x,y:terrainHeight(x,z)-.035,z},scale:{x:s,y:.55+decoration()*.45,z:s},yaw:decoration()*Math.PI});}
     }
     if(!junction){const start=asphalt.indices.length/3,layer=roadLayerAt(road,(a.s+b.s)/2);strip(asphalt,0,road.width,.025);roadContacts.push({start,end:asphalt.indices.length/3,surface:'Asphalt',layer,roadId:road.id});
-      const vergeStart=verge.indices.length/3;strip(verge,0,road.width+3,-.015);vergeContacts.push({start:vergeStart,end:verge.indices.length/3,surface:span?.kind==='bridge'||road.id.startsWith('city')?'Concrete':'Gravel',layer,roadId:road.id});
+      const vergeStart=verge.indices.length/3,vergeVertex=verge.positions.length/3,surface=span?.kind==='bridge'||road.id.startsWith('city')?'Concrete':'Gravel';strip(verge,0,road.width+3,-.015);verge.tintSince(vergeVertex,surface==='Concrete'?[1,1,1,1]:GRAVEL_TINT);vergeContacts.push({start:vergeStart,end:verge.indices.length/3,surface,layer,roadId:road.id});
       for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046);}
     if(!junction&&road.id.startsWith('city'))for(const side of [-1,1]){
       // Flush visual paving leaves suspension/contact behaviour unchanged.

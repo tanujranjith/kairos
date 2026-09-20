@@ -16,6 +16,7 @@ import { CellWorkerClient } from '../world/worker-client';
 import { cellCoordinates,cellKey,planCells,type CellDemand,type StreamActor,type StreamingProfile } from '../world/cell-manifest';
 import { ResourcePool } from '../world/resource-pool';
 import {StreetLighting} from './street-lighting';
+import {GroundMaterial} from './ground-material';
 
 interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mesh[];detailMeshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];signals:SignalMesh[];collision:boolean;detail:boolean;leases:Map<Mesh,{release:()=>void}>}
 export class WorldRenderer {
@@ -43,6 +44,7 @@ export class WorldRenderer {
       const maps=surfaceTextures(scene,kind,scale);material.albedoColor=Color3.White();material.albedoTexture=maps.albedo;material.bumpTexture=maps.normal;material.bumpTexture.level=kind==='meadow'?.55:.35;
     }
     this.road.roughness=.94;this.road.metallic=0;
+    new GroundMaterial(this.terrain);
     // Opaque architectural glazing approximates an unmodeled dark interior.
     // A pale diffuse base used to overwhelm reflections and read as pink panels.
     this.glass.albedoColor=Color3.FromHexString('#35464e').toLinearSpace();this.glass.metallic=.35;this.glass.roughness=.14;
@@ -56,6 +58,7 @@ export class WorldRenderer {
     for(let i=0;i<rockPos.length;i+=3){const x=rockPos[i],y=rockPos[i+1],z=rockPos[i+2],n=1+.17*Math.sin(x*2.1+z*.7)*Math.cos(y*1.9);rockPos[i]*=n;rockPos[i+1]*=n*.65;rockPos[i+2]*=n;}this.boulders.updateVerticesData('position',rockPos);this.boulders.material=rockMat;this.boulders.isVisible=false;
     const ridges=mountainMesh(landHeight),ridgeData=new VertexData(),ridgeMat=mat('atmospheric-ridges','#ffffff');
     const geology=surfaceTextures(scene,'cliff',.035);ridgeMat.albedoTexture=geology.albedo;geology.normal.dispose();
+    new GroundMaterial(ridgeMat,true);
     Object.assign(ridgeData,ridges);this.backdrop=new Mesh('valley-horizon',scene);ridgeData.applyToMesh(this.backdrop);this.backdrop.material=ridgeMat;this.backdrop.parent=this.root;this.backdrop.isPickable=false;
     this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene),waves=surfaceTextures(scene,'water',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves.normal;water.bumpTexture.level=.12;waves.albedo.dispose();this.water.material=water;
   }
