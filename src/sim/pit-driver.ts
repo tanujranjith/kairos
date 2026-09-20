@@ -49,7 +49,7 @@ export class PitDriver {
       // or by turning back after missing the approach.
       if(this.reason&&r&&r.lap>=1&&ahead>CIRCUIT.length-25&&track.distance<CIRCUIT.width/2+1&&s.grounded&&Math.abs(s.position.y-track.point.y)<2.5)this.phase='approach';
       else{
-        const input=racingInput(vehicle,others,race.session.difficulty,wetness,this.index);
+        const input=racingInput(vehicle,others,race.session.difficulty,wetness,this.index,CIRCUIT,dt);
         if(this.reason&&r&&r.lap>=1&&ahead<260){const target=Math.sqrt(PIT_POLICY.speed**2+2*PIT_POLICY.braking*ahead);input.throttle=Math.min(input.throttle,clamp((target-s.speed)*.2,0,1));input.brake=Math.max(input.brake,clamp((s.speed-target)*.2,0,.7));}
         return {input,serviceComplete:false};
       }
@@ -63,7 +63,7 @@ export class PitDriver {
       else if(this.serviceElapsed>=PIT_POLICY.serviceSeconds){this.phase='exit';this.stops++;this.serviceElapsed=0;return {input:{...neutralInput(),brake:1},serviceComplete:true};}
       else return {input:{...neutralInput(),brake:1},serviceComplete:false};
     }
-    if(this.phase==='rejoin'&&n.progress>PIT_VISIT.road.length-4){this.reset();return {input:racingInput(vehicle,others,race.session.difficulty,wetness,this.index),serviceComplete:false};}
+    if(this.phase==='rejoin'&&n.progress>PIT_VISIT.road.length-4){this.reset();return {input:racingInput(vehicle,others,race.session.difficulty,wetness,this.index,CIRCUIT,dt),serviceComplete:false};}
     const look=7+Math.abs(s.speed)*.65,aim=samplePath(PIT_VISIT.road,n.progress+look),delta=wrap(Math.atan2(aim.x-s.position.x,aim.z-s.position.z)-s.yaw);
     const curve=Math.max(...[0,10,20,30].map(a=>Math.abs(samplePath(PIT_VISIT.road,n.progress+a).curvature)));
     let targetSpeed=Math.min(PIT_POLICY.speed,Math.sqrt(2.8/Math.max(.004,curve)));

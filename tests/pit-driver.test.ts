@@ -13,7 +13,7 @@ const session=()=>{const r=new RaceManager();r.start({kind:'Practice',laps:5,ent
 describe('AI pit strategy and physical route',()=>{
   it('steers away from an alongside car, not toward it based on its own track half',()=>{
     const s=state('self',CIRCUIT,120,18),v={state:s,definition:vehicleById('apex')} as Vehicle,otherState=state('left',CIRCUIT,120,18),other={state:otherState,definition:vehicleById('apex')} as Vehicle;
-    s.position=pointAt(CIRCUIT,120,-.1);otherState.position=pointAt(CIRCUIT,120,-3.5);const baseline=racingInput(v,[v],.65,0,0);
+    s.position=pointAt(CIRCUIT,120,-.1);otherState.position=pointAt(CIRCUIT,120,-1.9);const baseline=racingInput(v,[v],.65,0,0);
     expect(racingInput(v,[v,other],.65,0,0).steer).toBeGreaterThan(baseline.steer);
   });
   it('brakes early for a much slower car but does not brake for a safely separate lane',()=>{

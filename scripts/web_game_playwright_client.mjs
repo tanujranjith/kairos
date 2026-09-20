@@ -268,6 +268,7 @@ async function main() {
     args: ["--use-gl=angle", "--use-angle=swiftshader"],
   });
   const page = await browser.newPage();
+  try {
   const consoleErrors = new ConsoleErrorTracker();
 
   page.on("console", (msg) => {
@@ -276,6 +277,9 @@ async function main() {
   });
   page.on("pageerror", (err) => {
     consoleErrors.ingest({ type: "pageerror", text: String(err) });
+  });
+  page.on("requestfailed", request => {
+    consoleErrors.ingest({ type: "requestfailed", url: request.url(), text: request.failure()?.errorText });
   });
 
   await page.addInitScript({ content: makeVirtualTimeShim() });
@@ -289,10 +293,12 @@ async function main() {
 
   if (args.clickSelector) {
     try {
+      await page.waitForSelector(args.clickSelector, { state: "visible", timeout: 90000 });
       await page.click(args.clickSelector, { timeout: 5000 });
       await page.waitForTimeout(250);
     } catch (err) {
-      console.warn("Failed to click selector", args.clickSelector, err);
+      await page.screenshot({path: path.join(args.screenshotDir, "startup-failure.png")}).catch(() => {});
+      throw err;
     }
   }
   let steps = null;
@@ -343,11 +349,12 @@ async function main() {
         path.join(args.screenshotDir, `errors-${i}.json`),
         JSON.stringify(freshErrors, null, 2)
       );
+      process.exitCode = 1;
       break;
     }
   }
 
-  await browser.close();
+  } finally { await browser.close(); }
 }
 
 main().catch((err) => {

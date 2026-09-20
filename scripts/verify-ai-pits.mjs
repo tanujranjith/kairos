@@ -1,7 +1,7 @@
 import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
-const entrants=Number(process.argv.find(v=>v.startsWith('--entrants='))?.split('=')[1]??8),fault=process.argv.find(v=>v.startsWith('--fault='))?.split('=')[1]??'tires',classes=process.argv.includes('--formula')?['FORMULA']:['GT','FORMULA'],output=`output/ai-pits-${entrants}${fault==='tires'?'':'-'+fault}${process.argv.includes('--formula')?'-formula':''}`,reports=[],errors=[];
+const entrants=Number(process.argv.find(v=>v.startsWith('--entrants='))?.split('=')[1]??8),fault=process.argv.find(v=>v.startsWith('--fault='))?.split('=')[1]??'tires',classes=process.argv.includes('--formula')?['FORMULA']:['GT','FORMULA'],output=process.argv.find(v=>v.startsWith('--output='))?.slice(9)??`output/ai-pits-${entrants}${fault==='tires'?'':'-'+fault}${process.argv.includes('--formula')?'-formula':''}`,reports=[],errors=[];
 await fs.mkdir(output,{recursive:true});const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1280,height:720}});page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(String(e)));
 try{
   await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForFunction(()=>window.kairos?.ui);await page.evaluate(()=>window.advanceTime(0));

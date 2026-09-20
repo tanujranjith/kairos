@@ -1,5 +1,15 @@
 # Feature status — working build, not acceptance certification
 
+## Latest racing-control checkpoint — September20
+
+148 tests and the isolated strict Node24 production build pass. Racing inputs now use anchored lane reservations, continuous line changes, measured chassis yaw-rate feedback and road-edge tracking clearance. Reproduced grid-convergence, first-bend oscillation and sixteen-car outer-lane failures were corrected without changing tire forces, vehicle power, keyboard controls or track-limit tolerances. All new controller parameters are authored `RACE_AI` data.
+
+Both complete eight-car GT/Formula weekends pass all stages with zero warnings, penalties or damage across the field; the practice stage includes an actual AI pit visit. Both sixteen-car three-lap races classify all entrants cleanly. Separate low-fuel and worn-tire tests pass all24pit gates, service, rejoin and a subsequent valid lap. These are controlled-time development-host scenarios, not every difficulty/weather/start order or laptop performance certification.
+
+The final144-case keyboard check passes unchanged, including actual acceleration/turn/brake/reverse/reset. Production Chrome and Edge pass WebGPU and forcedWebGL2, cold throttled cache and third-party hosts blocked, through ordinary driving and race-launch/menu flows. The supplied input harness now reports browser/request failures as failures instead of silently returning success; screenshots and state are still reviewed explicitly.
+
+The full game remains incomplete. In particular, service still uses single-file lane stops, full qualifying-grid order currently preserves only the player's qualified slot, and further vehicle/cabin art, broader scenery realism, adaptive quality/device recovery, KTX2, hardware/endurance and authorizedHTTPS verification remain required. See [racing control and reproduction](racing-ai.md) and [dated evidence](benchmarks.md).
+
 ## Latest forecourt checkpoint — September 20
 
 142 tests and the strict Node24 production build pass. The formerly empty garage gaps now contain a control tower, paved forecourts, sheltered seating and planting; twelve garage-side equipment stations add working-pit detail. New solids and paving pass road-clearance tests after correcting two placements near the curved pit mouths. Architectural glazing and dusk emission were refined through actual screenshot review. Nine circuit views and seven world/day/night captures pass with four contacts and no browser errors. Art remains stylized and below the full reference target.

@@ -42,6 +42,14 @@ Repeated scenery uses thin instances. Each cell owns unique instance-buffer geom
 
 `src/content/race-course.ts` defines race rules and finite-width, height-clipped directional timing gates. `RaceRouteTracker` owns per-entrant physical circuit/pit proof; `RaceManager` consumes interpolated crossing events for ordered checkpoints, sectors, laps, penalties and classification. The pit has its own ordered gate chain and circuit-equivalent progress anchored at entry, the extended finish plane and exit. Stationary service cannot advance race position, and resets/skipped gates cannot fabricate lap credit. See `race-timing.md` for tests and remaining AI/rejoin limitations.
 
+### Racing line control
+
+Racing AI reserves an anchored road-relative lane while another car's body overlaps now or within a1.2-second relative-speed horizon. Height-separated traffic is excluded. The occupied-lane bounds apply after passing decisions, so a later opponent cannot overwrite them. An unanchored reservation was rejected because it accumulated ordinary corner-tracking drift. Weakly owned per-vehicle/road state releases lane reservations once clearance returns and cannot retain disposed cars.
+
+The target corridor subtracts half the vehicle width and a2m tracking allowance from each road edge. A smaller allowance let a sixteen-car GT overtake sequence reserve an outside line too close to the curb; ordinary tracking error then put wheels off the asphalt. Lane speed, prediction horizon, body clearance, tracking allowance and yaw-control gains live in `RACE_AI`, separate from vehicle physics and track-limit rules.
+
+Unoccupied line changes move their target at1.2m/s using the actual controller timestep; player test autopilot and opponent decisions therefore use the same transition rate despite different update cadences. Pure pursuit requests a yaw rate, compared with the measured Havok chassis yaw rate to damp overshoot through the normal steering input. It does not modify yaw, velocity, tire forces or grip. A duplicate speed-squared curvature-steering term and an experimental steady sideslip correction were rejected by real first-bend tests. See `tests/racing-lanes.test.ts` and `scripts/inspect-race-launch.mjs` for the dense launch/field regression.
+
 ## Persistence
 
 `SaveGame.version` is validated, numerical ranges are clamped, unknown vehicles fall back safely, and non-finite records are discarded. Corrupt or unsupported stored profiles are preserved under a timestamped recovery key before fresh defaults are saved. IndexedDB open/write failures remain user-visible; play continues in memory. Import is bounded to 2MB and parsed as data, never executed. Export uses a user-triggered download. No user data is transmitted. The closed-database, unavailable-storage, corrupt-profile and export/import paths have browser regression checks.

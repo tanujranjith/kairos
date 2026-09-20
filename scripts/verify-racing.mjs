@@ -1,13 +1,16 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
-const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const output=process.argv.find(a=>a.startsWith('--output='))?.slice(9)??'output/racing',entrants=Number(process.argv.find(a=>a.startsWith('--entrants='))?.split('=')[1]??8);
+const browser=await chromium.launch({channel:'msedge',headless:true});
 const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[];
+page.setDefaultTimeout(90000);
+try{
 page.on('pageerror',e=>errors.push(String(e)));
 await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForFunction(()=>window.kairos?.ui);
 await page.evaluate(()=>window.advanceTime(0));
 const reports=[];
 for(const vehicleClass of ['GT','FORMULA']){
-  await page.evaluate(async vehicleClass=>{const g=window.kairos;Object.assign(g.raceConfig,{vehicleClass,laps:3,entrants:8,position:4,kind:'Quick Race'});await g.startRace();g.setAutopilot(true);},vehicleClass);
+  await page.evaluate(async({vehicleClass,entrants})=>{const g=window.kairos;Object.assign(g.raceConfig,{vehicleClass,laps:3,entrants,position:4,kind:'Quick Race'});await g.startRace();g.setAutopilot(true);},{vehicleClass,entrants});
   const trace=[];
   for(let i=0;i<50;i++){
     const s=await page.evaluate(async()=>{const g=window.kairos;await g.advanceTime(15000);return g.snapshot();});
@@ -16,7 +19,10 @@ for(const vehicleClass of ['GT','FORMULA']){
     if(s.screen==='results')break;
   }
   await page.evaluate(async()=>{const g=window.kairos;await g.renderer.scene.whenReadyAsync();await g.advanceTime(0);});
-  await fs.mkdir('output/racing',{recursive:true});await page.screenshot({path:`output/racing/${vehicleClass}.png`});
-  const final=await page.evaluate(()=>window.kairos.snapshot());reports.push({vehicleClass,final,trace});
+  await fs.mkdir(output,{recursive:true});await page.screenshot({path:`${output}/${vehicleClass}.png`});
+  const final=await page.evaluate(()=>window.kairos.snapshot()),damage=await page.evaluate(()=>[window.kairos.player,...window.kairos.opponents.map(o=>o.vehicle)].map(v=>({id:v.id,damage:v.state.damage})));
+  reports.push({vehicleClass,final,damage,trace});
+  await fs.writeFile(`${output}/report.json`,JSON.stringify({environment:'Installed Edge/WebGL2, controlled time. Actual grid and input-driven three-lap races; not laptop FPS or real-time endurance evidence.',errors,reports},null,2));
 }
-await fs.writeFile('output/racing/report.json',JSON.stringify({environment:'Development host / Chromium SwiftShader, controlled time; NOT laptop FPS evidence',errors,reports},null,2));await browser.close();if(errors.length||reports.some(r=>r.final.screen!=='results'||!r.final.race.entrants[0].finished))process.exitCode=1;
+if(errors.length||reports.some(r=>r.final.screen!=='results'||r.final.race.entrants.some(e=>!e.finished||e.warnings||e.penalty)||r.damage.some(v=>v.damage>=.01)))process.exitCode=1;
+}finally{await browser.close();}

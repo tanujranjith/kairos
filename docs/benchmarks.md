@@ -2,6 +2,29 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September20 racing lane control
+
+148 tests and strict Node24 build pass in isolation (index-Ie1QASsI.js, unchanged world worker-wq6AnC2o.js). The previous concurrent run hit the existing5s blueprint-test timeout while three browser simulations were active; the timeout was not raised and no world/mesh code changed. The isolated suite passes in14.89s. Existing large-engine chunk warning remains.
+
+Dense100ms traces reproduced the original6m-grid-lane convergence and side-contact/yaw excursion. Rejected iterations exposed drifting reservations, discontinuous passing targets and a steady sideslip-steering bias. The retained controller anchors occupied lanes, transitions unoccupied targets at1.2m/s with actual dt, tracks measured chassis yaw rate and reserves2m of tracking allowance at each road edge after half vehicle width. Vehicle forces, tire grip/power, keyboard input and track-limit rules are unchanged. New pure tests cover lane/height separation, predictive overlap, anchored drift, decision order, transition cadence, yaw-feedback direction and curb clearance.
+
+Final installed Edge/WebGL2 controlled-time results, with actual grid departures and no position/velocity corrections:
+
+| Scenario | GT simulated time | Formula simulated time | Evidence |
+|---|---:|---:|---|
+| Eight-car low-fuel AI visit |346s|341s|One service, all24pit gates, rejoin, subsequent valid lap; no warning/penalty/damage |
+| Eight-car worn-tire AI visit |431s|441s|Same proof; tires restored and final fuel97.84L/107.34L |
+| Eight-car full weekend |300s practice +300s qualifying +377.75s race|300s +300s +319.37s|Physical AI service during practice, actual next-session UI, all race entrants classified; all stages/all entrants zero warnings/penalties/damage |
+| Sixteen-car three-lap race |392.83s|334.12s|All16 classified; zero warnings/penalties/damage |
+
+Current reports/captures are in `output/racing-lanes/clearance-{fuel-8,tires-8,weekends,races-16}`. Earlier `final-*` reports predate the final curb margin and include the strict16-car GT warning; they are not substituted for the final pass. `output/race-launch/gt-16-warning` reproduces that warning at45.89s; `gt-16-clearance` passes the same section and90s of sampled running. Actual failure, passing field, service and result images were inspected. These selected checks do not establish every start position/weather/difficulty, simultaneous stops, off-line service bays or full qualifying-grid-order preservation.
+
+The first final skill-input attempt returned a white screenshot/no state and ERR_CONNECTION_RESET while its wrapper incorrectly exited0. The dev-server process remained live/HTTP200. Its cause is unproven; no restart was inferred. The existing supplied-client copy now waits explicitly for its requested control, propagates startup failures, records failed-request URLs, returns nonzero on browser errors and always closes its browser. The opened retry and final clearance-input capture/state show actual driving:3.794694m/s, four asphalt contacts, zero damage/loading/errors. Fresh144-case keyboard validation passes unchanged (maximum sideslip4.3964deg, all four contacts/zero damage); actual40mph steering/braking/reverse/reset pass, reverse-3.3725m/s. Final keyboard and input screenshots were opened.
+
+Production Edge/Chrome both pass forcedWebGL2 and actualWebGPU with cold25Mbps/40ms cache, third-party hosts blocked and no development hooks. FreeDrive motion, Northstar, clean eight-car GT(Edge)/Formula(Chrome) launch and home return pass. Menu readiness Edge5.999/5.764s and Chrome5.754/5.744s; click-to-motion4.573/6.884s and4.706/6.370s. Total11,323,955 bytes each through the tested flow. No failed/page/external requests; only known Windows powerPreference warning. Actual production images opened; preview5192 serves index-Ie1QASsI.js and no runtime edits followed the final build.
+
+No new rendering, real-time frame-pacing, actual8GB-laptop or30-minute endurance certification is implied by these controlled-time runs. World/car art remains below the full requested target; no authorizedHTTPS deployment was performed.
+
 ## September 20 working pit forecourt
 
 142 pure tests and strict Node24 production build pass (index-BqhwEn-q.js, cell-worker-wq6AnC2o.js). New coverage checks finite/cost-bounded foreground geometry, all solid and paved vertices against pit/access clearance, deterministic planting inside authored beds, control-sign ownership, dusk emission, and Vite's output-path exclusion. The first entry cabinet and exit planter failed at4.467m/5.670m from the pit center; repositioned without lowering the clearance thresholds. Actual screenshot review added stair rails and corrected flat pink/orange daytime panes. Glazing remains an opaque dark-interior approximation, not a modeled interior/live reflection system.

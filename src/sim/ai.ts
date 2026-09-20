@@ -1,29 +1,67 @@
 import type { InputFrame, Road } from '../core/types';
 import { CIRCUIT, pointAt, nearestRoad } from '../content/world';
 import { clamp, wrap } from '../core/math';
-import { Vehicle } from './physics';
+import type { Vehicle } from './physics';
 import { RACE_AI } from '../content/race-course';
 
-export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,wetness:number,index:number,road:Road=CIRCUIT):InputFrame {
+// A reserved lane is an anchored road offset, not the current lateral position
+// re-sampled every decision (which integrates ordinary corner tracking error).
+const reservedLanes=new WeakMap<Vehicle,{road:Road;offset:number}>();
+const plannedLanes=new WeakMap<Vehicle,{road:Road;offset:number}>();
+/** A lane change is a path transition, not an instantaneous six-metre target jump. */
+export const advanceLaneOffset=(current:number,target:number,dt:number)=>current+clamp(target-current,-RACE_AI.laneChangeSpeed*dt,RACE_AI.laneChangeSpeed*dt);
+
+export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,wetness:number,index:number,road:Road=CIRCUIT,dt=.1):InputFrame {
   const s=vehicle.state,near=nearestRoad(s.position.x,s.position.z,r=>r.id===road.id),speed=Math.abs(s.speed),lookAhead=clamp(9+speed*.60,9,48);
   // Retain the grid lane until launch traffic has spread out; converging all cars
   // on the centerline in the first seconds caused avoidable contact.
   let offset=s.distance<80?clamp(near.lateral,-3,3):0,bypass=false;
+  const laneLimit=Math.max(0,road.width/2-vehicle.definition.width/2-RACE_AI.trackingMargin);
+  const previous=reservedLanes.get(vehicle),anchor=clamp(previous?.road===road?previous.offset:near.lateral,-laneLimit,laneLimit);
+  let leftLimit=-laneLimit,rightLimit=laneLimit,reserved=false;
   for(const other of others){
     if(other===vehicle)continue;
     const relX=other.state.position.x-s.position.x,relZ=other.state.position.z-s.position.z,forward=relX*Math.sin(s.yaw)+relZ*Math.cos(s.yaw),lateral=relX*Math.cos(s.yaw)-relZ*Math.sin(s.yaw);
-    if(Math.abs(forward)<8&&Math.abs(lateral)<5)offset=lateral<0?2.7:-2.7;
-    else if(s.distance>150&&forward>3&&forward<40&&Math.abs(lateral)<2.5){
+    if(Math.hypot(relX,relZ)>100||Math.abs(other.state.position.y-s.position.y)>2.5)continue;
+    const otherNear=nearestRoad(other.state.position.x,other.state.position.z,r=>r.id===road.id);
+    let along=otherNear.progress-near.progress;
+    if(road.loop)along=(along+road.length*1.5)%road.length-road.length*.5;
+    const relativeSpeed=(other.state.velocity.x-s.velocity.x)*Math.sin(near.point.yaw)+(other.state.velocity.z-s.velocity.z)*Math.cos(near.point.yaw);
+    const predicted=along+relativeSpeed*RACE_AI.overlapHorizon,clearance=(vehicle.definition.length+other.definition.length)/2+RACE_AI.longitudinalClearance;
+    // Reserve the lane while bodies overlap now or within the next 1.2s.
+    // The old 5m side trigger let the two 6m-spaced grid lanes converge, then
+    // commanded a reversal too late to avoid a high-speed side contact.
+    // Work in road coordinates, not the car's yawing forward ray, and prohibit
+    // a later passing decision from overriding this occupied-lane constraint.
+    if(otherNear.distance<road.width/2+1&&Math.min(along,predicted)<clearance&&Math.max(along,predicted)>-clearance){
+      const side=otherNear.lateral-near.lateral;
+      if(Math.abs(side)<vehicle.definition.width+other.definition.width+4){
+        reserved=true;const separation=(vehicle.definition.width+other.definition.width)/2+RACE_AI.lateralClearance;
+        if(side<0)leftLimit=Math.max(leftLimit,Math.min(laneLimit,Math.max(anchor,otherNear.lateral+separation)));
+        else rightLimit=Math.min(rightLimit,Math.max(-laneLimit,Math.min(anchor,otherNear.lateral-separation)));
+      }
+    }
+    if(s.distance>150&&forward>3&&forward<40&&Math.abs(lateral)<2.5){
       if(Math.abs(other.state.speed)<2){
         const candidate=lateral<=0?3:-3,clear=others.every(v=>{if(v===vehicle||v===other)return true;const dx=v.state.position.x-s.position.x,dz=v.state.position.z-s.position.z,f=dx*Math.sin(s.yaw)+dz*Math.cos(s.yaw),side=dx*Math.cos(s.yaw)-dz*Math.sin(s.yaw);return f< -10||f>45||Math.abs(side-(candidate-near.lateral))>(vehicle.definition.width+v.definition.width)/2+.5;});
         if(clear){offset=candidate;bypass=true;}
       }else if(Math.abs(near.point.curvature)<.0015)offset=(index%2===0?1:-1)*2.8;
     }
   }
+  if(reserved)reservedLanes.set(vehicle,{road,offset:anchor});else reservedLanes.delete(vehicle);
+  const planned=plannedLanes.get(vehicle);
+  offset=advanceLaneOffset(planned?.road===road?planned.offset:clamp(near.lateral,-laneLimit,laneLimit),offset,dt);
+  offset=leftLimit<=rightLimit?clamp(offset,leftLimit,rightLimit):anchor;
   if(road.kind==='pit')offset=0;
+  plannedLanes.set(vehicle,{road,offset});
   const target=pointAt(road,near.progress+lookAhead,offset);
   const alpha=wrap(Math.atan2(target.x-s.position.x,target.z-s.position.z)-s.yaw);
-  const angle=Math.atan2(2*vehicle.definition.wheelbase*Math.sin(alpha),lookAhead)+pointAt(road,near.progress+lookAhead*.4).curvature*speed*speed*.0025,maxSteer=clamp(.57/(1+speed*.055),.115,.57);
+  const slipAngle=speed>4?wrap(Math.atan2(s.velocity.x,s.velocity.z)-s.yaw):0;
+  // Track the path's requested yaw rate against the actual rigid body's yaw
+  // rate. This damps overshoot without adding another v²-scaled curve term or
+  // a steady sideslip steering bias. It changes the rack input, never velocity.
+  const desiredYawRate=2*speed*Math.sin(alpha)/lookAhead,actualYawRate=vehicle.body?.getAngularVelocity().y??0;
+  const angle=Math.atan2(2*vehicle.definition.wheelbase*Math.sin(alpha),lookAhead)+clamp((desiredYawRate-actualYawRate)*RACE_AI.yawRateGain,-RACE_AI.yawCorrectionLimit,RACE_AI.yawCorrectionLimit),maxSteer=clamp(.57/(1+speed*.055),.115,.57);
   let targetSpeed=vehicle.definition.topSpeed/3.6*(.65+difficulty*.25);
   if(bypass)targetSpeed=Math.min(targetSpeed,10);
   // A service-required car limps home instead of reaching full straight-line
@@ -56,7 +94,7 @@ export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,w
       if(gap===0)targetSpeed=Math.min(targetSpeed,Math.max(0,leadSpeed-2));
     }
   }
-  const sideSlip=speed>4?Math.abs(wrap(Math.atan2(s.velocity.x,s.velocity.z)-s.yaw)):0;
+  const sideSlip=Math.abs(slipAngle);
   const cornerLoad=Math.abs(pointAt(road,near.progress+lookAhead*.4).curvature)*speed*speed/(vehicle.definition.grip*tireCondition*9.81);
   const formula=vehicle.definition.class==='FORMULA';
   const throttleBudget=clamp(1-cornerLoad*(formula?.8:.7),.2,1)*clamp(((formula?.19:.22)-sideSlip)/.12,0,1);
