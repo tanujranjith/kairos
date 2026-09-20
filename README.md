@@ -63,6 +63,8 @@ node scripts/verify-startup.mjs --repeats=3 --output=output/startup-delivery
 node scripts/verify-startup.mjs --channel=msedge --race --output=output/startup-edge
 node scripts/verify-startup.mjs --channel=chrome --race --formula --output=output/startup-formula-chrome
 node scripts/verify-formula-model.mjs
+node scripts/verify-road-models.mjs
+node scripts/verify-road-models.mjs --fallback
 node scripts/verify-handling.mjs
 node scripts/verify-traffic.mjs
 node scripts/verify-layers.mjs

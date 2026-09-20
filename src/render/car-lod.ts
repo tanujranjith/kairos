@@ -7,7 +7,9 @@ import { carDetail } from './detail-policy';
 export function createLodCar(scene:Scene,d:VehicleDefinition,setup?:Customization):CarVisual {
   const root=new TransformNode(`lod-${d.id}`,scene),rigs=[createCar(scene,d,setup),createCar(scene,d,setup,true)];
   root.metadata={kairosCar:true};let level:0|1=1,disposed=false;
-  rigs.forEach((rig,i)=>{rig.root.parent=root;rig.root.setEnabled(i===level);});
+  // NPC rigs have no player cockpit: omit tiny dashboard screens from submission
+  // and texture uploads. Exterior geometry, tire animation and physics are intact.
+  rigs.forEach((rig,i)=>{rig.root.parent=root;rig.root.setEnabled(i===level);for(const p of rig.parts)if(p.material?.name.includes(`${d.id}-instruments`))p.isVisible=false;});
   return {
     root,groundOffset:rigs[0].groundOffset,parts:rigs.flatMap(r=>r.parts),get lod(){return level;},
     get wheels(){return rigs[level].wheels;},get paint(){return rigs[level].paint;},get glass(){return rigs[level].glass;},get lights(){return rigs[level].lights;},get tail(){return rigs[level].tail;},

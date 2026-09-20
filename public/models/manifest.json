@@ -6,73 +6,73 @@
       "id": "aeris",
       "lod": 0,
       "file": "aeris-lod0.glb",
-      "bytes": 260468
+      "bytes": 292504
     },
     {
       "id": "aeris",
       "lod": 1,
       "file": "aeris-lod1.glb",
-      "bytes": 137212
+      "bytes": 117588
     },
     {
       "id": "velara",
       "lod": 0,
       "file": "velara-lod0.glb",
-      "bytes": 259848
+      "bytes": 305164
     },
     {
       "id": "velara",
       "lod": 1,
       "file": "velara-lod1.glb",
-      "bytes": 137088
+      "bytes": 124484
     },
     {
       "id": "crest",
       "lod": 0,
       "file": "crest-lod0.glb",
-      "bytes": 260132
+      "bytes": 292416
     },
     {
       "id": "crest",
       "lod": 1,
       "file": "crest-lod1.glb",
-      "bytes": 137112
+      "bytes": 118760
     },
     {
       "id": "nova",
       "lod": 0,
       "file": "nova-lod0.glb",
-      "bytes": 259680
+      "bytes": 307580
     },
     {
       "id": "nova",
       "lod": 1,
       "file": "nova-lod1.glb",
-      "bytes": 136924
+      "bytes": 127284
     },
     {
       "id": "gtx",
       "lod": 0,
       "file": "gtx-lod0.glb",
-      "bytes": 260444
+      "bytes": 287224
     },
     {
       "id": "gtx",
       "lod": 1,
       "file": "gtx-lod1.glb",
-      "bytes": 137664
+      "bytes": 129104
     },
     {
       "id": "apex",
       "lod": 0,
       "file": "apex-lod0.glb",
-      "bytes": 255268
+      "bytes": 259752
     },
     {
       "id": "apex",
       "lod": 1,
       "file": "apex-lod1.glb",
-      "bytes": 138304
+      "bytes": 113024
     }
   ]
 }

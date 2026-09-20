@@ -16,6 +16,7 @@ try{
     for(const d of VEHICLES)for(const livery of [0,1]){
       const car=createLodCar(scene,d,{paint:'#bc4321',wheels:'#718595',livery,brakeBias:.6,aero:1});g.renderer.registerCar(car);
       const root=car.root,parts=car.parts.length,paint=car.paint.albedoColor.asArray();
+      if(car.parts.some(m=>m.material?.name.includes(`${d.id}-instruments`)&&m.isVisible))throw new Error('NPC dashboard must not add a draw call');
       const count=()=>car.parts.filter(m=>m.isEnabled()).reduce((n,m)=>n+m.getTotalIndices()/3,0);
       car.selectDetail(10,'Low');car.update(g.player.state);const near=count(),nearPaint=car.paint.albedoColor.asArray();
       car.selectDetail(70,'Low');car.update(g.player.state);const far=count(),farPaint=car.paint.albedoColor.asArray();

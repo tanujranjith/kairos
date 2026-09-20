@@ -2,6 +2,47 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 19 enclosed-car and six-car wheel checkpoint
+
+All 118 unit tests, strict TypeScript and the production build pass; the existing large Babylon engine-chunk warning remains. New tests cover five distinct body/cabin profiles, open passenger cells, roof/headrest/steering clearance and instrument sightlines, conforming liveries at both detail levels, six wheel styles, finite/outward geometry, bounded detail cost and calipers following suspension/steering without tire rotation. No vehicle-force or race-rule parameters changed.
+
+The final `output/road-models/report.json` verifies all eighteen car/livery choices and five settled moving cameras for each car, matching live instrument telemetry, four contacts, zero damage, wheel/brake alignment and menu return; no page errors or external requests. Final front/rear, both liveries and all five camera contact sheets were opened. The explicit missing-GLB fallback test passed earlier in the pass, before final cockpit/eye/steering adjustments; the final livery cases exercise the same revised procedural source. The required input client's final screenshot/state in `output/road-model-input-release` was opened: 3.710974m/s, four asphalt contacts, zero damage, no loading/error state.
+
+| Vehicle | GLB triangles, detailed / distant | GLB bytes, detailed / distant |
+|---|---:|---:|
+| Aeris | 35,128 / 11,216 | 292,504 / 117,588 |
+| Velara | 35,720 / 11,518 | 305,164 / 124,484 |
+| Crest | 35,260 / 11,298 | 292,416 / 118,760 |
+| Nova | 35,852 / 11,670 | 307,580 / 127,284 |
+| GTX | 32,008 / 11,790 | 287,224 / 129,104 |
+| Apex | 31,850 / 11,042 | 259,752 / 113,024 |
+
+The twelve asset/livery LOD cases return exactly to 126 meshes, 71 materials, 35 transform nodes and 43 textures after disposal. That resource regression precedes only the final steering-height translation, not an ownership change. Its added assertion ensures NPC screens are hidden; player displays are tested separately. This is short-cycle evidence, not 30-minute process/GPU-memory acceptance.
+
+Six-car acceleration/contact values and Velara's 60/30/20Hz cadence/braking values are unchanged. Both three-lap/eight-car physical race regressions classify all eight entrants at 387.783s GT / 300.075s Formula, with zero player penalty/damage and two GT/zero Formula track-limit warnings. These precede only visual camera/steering refinements.
+
+Final isolated submission audit: installed Edge/WebGL2, RTX 3060, Low 1280×720, 66 controlled steps per view including extra passes:
+
+| View | Maximum draw calls | Maximum active triangles | Median scene submission |
+|---|---:|---:|---:|
+| Showroom | 184 | 175,432 | 5.9ms |
+| Lakeshore traffic | 245 | 373,969 | 7.5ms |
+| City traffic | 204 | 409,863 | 6.0ms |
+| Wet night | 204 | 408,684 | 6.2ms |
+| Eight-car GT grid | 295 | 346,707 | 7.4ms |
+| Eight-car Formula grid | 281 | 351,747 | 5.3ms |
+
+The first GT grid reached 304 draws (`output/render-cost/road-models-first-over-budget.json`). Hiding only NPC interior displays and skipping their uploads restores the submission budget; player telemetry and every physical vehicle remain unchanged. These are controlled-time rendering submissions, not isolated CPU/GPU costs or real-time frame pacing. More realistic bumper/interior detail, finished scenery, actual secondary-laptop/endurance acceptance and the full original goal remain incomplete.
+
+Production delivery passes in installed Edge and Chrome, each through forced WebGL2 and actual WebGPU, with cold cache, 25Mbps/40ms emulation and third-party hosts blocked. Each verifies showroom, Free Drive motion, Northstar, a clean eight-car countdown/launch and return home. Edge uses GT and Chrome Formula. No page errors, failed/external requests or exposed development hooks; only the known Windows WebGPU `powerPreference` warning. Each path transfers 11,237,429 bytes through these flows. The production GT race screenshot was opened.
+
+| Browser | WebGL2 menu ready / click-to-motion | WebGPU menu ready / click-to-motion |
+|---|---:|---:|
+| Edge | 6.777s / 5.359s | 6.015s / 8.990s |
+| Chrome | 6.115s / 5.556s | 5.769s / 7.244s |
+
+Reports/captures: `output/road-model-delivery-edge` and `output/road-model-delivery-chrome`. Preview5192 now serves the rebuilt files; refresh it. These localhost samples do not certify HTTPS, the target laptop, whole-process/GPU memory, endurance or resolution of earlier intermittent startup stalls.
+
 ## September 19 Apex model checkpoint
 
 All 114 unit tests, strict TypeScript and the production build pass (the existing large Babylon chunk warning remains). New cases check finite curved Formula geometry, upward-facing aero, lower cover/cockpit scale, the eye point inside the cockpit, detail-level reduction and liveries conforming to the actual panel triangles. The body retains the existing physical definition. Initial excess subdivision, a blank instrument screen and raised sidepod stripes were caught and corrected during build/input/screenshot iteration.
