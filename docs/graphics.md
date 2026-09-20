@@ -11,6 +11,14 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Continuous body surfaces and open Formula intakes — September 20
+
+`profile-curve.ts` interpolates authored stations using their real metre spacing, with a shared physical tangent and no local overshoot. It replaces uniform-parameter interpolation in both body generators. Enclosed-car crowns have more lateral samples with a corresponding reduction in longitudinal/fascia samples; continuous skin normals prevent wheel-arch triangulation from creasing the door reflections. Fender trim follows the authored body's changing width instead of a fixed width. Velara and GTX have less pinched waists and shallower bonnet valleys. These are visual surfaces only: physical dimensions, suspension, tire grip, steering and racing inputs are unchanged.
+
+Formula loft caps have separate vertices/normals. The sidepods now have genuinely open mouths with inward-facing, 15cm-deep dark throats; the previous painted end caps and incorrectly pivoted intake patches were removed. Tests cover matching mouth boundaries, open faces and recessed normals at both detail levels. All twelve compressed GLBs are regenerated from these sources.
+
+Generated and imported paint share a .46 metallic / .28 roughness base and .13-roughness clearcoat. Matched screenshot review rejected a flatter .28-metallic candidate. This is a bounded material/surface correction, not a claim of finished reference-quality cars: cabins, glazing, small-scale finish and broader environment realism still need work. `inspect-car-surfaces.mjs --output=...` retains fixed-camera comparisons; `verify-road-models.mjs`, `verify-render-detail.mjs` and `audit-render-cost.mjs` also accept separate output directories so earlier evidence is not overwritten.
+
 ### Aster forecourt and race-control landmark — September 20
 
 `world/pit-forecourt.ts` adds an original race-control tower with a glazed upper cabin, balcony, external stair flights/rails and aerials, plus paved garage-gap forecourts, sheltered benches, twelve raised planting beds and twelve rolling-cabinet/wheel-rack stations. The tower occupies the gap between existing garages rather than the pit lane. Solids reuse the existing cell collision/material batches; the mounted control sign follows normal cell ownership. All new paving and prop vertices are tested for pit/access-road clearance. The first entry cabinet and exit planter failed that check and were repositioned, not accepted with a wider tolerance.

@@ -2,7 +2,7 @@ import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
-const output='output/render-detail';await fs.mkdir(output,{recursive:true});
+const output=process.argv.find(a=>a.startsWith('--output='))?.slice(9)??'output/render-detail';await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[],external=[],checks=[];
 page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(String(e)));

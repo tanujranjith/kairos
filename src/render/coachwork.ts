@@ -3,10 +3,10 @@ import type { VehicleDefinition } from '../core/types';
 import {roadDesign} from './road-design';
 import {panelStripe,panelHeight,panelSide,panelDecal} from './panel-stripe';
 import {fascia,fasciaDepth} from './fascia';
+import {profileCurve} from './profile-curve';
 
 type Point=[number,number,number];
 const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
-const smooth=(a:number,b:number,c:number,d:number,t:number)=>.5*(2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
 
 /** Original continuous body surfaces, separate glazing and inset trim. Metres, +Z nose. */
 export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMaterial;glass:PBRMaterial;dark:PBRMaterial;chrome:PBRMaterial;light:PBRMaterial;tail:PBRMaterial;accent?:PBRMaterial;instruments?:PBRMaterial},lite:boolean,livery=0){
@@ -15,8 +15,8 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
   const add=(mesh:Mesh,material:Material)=>{mesh.material=material;parts.push(mesh);return mesh;};
   const box=(name:string,w:number,h:number,l:number,x:number,y:number,z:number,material:Material)=>{const mesh=MeshBuilder.CreateBox(name,{width:w,height:h,depth:l},scene);mesh.position.set(x,y,z);return add(mesh,material);};
   const tube=(name:string,points:Point[],radius:number,material:Material)=>add(MeshBuilder.CreateTube(name,{path:points.map(p=>Vector3.FromArray(p)),radius,tessellation:lite?4:8},scene),material);
-  const sheet=(name:string,rows:Point[][],material:Material)=>{
-    let positions=rows.flat(2),uvs:number[]=[];const indices:number[]=[],normals:number[]=[],width=rows[0].length;
+  const sheet=(name:string,rows:Point[][],material:Material,surfaceNormals?:number[])=>{
+    let positions=rows.flat(2),uvs:number[]=[],normals=surfaceNormals??[];const indices:number[]=[],width=rows[0].length;
     for(let j=0;j<rows.length;j++)for(let i=0;i<width;i++){uvs.push(i/(width-1),j/(rows.length-1));if(j<rows.length-1&&i<width-1){const a=j*width+i;
       const x=(rows[j][i][0]+rows[j][i+1][0])*.5,z=(rows[j][i][2]+rows[j+1][i][2])*.5;
       if(name==='sculpted-coachwork'&&Math.abs(x)<W*.73&&z>cabinRear+.035&&z<frontBase-.035)continue;
@@ -25,28 +25,49 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
     if(name==='sculpted-coachwork'){
       // Remove unused inner vertices too: the passenger cell is a real opening,
       // not a painted bonnet surface bisecting the dashboard and seats.
-      const map=new Map<number,number>(),p:number[]=[],uv:number[]=[];
-      for(let i=0;i<indices.length;i++){const old=indices[i];if(!map.has(old)){map.set(old,p.length/3);p.push(...positions.slice(old*3,old*3+3));uv.push(...uvs.slice(old*2,old*2+2));}indices[i]=map.get(old)!;}positions=p;uvs=uv;
+      const map=new Map<number,number>(),p:number[]=[],uv:number[]=[],n:number[]=[];
+      for(let i=0;i<indices.length;i++){const old=indices[i];if(!map.has(old)){map.set(old,p.length/3);p.push(...positions.slice(old*3,old*3+3));uv.push(...uvs.slice(old*2,old*2+2));if(surfaceNormals)n.push(...normals.slice(old*3,old*3+3));}indices[i]=map.get(old)!;}positions=p;uvs=uv;if(surfaceNormals)normals=n;
     }
-    VertexData.ComputeNormals(positions,indices,normals);
+    if(!surfaceNormals)VertexData.ComputeNormals(positions,indices,normals);
     if((name==='recessed-headlamp'&&normals.filter((_,i)=>i%3===1).reduce((a,b)=>a+b,0)<0)||(name.startsWith('kairos-')&&normals.filter((_,i)=>i%3===2).reduce((a,b)=>a+b,0)>0)){for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];VertexData.ComputeNormals(positions,indices,normals);}
     const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;data.uvs=uvs;const mesh=new Mesh(name,scene);data.applyToMesh(mesh);return add(mesh,material);
   };
   const stations=design.stations;
+  const profiles=[1,2,3].map(channel=>profileCurve(stations.map(s=>[s[0],s[channel]])));
   const rows:Point[][]=[];
-  for(let k=0;k<stations.length-1;k++)for(let j=0;j<(lite?4:10);j++){
-    const t=j/(lite?4:10),a=stations[Math.max(0,k-1)],b=stations[k],c=stations[k+1],e=stations[Math.min(stations.length-1,k+2)];
-    const z=mix(b[0],c[0],t),w=smooth(a[1],b[1],c[1],e[1],t),shoulder=smooth(a[2],b[2],c[2],e[2],t),centre=smooth(a[3],b[3],c[3],e[3],t);
+  for(let k=0;k<stations.length-1;k++)for(let j=0;j<(lite?4:7);j++){
+    const t=j/(lite?4:7),z=mix(stations[k][0],stations[k+1][0],t),[w,shoulder,centre]=profiles.map(p=>p.at(z));
     rows.push(section(z,w,shoulder,centre));
   }
   rows.push(section(...stations[stations.length-1]));
   function section(z:number,w:number,shoulder:number,centre:number):Point[]{
     const dz=Math.min(Math.abs(z-d.wheelbase/2),Math.abs(z+d.wheelbase/2)),radius=d.wheelRadius+.045;
     const bottom=dz<radius?-.32+Math.sqrt(radius*radius-dz*dz):-.43;
-    const half:[number,number][]=[[0,centre+.015],[.36,centre+.012],[.65,centre+.01],[.83,shoulder+.008],[.94,shoulder],[.99,shoulder-.035],[1,mix(shoulder-.045,bottom,.65)],[.98,bottom],[.86,bottom-.015]];
+    const crown=crownPoints(shoulder,centre),profile=profileCurve(crown);
+    const upper=lite?crown:[0,.18,.36,.51,.65,.74,.83,.885,.94].map(x=>[x,profile.at(x)] as [number,number]);
+    const half:[number,number][]=[...upper,[.99,shoulder-.035],[1,mix(shoulder-.045,bottom,.65)],[.98,bottom],[.86,bottom-.015]];
     return [...half.slice(1).reverse().map(([x,y])=>[-x*w,y,z] as Point),...half.map(([x,y])=>[x*w,y,z] as Point)];
   }
-  const body=sheet('sculpted-coachwork',rows,m.paint);
+  function crownPoints(shoulder:number,centre:number):[number,number][]{return [[0,centre+.015],[.36,centre+.012],[.65,centre+.01],[.83,shoulder+.008],[.94,shoulder]];}
+  // Evaluate normals from the continuous skin, not triangle counts. Unequal
+  // station spacing and changing wheel-arch height otherwise crease reflections.
+  const skinNormals=rows.flatMap(row=>{
+    const z=row[0][2],z0=Math.max(stations[0][0],z-.0001),z1=Math.min(stations.at(-1)![0],z+.0001);
+    const sample=(at:number)=>{const [w,s,c]=profiles.map(p=>p.at(at));return {w,crown:profileCurve(crownPoints(s,c)),row:section(at,w,s,c)};};
+    const a=sample(z0),b=sample(z1),now=sample(z);
+    return row.flatMap((p,i)=>{
+      const u=Math.abs(p[0])/now.w;
+      if(u<=.940001){
+        const dx=now.crown.derivative(Math.min(u,.94))*Math.sign(p[0])/now.w;
+        const dz=(b.crown.at(Math.abs(p[0])/b.w)-a.crown.at(Math.abs(p[0])/a.w))/(z1-z0);
+        return new Vector3(-dx,1,-dz).normalize().asArray();
+      }
+      const across=Vector3.FromArray(row[Math.min(row.length-1,i+1)]).subtract(Vector3.FromArray(row[Math.max(0,i-1)]));
+      const along=Vector3.FromArray(b.row[i]).subtract(Vector3.FromArray(a.row[i]));
+      return Vector3.Cross(along,across).normalize().asArray();
+    });
+  });
+  const body=sheet('sculpted-coachwork',rows,m.paint,skinNormals);
   const onSkin=(points:Point[],offset=.004):Point[]=>points.map(([x,,z])=>[x,(panelHeight(body,x,z)??0)+offset,z]);
   const rear=fascia(scene,d,rows[0],false,lite,m.paint,m.dark),front=fascia(scene,d,rows.at(-1)!,true,lite,m.paint,m.dark);
   parts.push(...rear.parts,...front.parts);
@@ -68,7 +89,7 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
     const pillar=mix(backRoof,frontRoof,.27);tube('b-pillar',[[side*W*(roofWidth+.005),roof-.008,pillar],[side*W*baseWidth,belt,pillar-.05]],d.id==='crest'?.040:.023,m.dark);
     sheet('rear-quarter-sail',[[corners[0],[side*W*(baseWidth+.085),belt-.014,cabinRear-.05]],[corners[1],[side*W*(roofWidth+.05),roof-.04,backRoof-.17]]],m.paint);
     // Fender lips follow the tire aperture and leave the suspension clearance open.
-    for(const zc of [-d.wheelbase/2,d.wheelbase/2]){const points:Point[]=[];for(let k=0;k<=20;k++){const a=k/20*Math.PI;points.push([side*W*.996,-.32+Math.sin(a)*(d.wheelRadius+.051),zc+Math.cos(a)*(d.wheelRadius+.051)]);}tube('rolled-fender-lip',points,.012,m.paint);}
+    for(const zc of [-d.wheelbase/2,d.wheelbase/2]){const points:Point[]=[];for(let k=0;k<=20;k++){const a=k/20*Math.PI,y=-.32+Math.sin(a)*(d.wheelRadius+.051),z=zc+Math.cos(a)*(d.wheelRadius+.051);points.push([side*(profiles[0].at(z)*.98+.003),y,z]);}tube('rolled-fender-lip',points,.010,m.paint);}
     tube('rocker-sill',[[side*W*.97,-.385,-d.wheelbase/2+.38],[side*W*.94,-.40,0],[side*W*.98,-.385,d.wheelbase/2-.38]],gt?.045:.027,m.dark);
     const seam:Point[]=[],outline=[[.205,.66],[-.31,.54],[-.34,-.74],[.21,-.84]];
     for(let edge=0;edge<outline.length-1;edge++)for(let i=0;i<=8;i++){const t=i/8,y=mix(outline[edge][0],outline[edge+1][0],t),z=mix(outline[edge][1],outline[edge+1][1],t);seam.push([(panelSide(body,y,z,side)??side*W)+side*.002,y,z]);}

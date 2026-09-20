@@ -23,6 +23,8 @@ Open the local URL in hardware-accelerated Chrome or Edge. `?renderer=webgl` for
 
 Keyboard road-speed steering and traction control have been corrected, including the reported40mph spin. The suspension no longer mistakes horizontal motion for damper compression. See [handling evidence and controls](docs/keyboard-handling.md). All six cars retain their original tire-grip and power parameters.
 
+The latest [car-surface pass](docs/graphics.md) smooths body reflections, reshapes the Velara/GTX bonnet and waist, fits wheel-arch trim, and opens the Formula sidepod intakes. All twelve model/detail exports are rebuilt. This is incremental visual progress; car interiors and fuller world ambience are still below the finished art target.
+
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.

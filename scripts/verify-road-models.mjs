@@ -1,7 +1,7 @@
 import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
-const fallback=process.argv.includes('--fallback'),output=`output/road-models${fallback?'-fallback':''}`;await fs.mkdir(output,{recursive:true});
+const fallback=process.argv.includes('--fallback'),output=process.argv.find(a=>a.startsWith('--output='))?.slice(9)??`output/road-models${fallback?'-fallback':''}`;await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[],external=[],rows=[];
 page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(String(e)));page.on('request',r=>{if(/^https?:/.test(r.url())&&!r.url().startsWith('http://127.0.0.1:5187'))external.push(r.url());});
 const warm=async()=>page.evaluate(async()=>{const g=window.kairos;await g.advanceTime(0);await g.renderer.scene.whenReadyAsync();for(let n=0;n<12;n++)await g.advanceTime(0);});

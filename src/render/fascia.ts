@@ -11,8 +11,8 @@ export function fascia(scene:Scene,d:VehicleDefinition,edge:Point[],front:boolea
   const openingW=front?style.grille:d.width*.34,openingH=front?(d.id==='crest'?.135:.115):.105;
   const boundary=[...edge,[0,-.445,plane] as Point],outer:Point[]=[];
   // Keep every original edge vertex so the loft and bumper cannot open a seam.
-  for(let i=0;i<boundary.length;i++)for(let j=0;j<(lite?2:4);j++){
-    const a=boundary[i],b=boundary[(i+1)%boundary.length],t=j/(lite?2:4);
+  for(let i=0;i<boundary.length;i++)for(let j=0;j<(lite?2:3);j++){
+    const a=boundary[i],b=boundary[(i+1)%boundary.length],t=j/(lite?2:3);
     outer.push([lerp(a[0],b[0],t),lerp(a[1],b[1],t),plane]);
   }
   const opening=outer.map(([x,y])=>{

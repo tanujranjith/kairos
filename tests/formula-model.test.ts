@@ -29,6 +29,31 @@ describe('Apex original model',()=>{
   it('places driver eyes inside the opening and below the halo',()=>{
     const eye=cameraMounts(vehicleById('apex')).cockpit;expect(eye.x).toBe(0);expect(eye.y).toBeGreaterThan(.11);expect(eye.y).toBeLessThan(.215);expect(eye.z).toBeGreaterThan(-.7);expect(eye.z).toBeLessThan(.1);
   });
+  it('leaves real sidepod apertures with inward-facing recessed throats at both LODs',()=>{
+    const engine=new NullEngine(),scene=new Scene(engine),d=vehicleById('apex');
+    const materials=Object.fromEntries(['paint','dark','chrome','light','tail','accent','instruments'].map(k=>[k,new PBRMaterial(k,scene)])) as Record<'paint'|'dark'|'chrome'|'light'|'tail'|'accent'|'instruments',PBRMaterial>;
+    try{for(const lite of [false,true]){
+      const car=formulaCoachwork(scene,d,materials,lite);
+      const pods=car.parts.filter(p=>p.name==='undercut-sidepod'),throats=car.parts.filter(p=>p.name==='pod-intake-recess');
+      expect(pods).toHaveLength(2);expect(throats).toHaveLength(2);
+      for(let side=0;side<2;side++){
+        for(const part of [pods[side],throats[side]]){
+          const p=part.getVerticesData('position')!,f=part.getIndices()!;
+          expect(part.rotation.length()).toBe(0);
+          for(let i=0;i<f.length;i+=3)expect([f[i],f[i+1],f[i+2]].every(v=>Math.abs(p[v*3+2]-.49)<1e-6),'no face seals intake mouth').toBe(false);
+        }
+        const throat=throats[side],p=throat.getVerticesData('position')!,n=throat.getVerticesData('normal')!;
+        const z=p.filter((_,i)=>i%3===2);expect(Math.max(...z)-Math.min(...z)).toBeCloseTo(.15,5);
+        expect(throat.material).toBe(materials.dark);
+        // Back of the cavity must face the viewer looking into the nose (+Z).
+        const backNormals=n.filter((_,i)=>i%3===2&&Math.abs(p[i]-.34)<1e-6);
+        expect(backNormals.some(v=>v>.99)).toBe(true);
+        const rim=(part:typeof throat)=>{const positions=part.getVerticesData('position')!;return Array.from({length:positions.length/3},(_,i)=>positions.slice(i*3,i*3+3)).filter(v=>Math.abs(v[2]-.49)<1e-6);};
+        expect(rim(throat)).toEqual(rim(pods[side]));
+      }
+      car.parts.forEach(p=>p.dispose());
+    }}finally{scene.dispose();engine.dispose();}
+  });
   it('keeps both liveries flush with the actual panel triangles at both LODs',()=>{
     const engine=new NullEngine(),scene=new Scene(engine),d=vehicleById('apex');
     const materials=Object.fromEntries(['paint','dark','chrome','light','tail','accent','instruments'].map(k=>[k,new PBRMaterial(k,scene)])) as Record<'paint'|'dark'|'chrome'|'light'|'tail'|'accent'|'instruments',PBRMaterial>;

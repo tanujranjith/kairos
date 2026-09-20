@@ -37,6 +37,9 @@ describe('distinct original vehicle models',()=>{
     const engine=new NullEngine(),scene=new Scene(engine),m=Object.fromEntries(['paint','glass','dark','chrome','light','tail','accent','instruments'].map(k=>[k,new PBRMaterial(k,scene)])) as Record<'paint'|'glass'|'dark'|'chrome'|'light'|'tail'|'accent'|'instruments',PBRMaterial>;
     try{for(const d of VEHICLES.filter(d=>d.class!=='FORMULA'))for(const lite of [false,true]){
       const car=roadCoachwork(scene,d,m,lite,1),roof=car.parts.find(p=>p.name==='crowned-roof')!;
+      const skin=car.body.getVerticesData('position')!,normals=car.body.getVerticesData('normal')!;
+      expect(normals).toHaveLength(skin.length);
+      for(let v=0;v<normals.length;v+=3){expect(Math.hypot(...normals.slice(v,v+3))).toBeCloseTo(1,5);if(Math.abs(skin[v])<.35)expect(normals[v+1]).toBeGreaterThan(.5);}
       expect(panelHeight(car.body,0,-.1)).toBeUndefined();expect(panelHeight(car.body,0,d.length/2-.12)).toBeTypeOf('number');expect(car.parts.some(p=>p.name==='driver-instruments'&&p.material===m.instruments)).toBe(true);
       for(const headrest of car.parts.filter(p=>p.name==='seat-headrest')){headrest.computeWorldMatrix(true);expect(headrest.getBoundingInfo().boundingBox.maximumWorld.y).toBeLessThan(car.roofHeight-.03);}
       expect(car.parts.some(p=>p.name==='footwell-firewall')).toBe(true);

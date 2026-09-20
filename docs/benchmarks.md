@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September20 continuous car surfaces and Formula intake correction
+
+- Final isolated160tests/23files pass25.04s, strict Node24 production build index-lxxlVIWL.js succeeds. All12GLBs regenerated; manifest byte counts and source/dist checksums agree. No physical/input/AI edits in this checkpoint.
+- Matched views under output/car-surfaces retain baseline, rejected flat-paint candidate, crowned surface and corrected normal/intake/arch candidates. Screenshot review drove genuine open15cm Formula throats, continuous road-body normals and a second arch-width correction after the Nova projection zigzag was exposed. All six final native/fallback fleets pass18liveries/five moving cameras/steering/calipers/live telemetry/four contacts/zero damage, output/car-surfaces/final-{exported,fallback}-fleet.
+- Twelve detail/livery cases return exactly129meshes/71materials/35nodes/43textures. Probe and preset checks pass. Required input first attempt timed out at page.goto30s while the detail suite ran; original Vite handle14724 remained live and both servers returnedHTTP200. Isolated unchanged retry passes3.794694m/s/four asphalt contacts/zero damage/loading/errors. Actual image/state opened. This does not establish the cause of the transient navigation timeout.
+- Isolated RTX3060/Edge/WebGL2 Low720p cost audit:528frames across8views, all positive measurements within300draws/500k active triangles. GTgrid peaks298/498441; Formula283/488697. Resources and submissions are bounded checks, not target-laptop FPS/endurance acceptance.
+- Production Edge and Chrome, forcedWebGL2/actualWebGPU, cold25Mbps40ms/external blocked/no devhooks: all normal drive/handling/clean8GT orFormula launch/home checks pass; no page/failed/external errors. Only known Windows powerPreference warning. Edge menu6.055/6.749s, Chrome6.224/6.398s;11,338,912totalbytes each. Actual race/day/night images opened. A cold showroom screenshot again catches the first PBR body compilation (trim/interior visible before paint), so functional startup is verified, not visually complete shader warmup. Keep that as a real presentation limitation to fix.
+- User adds priority defects after these checks: gravel fall-through, grass/gravel sliding and70mph brake spin, plus a request for planted/confident sports-car handling. Those are new required work, not certified by the earlier40mph asphalt turn suite. Car/cabin/world realism remains visibly below references; no HTTPS/8GBhardware/endurance completion claim.
+
 ## September20 full qualifying-grid continuity
 
 - Node24 isolated suite:155tests/22files pass in12.90s. Strict TypeScript/production build passes with the existing large-engine-chunk warning. Final runtime bundle index-CxdMa4Ia.js and stylesheet index-CzQwPI_F.css; no physics, input, vehicle definition or art changes.

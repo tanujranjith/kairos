@@ -1,6 +1,6 @@
 import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
-const output='output/render-cost';await fs.mkdir(output,{recursive:true});
+const output=process.argv.find(a=>a.startsWith('--output='))?.slice(9)??'output/render-cost';await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[],results=[];
 page.setDefaultTimeout(90000);page.on('pageerror',error=>errors.push(String(error)));
 try{

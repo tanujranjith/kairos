@@ -1,4 +1,11 @@
 import type {PBRMaterial} from '@babylonjs/core';
+/** Pigmented base coat under a smooth dielectric clear coat, not bare polished
+ * metal. Apply runtime-only intensities equally to authored and imported cars. */
+export function finishCarPaint(material:PBRMaterial){
+  material.metallic=.46;material.roughness=.28;
+  material.clearCoat.isEnabled=true;material.clearCoat.intensity=1;material.clearCoat.roughness=.13;
+  material.environmentIntensity=.85;material.indexOfRefraction=1.5;
+}
 /** glTF doesn't carry Babylon's lighting-intensity controls. Apply the same
  * restrained plastic/carbon response to generated and imported car trim. */
 export function finishCarTrim(material:PBRMaterial){

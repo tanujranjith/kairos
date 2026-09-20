@@ -1,10 +1,10 @@
 import { Mesh,MeshBuilder,Vector3,VertexData,Curve3,type Scene,type PBRMaterial,type Material } from '@babylonjs/core';
 import type {VehicleDefinition} from '../core/types';
+import {profileCurve} from './profile-curve';
 
 type Point=[number,number,number];
 type Station=[number,number,number,number]; // z, half width, lower/upper body surface
 type Materials=Record<'paint'|'dark'|'chrome'|'light'|'tail'|'accent'|'instruments',PBRMaterial>;
-const cubic=(a:number,b:number,c:number,d:number,t:number)=>.5*(2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
 const lerp=(a:number,b:number,t:number)=>a+(b-a)*t;
 
 /** Original single-seater: actual open cockpit, undercut pods and multi-element aero.
@@ -30,18 +30,29 @@ export function formulaCoachwork(scene:Scene,d:VehicleDefinition,m:Materials,lit
   const box=(name:string,w:number,h:number,depth:number,x:number,y:number,z:number,material:Material)=>{
     const part=MeshBuilder.CreateBox(name,{width:w,height:h,depth},scene);part.position.set(x,y,z);return add(part,material);
   };
-  const loft=(name:string,stations:Station[],material:Material,x=0)=>{
+  const loft=(name:string,stations:Station[],material:Material,x=0,openEnd=false,inward=false)=>{
     const positions:number[]=[],indices:number[]=[],rings:Station[]=[],steps=lite?3:5,segments=lite?12:20;
+    const profiles=[1,2,3].map(channel=>profileCurve(stations.map(s=>[s[0],s[channel]])));
     for(let k=0;k<stations.length-1;k++)for(let j=0;j<steps;j++){
-      const t=j/steps,a=stations[Math.max(0,k-1)],b=stations[k],c=stations[k+1],e=stations[Math.min(stations.length-1,k+2)];
-      rings.push([lerp(b[0],c[0],t),...([1,2,3].map(n=>cubic(a[n],b[n],c[n],e[n],t)))] as Station);
+      const z=lerp(stations[k][0],stations[k+1][0],j/steps);
+      rings.push([z,...profiles.map(p=>p.at(z))] as Station);
     }rings.push(stations.at(-1)!);
     for(const [z,w,b,t]of rings)for(let i=0;i<segments;i++){
       const angle=i/segments*Math.PI*2,co=Math.cos(angle),si=Math.sin(angle);
       positions.push(x-Math.sign(co)*Math.pow(Math.abs(co),.70)*w,lerp(b,t,(1+Math.sign(si)*Math.pow(Math.abs(si),.80))*.5),z);
     }
     for(let j=0;j<rings.length-1;j++)for(let i=0;i<segments;i++){const a=j*segments+i,b=j*segments+(i+1)%segments;indices.push(a,b,a+segments,b,b+segments,a+segments);}
-    for(let i=1;i<segments-1;i++){indices.push(0,i+1,i);const end=(rings.length-1)*segments;indices.push(end,end+i,end+i+1);}
+    // A closing face has its own normals; averaging it into the curved skin
+    // makes broad highlights fold inward at every intake/nose/tail rim.
+    const rear=positions.length/3,end=(rings.length-1)*segments;
+    positions.push(...positions.slice(0,segments*3));
+    for(let i=1;i<segments-1;i++)indices.push(rear,rear+i+1,rear+i);
+    if(!openEnd){
+      const front=positions.length/3;positions.push(...positions.slice(end*3,(end+segments)*3));
+      for(let i=1;i<segments-1;i++)indices.push(front,front+i,front+i+1);
+    }
+    // Intake walls face into their air passage, including the recessed back.
+    if(inward)for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];
     return mesh(name,positions,indices,material);
   };
   const foil=(name:string,span:number,chord:number,y:number,z:number,camber:number,material:Material,sweep=0)=>{
@@ -65,11 +76,11 @@ export function formulaCoachwork(scene:Scene,d:VehicleDefinition,m:Materials,lit
   const sidepods:Mesh[]=[];
   loft('contoured-floor',[[-2.36,.54,-.54,-.48],[-1.15,.76,-.54,-.50],[.5,.82,-.53,-.49],[.94,.52,-.50,-.47]],m.dark);
   for(const side of [-1,1]){
-    const sidepod=loft('undercut-sidepod',[[-1.88,.10,-.40,-.16],[-1.31,.20,-.40,-.015],[-.66,.29,-.28,.10],[.15,.31,-.24,.125],[.49,.23,-.17,.065]],m.paint,side*.53);sidepod.metadata={formulaPanel:'sidepod'};
+    const sidepod=loft('undercut-sidepod',[[-1.88,.10,-.40,-.16],[-1.31,.20,-.40,-.015],[-.66,.29,-.28,.10],[.15,.31,-.24,.125],[.49,.23,-.17,.065]],m.paint,side*.53,true);sidepod.metadata={formulaPanel:'sidepod'};
     sidepods.push(sidepod);
     loft('cockpit-shoulder',[[-.91,.045,-.21,.10],[-.52,.068,-.15,.11],[.07,.065,-.14,.07],[.46,.043,-.16,.04]],m.paint,side*.30);
     // A recessed intake and rolled lip make each pod read as hollow, not a solid box.
-    const intake=loft('pod-intake-recess',[[.47,.195,-.13,.045],[.505,.184,-.118,.038]],m.dark,side*.53);intake.rotation.y=side*.08;
+    loft('pod-intake-recess',[[.34,.184,-.118,.038],[.49,.23,-.17,.065]],m.dark,side*.53,true,true);
     tube('pod-intake-lip',[[side*.35,.058,.49],[side*.53,.072,.50],[side*.71,.033,.475]],.016,m.paint);
     tube('floor-edge',[[side*.53,-.474,-2.2],[side*.77,-.493,-.9],[side*.84,-.48,.4],[side*.58,-.45,.92]],.012,m.dark);
     for(let axle=0;axle<2;axle++){

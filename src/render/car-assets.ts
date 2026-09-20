@@ -3,7 +3,7 @@ import '@babylonjs/loaders/glTF';
 import type { VehicleDefinition, Customization } from '../core/types';
 import type { CarVisual } from './car';
 import { carInstruments } from './car-instruments';
-import { finishCarTrim } from './car-materials';
+import { finishCarTrim,finishCarPaint } from './car-materials';
 const libraries=new WeakMap<Scene,Map<string,AssetContainer>>();
 export async function loadCarAssets(scene:Scene,ids:string[]){
   const library=libraries.get(scene)??new Map<string,AssetContainer>();libraries.set(scene,library);
@@ -19,7 +19,7 @@ export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Custo
   const trim=find('carbon');if(trim)finishCarTrim(trim);
   const paint=find('paint'),glass=find('glass')??new PBRMaterial('unused-open-wheel-glass',scene),lights=find('headlight')??find('taillight'),tail=find('taillight');if(!materials.includes(glass))materials.push(glass);
   if(!paint||!glass||!lights||!tail||wheels.some(w=>!w)){root.dispose();materials.forEach(m=>m.dispose());return null;}
-  paint.albedoColor=Color3.FromHexString(setup?.paint??d.color).toLinearSpace();const alloy=find('alloy');if(alloy)alloy.albedoColor=Color3.FromHexString(setup?.wheels??'#b2bac0').toLinearSpace();parts.forEach(p=>{p.isPickable=false;p.receiveShadows=true;});
+  finishCarPaint(paint);paint.albedoColor=Color3.FromHexString(setup?.paint??d.color).toLinearSpace();const alloy=find('alloy');if(alloy)alloy.albedoColor=Color3.FromHexString(setup?.wheels??'#b2bac0').toLinearSpace();parts.forEach(p=>{p.isPickable=false;p.receiveShadows=true;});
   const display=find('instruments');
   // PBRMaterial.clone also clones embedded GLB textures. The static instrument
   // image is replaced by a live display: release only this instance's clone,

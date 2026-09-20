@@ -1,5 +1,15 @@
 # Feature status — working build, not acceptance certification
 
+## Latest car-surface checkpoint — September20
+
+160 tests and the strict Node24 build pass. All six cars use nonuniform authored body curves; enclosed-car continuous normals remove uneven side reflections, with fitted arch trim and revised Velara/GTX bonnet/waist surfaces. Formula sidepods have actual open intake mouths and recessed inward-facing throats. Imported and generated paint use the same layered finish. All twelve compressed GLBs are rebuilt. No physical vehicle, keyboard, AI or race-rule code changed; the earlier40mph traction correction remains intact.
+
+Twelve asset/livery detail-switch cases restore exact resource counts; reflections, preset changes and the supplied keyboard input/screenshot loop pass. The isolated Low720p RTX3060 submission audit stays within300draws/500,000triangles across528frames in8views, peaking at298/498,441. This is not target-laptop FPS or endurance certification. Production Chrome/Edge both pass forcedWebGL2 and actualWebGPU startup, drive, handling, clean eight-car race launch and home return with external hosts blocked. See the dated [evidence](benchmarks.md).
+
+Actual screenshot review drove corrections to paint, normals, intake closure and jagged wheel-arch trim. The cars remain visibly stylized: detailed cabins/glazing and the requested fuller background/world ambience still need substantial work. This pass does not complete the full art target or overall game acceptance.
+
+New feedback adds gravel fall-through, grass/gravel instability and70mph braking spins; the earlier40mph asphalt-turn checks do not certify those cases. These are the next handling priority. Cold production showroom captures also expose incomplete body visibility during initial paint-shader compilation, despite functional startup passing; visual warmup needs correction.
+
 ## Latest qualifying-grid checkpoint — September20
 
 155 tests and the isolated strict Node24 production build pass. Race Weekend now preserves every earned qualifying position, not only the player's slot. Driver names, opponent indices and pit assignments retain their identity. Timing ties/no-time drivers retain qualifying starting order; practice times do not set the race grid. Restart weekend resets to fresh practice and the selected grid, while loading retry preserves the captured earned grid. Active-session settings no longer read changed setup preferences.
