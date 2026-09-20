@@ -8,6 +8,11 @@ try{
   const sample=async name=>{const data=await page.evaluate(async()=>{const {auditRendering}=await import('/src/tools/render-audit.ts');return auditRendering(66);});results.push({name,...data});console.log(JSON.stringify({name,adapter:data.adapter,quality:data.quality,maxDrawCalls:Math.max(...data.rows.map(r=>r.drawCalls)),maxActiveTriangles:Math.max(...data.rows.map(r=>r.activeTriangles)),captures:data.rows.filter(r=>r.probeCaptured).length,sceneSubmitMedian:data.rows.map(r=>r.sceneMs).sort((a,b)=>a-b)[Math.floor(data.rows.length/2)]}));};
   await sample('showroom');
   await page.evaluate(async()=>{const g=window.kairos;g.save.settings.timeRate=0;await g.startDrive();await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);});await sample('lakeshore-traffic');
+  if(process.argv.includes('--rural')){
+    for(const [name,x,z,road]of [['forest-traffic',250,1200,'forest'],['mountain-traffic',1130,320,'pass']]){
+      await page.evaluate(async({x,z,road})=>{const g=window.kairos;g.teleport(x,z,road);await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);},{x,z,road});await sample(name);
+    }
+  }
   await page.evaluate(async()=>{const g=window.kairos;g.teleport(-1340,-980,'city3');await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);});await sample('city-traffic');
   await page.evaluate(async()=>{const g=window.kairos;g.save.settings.time=22;g.save.settings.weather='Rain';g.wetness=.8;await g.advanceTime(1000);});await sample('wet-night');
   await page.evaluate(async()=>{const g=window.kairos;await g.action('home');g.save.settings.time=17.4;g.save.settings.weather='Clear';g.wetness=0;g.raceConfig.entrants=8;await g.startRace();await g.advanceTime(1000);});await sample('eight-car-grid');

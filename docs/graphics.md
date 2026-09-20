@@ -11,6 +11,14 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Authored rural groves and weathered boulders — September 20
+
+`content/rural-landscape.ts` defines six roadside planting corridors along the lakeshore, forest, pass, southern route, ring road and north bridge. `world/rural-dressing.ts` derives deterministic grouped groves and background copses, then owns each plant through exactly one streamed cell. Planting keeps conservative clearance from road crowns, junction sightlines, the lake, service plots, the circuit, industrial areas and Northstar. Lower presets are stable subsets of higher presets, so quality changes do not reshuffle nearby trees.
+
+`render/boulders.ts` replaces the old white, post-deformed sphere with a low, water-worn 180-triangle form. Normals are recomputed after deformation and welded across UV seams; vertex tint and the original `boulder` albedo/normal texture add earth staining and mineral variation. Rocks, trees and understory remain nonphysical scenery. Road, terrain, contact surfaces and vehicle forces are unchanged.
+
+Native WebGL2 and WebGPU captures cover lake, lower/upper forest, mountain, rain and a close rock study. Normal keyboard driving finishes with four contacts and zero damage on both backends. Three repeated city/mountain/lake streaming circuits return to identical resource counts, and three race/home cycles release their owned resources. The expanded Low audit adds forest and mountain scenes; all 660 frames remain below 300 draw calls and 500,000 active triangles. This is a substantial composition improvement, not final naturalistic vegetation, photogrammetry or target-laptop performance certification. See [the focused design and verification note](rural-landscape.md).
+
 ### Direction-based atmosphere — September 20
 
 The painted sky texture and separate sun sphere are replaced by one native GLSL/WGSL sky material. Per-pixel directions project a packed cloud atlas into low cloud and high wisps, with softer edges, weather-dependent coverage, warm sunward haze and cloud-obscured angular sun/moon discs. Stars and a dark blue gradient make clear nights legible. The existing ACES pipeline remains the sole display transform. See [implementation and limits](atmosphere.md); this is layered cloud shading, not volumetric cloud rendering, and does not finish the sparse landscape or car art.

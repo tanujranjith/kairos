@@ -31,6 +31,8 @@ Ground materials blend meadow, dry grass, woodland soil, shore sediment and expo
 
 The [directional sky](docs/atmosphere.md) now has layered clouds, sunward dusk haze, a small cloud-obscured sun, and a readable night gradient with stars and moon. It uses one shared cloud atlas and native shaders on both renderers, not a low-resolution coloured sky repainted every time the clock changes. This does not change driving physics or complete the wider scenery upgrade.
 
+Rural roads now use [authored roadside groves and weathered boulders](docs/rural-landscape.md) instead of uniform tree scatter and white concrete-looking rocks. The planting is deterministic, streamed by cell, quality-scaled and kept clear of roads, junction sightlines, water, services and the circuit. It improves the empty background while preserving road, terrain and vehicle physics; the world and cars are still stylized and require further art passes.
+
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.
@@ -105,7 +107,7 @@ The verification scripts use the dev server on port 5187. `verify-delivery.mjs` 
 
 `node scripts/verify-delivery.mjs --25mbps` adds browser-emulated 25Mbps download / 5Mbps upload with 40ms latency and a cold browser cache. Its separate `output/delivery-25mbps/` results are development-host network emulation, not an actual-laptop or Internet deployment benchmark.
 
-See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md), [road/contact layers](docs/road-layers.md), [streaming](docs/streaming.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. Further art polish, streaming performance/endurance, broad traffic/racing stress, the full interaction/fault matrix, and target-laptop performance still need work.
+See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md), [rural landscape](docs/rural-landscape.md), [road/contact layers](docs/road-layers.md), [streaming](docs/streaming.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. Further car/world art polish, streaming performance/endurance, broad traffic/racing stress, the full interaction/fault matrix, and target-laptop performance still need work.
 
 ## Static hosting
 

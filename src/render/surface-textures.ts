@@ -1,6 +1,6 @@
 import { RawTexture, Texture, type Scene } from '@babylonjs/core';
 
-export type SurfaceKind='asphalt'|'meadow'|'gravel'|'concrete'|'stone'|'bark'|'water'|'cliff';
+export type SurfaceKind='asphalt'|'meadow'|'gravel'|'concrete'|'stone'|'bark'|'water'|'cliff'|'boulder';
 const fract=(v:number)=>v-Math.floor(v);
 const hash=(x:number,y:number)=>fract(Math.sin(x*127.1+y*311.7)*43758.5453);
 export function noise(x:number,y:number,period:number){
@@ -11,7 +11,7 @@ export function noise(x:number,y:number,period:number){
 /** Original, periodic material fields: no photo licensing or third-party runtime downloads. */
 export function surfacePixels(kind:SurfaceKind,size=256){
   const heights=new Float32Array(size*size),color=new Uint8Array(size*size*4),normal=new Uint8Array(size*size*4);
-  const base={asphalt:[79,82,83],meadow:[122,135,98],gravel:[135,128,111],concrete:[183,178,165],stone:[81,88,90],bark:[79,68,52],water:[45,76,79],cliff:[203,207,210]}[kind];
+  const base={asphalt:[79,82,83],meadow:[122,135,98],gravel:[135,128,111],concrete:[183,178,165],stone:[81,88,90],bark:[79,68,52],water:[45,76,79],cliff:[203,207,210],boulder:[118,119,111]}[kind];
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const u=x/size,v=y/size,n=noise(u*8,v*8,8),fine=noise(u*96,v*96,96),grain=hash(x,y);
     let height=n*.4+fine*.45+grain*.15,variation=(n-.5)*.15+(fine-.5)*.18+(grain-.5)*.14;
@@ -20,6 +20,11 @@ export function surfacePixels(kind:SurfaceKind,size=256){
     if(kind==='concrete'){variation=(n-.5)*.055+(fine-.5)*.06+(grain-.5)*.025;height=fine*.25+grain*.15;}
     if(kind==='bark'){height=noise(u*32,v*4,32)*.8+fine*.2;variation=(height-.5)*.65;}
     if(kind==='stone'){variation=(n-.5)*.08+(fine-.5)*.015;height=n*.10+fine*.015;}
+    if(kind==='boulder'){
+      const seam=Math.pow(Math.max(0,1-Math.abs(noise(u*16,v*16,16)-.49)*22),5),mineral=noise(u*40,v*40,40);
+      height=n*.25+fine*.42+grain*.10-seam*.17;
+      variation=(n-.5)*.21+(mineral-.5)*.35+(grain-.5)*.26-seam*.15;
+    }
     if(kind==='water'){height=.5+Math.sin((u*9+v*3+noise(u*4,v*4,4)*.45)*Math.PI*2)*.17+Math.sin((u*3-v*11)*Math.PI*2)*.12+Math.sin((u*21+v*17)*Math.PI*2)*.05;variation=(height-.5)*.10;}
     if(kind==='cliff'){const strata=noise(u*12,v*36+noise(u*4,v*4,4)*2,12);height=n*.30+strata*.5+fine*.2;variation=(n-.5)*.08+(strata-.5)*.10+(fine-.5)*.04;}
     heights[y*size+x]=height;const o=(y*size+x)*4;

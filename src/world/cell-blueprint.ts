@@ -15,6 +15,7 @@ import { buildGrandstand } from './grandstand';
 import {buildCircuitSetting} from './circuit-setting';
 import {buildPitForecourt} from './pit-forecourt';
 import {buildStreetscape} from './streetscape';
+import {ruralDressing} from './rural-dressing';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
@@ -95,8 +96,14 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       const style:BuildingStyle=industrial?'factory':z< -1280?'house':(['brick','limestone','office'] as const)[i%3];
       buildArchitecture({wall:buildings,roof:roofs,glass:windows},{x,y,z,width:w,depth:l,height:h,yaw:near.point.yaw,style,seed:hash(cx+i,cz)});
     }
-    else if(!circuit&&!industrial){const s=.65+random()*.72,yaw=random()*Math.PI,pine=z>900||i%4===0;instances.push({kind:pine?'pine':'oak',position:{x,y:y+8*s,z},scale:{x:s,y:s,z:s},yaw},{kind:pine?'trunk':'oakTrunk',position:{x,y:y+6*s,z},scale:{x:s,y:s,z:s},yaw});if(i%5===0)instances.push({kind:'rock',position:{x:x+5,y:y+.5,z:z+3},scale:{x:s*1.5,y:s*.7,z:s},yaw});}
+    else if(!circuit&&!industrial){
+      // Preserve RNG consumption and every urban building/plant placement.
+      // Only rural scatter is replaced by the authored grouped landscape.
+      const s=.65+random()*.72,yaw=random()*Math.PI,pine=z>900||i%4===0;
+      if(city||x< -650&&z< -250) {instances.push({kind:pine?'pine':'oak',position:{x,y:y+8*s,z},scale:{x:s,y:s,z:s},yaw},{kind:pine?'trunk':'oakTrunk',position:{x,y:y+6*s,z},scale:{x:s,y:s,z:s},yaw});if(i%5===0)instances.push({kind:'rock',position:{x:x+5,y:y+.5,z:z+3},scale:{x:s*1.5,y:s*.7,z:s},yaw});}
+    }
   }
+  instances.push(...ruralDressing(cx,cz,quality));
   for(const landmark of LANDMARKS){if(Math.floor(landmark.x/CELL_SIZE)!==cx||Math.floor(landmark.z/CELL_SIZE)!==cz)continue;const n=nearestRoad(landmark.x,landmark.z,landmark.roadId?r=>r.id===landmark.roadId:undefined),x=n.point.x+Math.cos(n.point.yaw)*(n.road.width*.5+7),z=n.point.z-Math.sin(n.point.yaw)*(n.road.width*.5+7),y=terrainHeight(x,z);
     if(landmark.type==='service'||landmark.type==='garage'){const px=n.point.x+Math.cos(n.point.yaw)*(n.road.width*.5+17),pz=n.point.z-Math.sin(n.point.yaw)*(n.road.width*.5+17);buildServicePavilion({wall:buildings,roof:roofs,glass:windows},pavement,{x:px,y:terrainHeight(px,pz),z:pz,yaw:n.point.yaw+Math.PI/2});}if(landmark.type!=='trial'&&landmark.type!=='drift')signs.push({id:landmark.id,name:landmark.name,position:{x,y,z},yaw:n.point.yaw});
   }

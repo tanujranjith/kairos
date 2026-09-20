@@ -17,6 +17,7 @@ import { cellCoordinates,cellKey,planCells,type CellDemand,type StreamActor,type
 import { ResourcePool } from '../world/resource-pool';
 import {StreetLighting} from './street-lighting';
 import {GroundMaterial} from './ground-material';
+import {createBoulders} from './boulders';
 
 interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mesh[];detailMeshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];signals:SignalMesh[];collision:boolean;detail:boolean;leases:Map<Mesh,{release:()=>void}>}
 export class WorldRenderer {
@@ -53,9 +54,7 @@ export class WorldRenderer {
     const vegetation=createVegetation(scene);this.treeMesh=vegetation.tree;this.oakMesh=vegetation.oak;this.trunkMesh=vegetation.trunk;this.oakTrunkMesh=vegetation.oakTrunk;this.grassMesh=vegetation.grass;this.foliage=vegetation.foliage;this.trunk=vegetation.bark;
     for(const source of [this.treeMesh,this.oakMesh,this.trunkMesh,this.oakTrunkMesh,this.grassMesh])(source.material as PBRMaterial).maxSimultaneousLights=6;
     this.woodland=createCircuitWoodland(this.root,this.oakMesh,this.trunkMesh);
-    const rockMat=mat('weathered-rock','#ffffff'),rockMaps=surfaceTextures(scene,'concrete');rockMat.albedoTexture=rockMaps.albedo;rockMat.bumpTexture=rockMaps.normal;
-    this.boulders=MeshBuilder.CreateSphere('rock-source',{diameter:5,segments:8},scene);const rockPos=this.boulders.getVerticesData('position')!;
-    for(let i=0;i<rockPos.length;i+=3){const x=rockPos[i],y=rockPos[i+1],z=rockPos[i+2],n=1+.17*Math.sin(x*2.1+z*.7)*Math.cos(y*1.9);rockPos[i]*=n;rockPos[i+1]*=n*.65;rockPos[i+2]*=n;}this.boulders.updateVerticesData('position',rockPos);this.boulders.material=rockMat;this.boulders.isVisible=false;
+    this.boulders=createBoulders(scene);
     const ridges=mountainMesh(landHeight),ridgeData=new VertexData(),ridgeMat=mat('atmospheric-ridges','#ffffff');
     const geology=surfaceTextures(scene,'cliff',.035);ridgeMat.albedoTexture=geology.albedo;geology.normal.dispose();
     new GroundMaterial(ridgeMat,true);
