@@ -43,6 +43,10 @@ describe('distinct original vehicle models',()=>{
       expect(panelHeight(car.body,0,-.1)).toBeUndefined();expect(panelHeight(car.body,0,d.length/2-.12)).toBeTypeOf('number');expect(car.parts.some(p=>p.name==='driver-instruments'&&p.material===m.instruments)).toBe(true);
       for(const headrest of car.parts.filter(p=>p.name==='seat-headrest')){headrest.computeWorldMatrix(true);expect(headrest.getBoundingInfo().boundingBox.maximumWorld.y).toBeLessThan(car.roofHeight-.03);}
       expect(car.parts.some(p=>p.name==='footwell-firewall')).toBe(true);
+      expect(car.parts.filter(p=>p.name==='headlamp-projector-optic')).toHaveLength(2);
+      expect(car.parts.filter(p=>p.name==='headlamp-projector-bezel')).toHaveLength(2);
+      expect(car.parts.filter(p=>p.name==='headlamp-clear-lens')).toHaveLength(2);
+      expect(car.parts.filter(p=>p.name==='rear-lamp-separator')).toHaveLength(lite?0:6);
       const steering=car.parts.find(p=>p.name==='steering-wheel')!;steering.computeWorldMatrix(true);expect(steering.getBoundingInfo().boundingBox.maximumWorld.y).toBeLessThan(car.roofHeight-.03);
       const boss=car.parts.find(p=>p.name==='steering-boss')!,display=car.parts.find(p=>p.name==='driver-instruments')!,eye=cameraMounts(d).cockpit;boss.computeWorldMatrix(true);display.computeWorldMatrix(true);
       expect((boss.getBoundingInfo().boundingBox.maximumWorld.y-eye.y)/(boss.position.z-eye.z)).toBeLessThan((display.getBoundingInfo().boundingBox.minimumWorld.y-eye.y)/(display.position.z-eye.z));
@@ -57,6 +61,10 @@ describe('distinct original vehicle models',()=>{
         for(const p of w.parts){expect(p.getVerticesData('position')!.every(Number.isFinite)).toBe(true);expect(p.getVerticesData('normal')!.every(Number.isFinite)).toBe(true);triangles+=p.getTotalIndices()/3;}
         const spoke=w.parts.find(p=>p.name==='sculpted-forged-spokes')!,normals=Array.from(spoke.getVerticesData('normal')!);expect(normals.slice(0,12).filter((_,i)=>i%3===0).reduce((s,x)=>s+x,0)*(side===0?-1:1)).toBeGreaterThan(2);
         const tyre=w.parts.find(p=>p.name==='profiled-tire')!,p=tyre.getVerticesData('position')!,n=tyre.getVerticesData('normal')!;let radial=0;for(let k=0;k<p.length;k+=3)radial+=p[k]*n[k]+p[k+2]*n[k+2];expect(radial).toBeGreaterThan(0);
+        expect(w.parts.some(p=>p.name==='wheel-valve-stem')).toBe(!lite);
+        expect(w.parts.some(p=>p.name==='sidewall-mould-line')).toBe(!lite);
+        expect(w.parts.some(p=>p.name==='herringbone-tread-relief')).toBe(!lite&&d.class!=='FORMULA');
+        expect(w.parts.some(p=>p.name==='slick-centre-seam')).toBe(!lite&&d.class==='FORMULA');
         expect(!!w.caliper).toBe(!lite);counts.push(triangles);w.parts.forEach(p=>p.dispose());w.caliper?.dispose();
       }expect(counts[0]).toBeLessThan(6000);expect(counts[1]).toBeLessThan(counts[0]*.5);
     }}finally{scene.dispose();engine.dispose();}

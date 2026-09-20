@@ -2,6 +2,17 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Six-car lighting, tire and safety-cell upgrade — September 20 (verified checkpoint)
+
+- The full suite passes 199 tests / 30 files in 51.45 seconds with two workers. The final strict build runs under Node 24.19.0 and emits `index-CjFQ_PDh.js`; the existing Babylon chunk warning remains. All twelve public GLBs exactly match their `dist/models` SHA-256 counterparts.
+- Focused geometry tests cover projector optics/lenses, rear separators, valve/sidewall/tread/slick detail, Formula safety hardware, finite normals, outward wheel faces, lower-detail reduction and fixed calipers. The first exported run correctly failed the existing 40,000-triangle ceiling at 42,738 triangles. Rotational micro-detail was reduced rather than raising the limit; that failed result is retained under `output/car-detail/exported-fleet`.
+- Final `final-exported-fleet` and `final-fallback-fleet` both pass six cars × three liveries, five moving cameras, telemetry, steering/wheel animation, fixed calipers, four contacts and zero-damage driving. Exported detailed cars are Aeris 36,290; Velara 36,896; Crest 37,072; Nova 37,712; GTX 33,416; Apex 31,186 triangles. Procedural fallback ranges from 33,246 to 38,462 triangles. Matched before/after front/rear/side images were opened.
+- `render-detail` passes twelve near/far/livery rigs, paint/pivot continuity, reflection integration, quality changes, traffic/race LOD and repeated disposal. Resources return exactly to 132 meshes / 73 materials / 35 transform nodes / 43 textures. Native near rigs range 31,186–38,940 triangles including a livery; far rigs 11,186–12,580.
+- The supplied web-game input loop reaches 5.8664666 m/s with four Asphalt contacts, zero damage and no loading/browser error. Its screenshot/state were opened and show the upgraded exported Velara in the revised rural setting.
+- `cost-final` contains 660 positive Low 1280×720 frames across ten views, explicitly validated against 300 draw calls / 500,000 triangles. The GT grid is the maximum at 292 draws / 490,098 triangles; Formula is 277 / 488,004. This is RTX 3060 / Edge submission and geometry evidence, not the target laptop's FPS or memory result.
+- Final cold 25 Mbps/40 ms production checks pass installed Edge and Chrome in forced WebGL2 and actual WebGPU, through showroom, Free Drive motion, Northstar, clean eight-car GT/Formula launch and home return. Menu readiness is Edge 8.243/6.929 seconds and Chrome 7.597/6.857 seconds; tested-flow transfer is 11,467,953 bytes. Errors, failed requests and external requests are empty; only the known Windows WebGPU power-preference warning appears. All four showroom and both race-class images were opened.
+- No physical vehicle, tire-force, input, road, traffic or race parameters changed. Broader material realism, target-laptop performance, 30-minute endurance and authorized HTTPS deployment remain unfinished.
+
 ## Roadside landscape composition — September 20 (verified checkpoint)
 
 - Final isolated suite: 199 tests across 30 files pass in 161.16 seconds with two workers. Strict Node24 TypeScript/Vite production build passes. Focused rural tests cover deterministic quality subsets, protected-area clearance, finite welded boulder normals, material identity and cell ownership. No vehicle, tire, control, road, terrain or collision parameter changed.

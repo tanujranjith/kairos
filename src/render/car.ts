@@ -17,6 +17,7 @@ export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,l
   finishCarTrim(dark);
   glass.clearCoat.isEnabled=true;glass.clearCoat.intensity=1;glass.indexOfRefraction=1.52;
   const light=material('headlight','#c8edff',.1,.16);light.emissiveColor=new Color3(.5,.7,.9);
+  const lens=material('lamp-lens','#dce9ee',.02,.09);lens.alpha=.24;lens.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;lens.backFaceCulling=false;lens.twoSidedLighting=true;lens.indexOfRefraction=1.49;lens.clearCoat.isEnabled=true;lens.clearCoat.intensity=1;
   const tail=material('taillight','#cf1c2b',.1,.18);tail.emissiveColor=new Color3(.7,.015,.015);
   const accent=material('accent',d.class==='GT'?'#298fad':'#d9e3de',.45,.25);
   const brake=material('brake-rotor','#74777b',.82,.52);
@@ -25,7 +26,7 @@ export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,l
   if(d.class==='FORMULA'){
     staticParts.push(...formulaCoachwork(scene,d,{paint,dark,chrome,light,tail,accent,instruments:instruments!.material},lite,setup?.livery??0).parts);
   }else{
-    staticParts.push(...roadCoachwork(scene,d,{paint,glass,dark,chrome,light,tail,accent,instruments:instruments.material},lite,setup?.livery??0).parts);
+    staticParts.push(...roadCoachwork(scene,d,{paint,glass,lens,dark,chrome,light,tail,accent,instruments:instruments.material},lite,setup?.livery??0).parts);
   }
   function merge(parts:Mesh[],parent:TransformNode){const groups=new Map<Material,Mesh[]>();for(const m of parts){if(!m.material)continue;const list=groups.get(m.material)??[];list.push(m);groups.set(m.material,list);}const result:Mesh[]=[];for(const [mat,list]of groups){
     // A few molded panels use vertex tint instead of another material. Complete

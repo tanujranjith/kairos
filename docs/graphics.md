@@ -11,6 +11,14 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Fleet lighting, tire and safety-cell detail — September 20
+
+The user's requested further model upgrade now covers every vehicle rather than one showcase car. `wheel-model.ts` gives all six cars raised sidewall mould lines, valve stems/caps and rotor hats. Road/GT tires add staggered herringbone tread relief; Formula slicks retain a centre mould seam. The tire additions are visual only and do not alter rolling radius, suspension pivots or the tire-force contact model. Detailed circular wheel surfaces use 32 stations and tiny rings use ten so the visible features fit the existing geometry ceiling.
+
+The five enclosed cars now place chrome projector bezels and emissive optics in their existing sculpted housings, beneath separate low-opacity clear lens panels. Selected classes add secondary projectors. Rear light guides gain dark internal separators rather than exposed decorative bars. Apex adds cockpit head-surround padding, a camera fairing and antenna outside the driver eye and halo. Physical envelopes, wheel centers, camera mounts, handling and AI inputs are unchanged.
+
+Both regenerated GLBs and blocked-download procedural fallback pass all six cars, eighteen livery selections, five moving cameras, live instruments, steering-following fixed calipers, four contacts and zero-damage driving. Detailed exported cars range from 31,186 to 37,712 triangles; fallback cars from 33,246 to 38,462. Twelve near/far/livery rigs preserve paint and pivots and dispose back to exactly 132 meshes / 73 materials / 35 nodes / 43 textures. The final ten-scene Low audit remains under 300 draw calls and 500,000 triangles. The result is visibly richer at showroom/chase distance, but still uses procedural surfaces and is not claimed as photorealistic or final automotive art.
+
 ### Authored rural groves and weathered boulders — September 20
 
 `content/rural-landscape.ts` defines six roadside planting corridors along the lakeshore, forest, pass, southern route, ring road and north bridge. `world/rural-dressing.ts` derives deterministic grouped groves and background copses, then owns each plant through exactly one streamed cell. Planting keeps conservative clearance from road crowns, junction sightlines, the lake, service plots, the circuit, industrial areas and Northstar. Lower presets are stable subsets of higher presets, so quality changes do not reshuffle nearby trees.

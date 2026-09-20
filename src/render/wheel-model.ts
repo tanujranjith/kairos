@@ -7,7 +7,7 @@ export const tireWidth=(d:VehicleDefinition,i:number)=>d.class==='FORMULA'?(i<2?
 /** Original concave forged wheels. Wheel axis X; only the separately returned
  * caliper is stationary relative to steering/suspension, not to wheel rotation. */
 export function wheelModel(scene:Scene,d:VehicleDefinition,i:number,m:{rubber:PBRMaterial;alloy:PBRMaterial;brake:PBRMaterial;accent:PBRMaterial},lite=false){
-  const parts:Mesh[]=[],r=d.wheelRadius,width=tireWidth(d,i),side=i%2===0?-1:1,style=wheelStyle(d.id),steps=lite?20:40;
+  const parts:Mesh[]=[],r=d.wheelRadius,width=tireWidth(d,i),side=i%2===0?-1:1,style=wheelStyle(d.id),steps=lite?20:32;
   const add=(p:Mesh,material:PBRMaterial)=>{p.material=material;parts.push(p);return p;};
   const lathe=(name:string,profile:number[][],material:PBRMaterial)=>{
     const p=MeshBuilder.CreateLathe(name,{shape:profile.map(([x,y])=>new Vector3(x,y,0)),tessellation:steps,sideOrientation:name==='rim-barrel'?Mesh.DOUBLESIDE:Mesh.FRONTSIDE},scene);p.rotation.z=-Math.PI/2;return add(p,material);
@@ -17,13 +17,37 @@ export function wheelModel(scene:Scene,d:VehicleDefinition,i:number,m:{rubber:PB
   tireProfile.push([r,width*.36],[r*.97,width*.46],[r*.87,width*.5],[r*.70,width*.5]);lathe('profiled-tire',tireProfile,m.rubber);
   lathe('rim-barrel',[[r*.695,-width*.48],[r*.674,-width*.42],[r*.668,width*.39],[r*.695,width*.48]],m.alloy);
   const face=side*(width*.5+.005),discX=side*(width*.5-.048);
-  const ring=(name:string,radius:number,thickness:number,x:number,material:PBRMaterial)=>{
-    const path=Array.from({length:steps+1},(_,n)=>new Vector3(x,Math.cos(n/steps*Math.PI*2)*radius,Math.sin(n/steps*Math.PI*2)*radius));
-    return add(MeshBuilder.CreateTube(name,{path,radius:thickness,tessellation:lite?4:6},scene),material);
+  const ring=(name:string,radius:number,thickness:number,x:number,material:PBRMaterial,micro=false)=>{
+    const segments=micro?10:steps,path=Array.from({length:segments+1},(_,n)=>new Vector3(x,Math.cos(n/segments*Math.PI*2)*radius,Math.sin(n/segments*Math.PI*2)*radius));
+    return add(MeshBuilder.CreateTube(name,{path,radius:thickness,tessellation:lite||micro?4:6},scene),material);
   };
   ring('machined-rim-lip',r*.706,lite?.012:.009,face,m.alloy);
-  if(!lite){ring('sidewall-bead',r*.79,.0025,side*width*.501,m.rubber);ring('inner-rim-lip',r*.695,.009,-face,m.alloy);}
+  if(!lite){
+    ring('sidewall-bead',r*.79,.0025,side*width*.501,m.rubber);ring('inner-rim-lip',r*.695,.009,-face,m.alloy);
+    // Raised sidewall mould lines and a real valve stem give the wheel scale
+    // without changing its rolling radius or physical contact patch.
+    ring('sidewall-mould-line',r*.885,.0017,side*width*.503,m.rubber,true);
+    if(d.class==='FORMULA')ring('slick-centre-seam',r*.999,.0018,0,m.rubber,true);
+    const valve=MeshBuilder.CreateCylinder('wheel-valve-stem',{height:.030,diameter:.010,tessellation:8},scene);
+    valve.rotation.z=Math.PI/2;valve.position.set(face+side*.010,Math.cos(.72)*r*.61,Math.sin(.72)*r*.61);add(valve,m.rubber);
+    const cap=MeshBuilder.CreateCylinder('wheel-valve-cap',{height:.009,diameter:.013,tessellation:8},scene);
+    cap.rotation.z=Math.PI/2;cap.position.set(face+side*.028,Math.cos(.72)*r*.61,Math.sin(.72)*r*.61);add(cap,m.brake);
+    if(d.class!=='FORMULA'){
+      // Three staggered herringbone lanes float only 1.2 mm above the visual
+      // carcass. They are display relief, not collision or tire-force geometry.
+      const tp:number[]=[],ti:number[]=[],tn:number[]=[],tu:number[]=[];
+      for(let segment=0;segment<18;segment++)for(let lane=-1;lane<=1;lane++){
+        const a=segment/18*Math.PI*2+(lane===0?.025:lane*.045),span=.076,laneX=lane*width*.205,half=width*.105;
+        const corners=[[-half,-span],[half,-span*.42],[half,span],[-half,span*.42]];
+        const base=tp.length/3;
+        for(const [dx,da]of corners){const angle=a+da,rad=r+.0012;tp.push(laneX+dx,Math.cos(angle)*rad,Math.sin(angle)*rad);tn.push(0,Math.cos(angle),Math.sin(angle));tu.push(lane/3+.5,segment/18);}
+        ti.push(base,base+1,base+2,base,base+2,base+3);
+      }
+      const tread=new Mesh('herringbone-tread-relief',scene),td=new VertexData();td.positions=tp;td.indices=ti;td.normals=tn;td.uvs=tu;td.applyToMesh(tread);add(tread,m.rubber);
+    }
+  }
   lathe('ventilated-brake-rotor',[[r*.20,discX-.006],[r*.58,discX-.006],[r*.58,discX+.006],[r*.20,discX+.006],[r*.20,discX-.006]],m.brake);
+  if(!lite)ring('brake-rotor-hat',r*.255,.010,discX+side*.009,m.alloy,true);
   const positions:number[]=[],indices:number[]=[];
   const polygon=(corners:Vector3[])=>{const base=positions.length/3;corners.forEach(p=>positions.push(p.x,p.y,p.z));for(let k=1;k<corners.length-1;k++)indices.push(base,base+k,base+k+1);};
   const point=(x:number,rad:number,a:number)=>new Vector3(x,Math.cos(a)*rad,Math.sin(a)*rad);

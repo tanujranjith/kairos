@@ -10,7 +10,7 @@ type Point=[number,number,number];
 const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
 
 /** Original continuous body surfaces, separate glazing and inset trim. Metres, +Z nose. */
-export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMaterial;glass:PBRMaterial;dark:PBRMaterial;chrome:PBRMaterial;light:PBRMaterial;tail:PBRMaterial;accent?:PBRMaterial;instruments?:PBRMaterial},lite:boolean,livery=0){
+export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMaterial;glass:PBRMaterial;lens?:PBRMaterial;dark:PBRMaterial;chrome:PBRMaterial;light:PBRMaterial;tail:PBRMaterial;accent?:PBRMaterial;instruments?:PBRMaterial},lite:boolean,livery=0){
   const parts:Mesh[]=[],W=d.width/2,L=d.length/2,roof=d.height-(.32+d.wheelRadius),gt=d.class==='GT',design=roadDesign(d);
   const [cabinRear,backRoof,frontRoof,frontBase]=design.cabin;
   const add=(mesh:Mesh,material:Material)=>{mesh.material=material;parts.push(mesh);return mesh;};
@@ -89,15 +89,30 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
     const mirrorLens=MeshBuilder.CreateSphere('mirror-lens',{diameter:1,segments:8},scene);mirrorLens.scaling.set(.17,.058,.018);mirrorLens.position.set(side*(W+.055),.33,.455);add(mirrorLens,m.chrome);
     // Dark housings and separate light guides follow the fender sweep.
     const lampInset=design.lamp==='compact'?.43:design.lamp==='race'?.56:.38;
-    const lamp:Point[][]=[onSkin([[side*lampInset,0,L-.21],[side*W*.85,0,L-.40]],.005),onSkin([[side*(lampInset+.02),0,L-.025],[side*W*.88,0,L-.23]],.005)];
-    parts.push(panelDecal(scene,'recessed-headlamp',body,m.dark,[lamp[0][0],lamp[0][1],lamp[1][1],lamp[1][0]].map(([x,,z])=>[x,z]),.003));
+    const lamp:Point[][]=[onSkin([[side*lampInset,0,L-.21],[side*W*.85,0,L-.40]],.005),onSkin([[side*(lampInset+.02),0,L-.025],[side*W*.88,0,L-.23]],.005)],lampFootprint=lamp[0].concat(lamp[1].slice().reverse()).map(([x,,z])=>[x,z] as [number,number]);
+    parts.push(panelDecal(scene,'recessed-headlamp',body,m.dark,lampFootprint,.003));
+    // The clear cover and nested projector/reflector sit on the same authored
+    // skin as the housing, avoiding the previous flat glowing cutout.
+    const projectorX=side*(lampInset+(design.lamp==='compact'?.105:.145)),projectorZ=L-(design.lamp==='race'?.235:.205),projectorY=(panelHeight(body,projectorX,projectorZ)??design.shoulders.at(-1)!)+.011;
+    const bezel=MeshBuilder.CreateTorus('headlamp-projector-bezel',{diameter:design.lamp==='compact'?.072:.090,thickness:.007,tessellation:lite?8:16},scene);bezel.position.set(projectorX,projectorY,projectorZ);add(bezel,m.chrome);
+    const optic=MeshBuilder.CreateCylinder('headlamp-projector-optic',{height:.009,diameter:design.lamp==='compact'?.050:.064,tessellation:lite?10:20},scene);optic.position.set(projectorX,projectorY+.003,projectorZ);add(optic,m.light);
+    if(!lite&&(design.lamp==='rally'||design.lamp==='race'||design.lamp==='tourer')){
+      const secondaryX=projectorX+side*.125,secondaryZ=projectorZ-.055,secondaryY=(panelHeight(body,secondaryX,secondaryZ)??projectorY)+.010;
+      const secondary=MeshBuilder.CreateCylinder('headlamp-secondary-optic',{height:.008,diameter:.041,tessellation:12},scene);secondary.position.set(secondaryX,secondaryY+.002,secondaryZ);add(secondary,m.light);
+      const ring=MeshBuilder.CreateTorus('headlamp-secondary-bezel',{diameter:.057,thickness:.005,tessellation:12},scene);ring.position.set(secondaryX,secondaryY,secondaryZ);add(ring,m.chrome);
+    }
     tube('led-signature',onSkin([[side*(lampInset+.04),0,L-.187],[side*.66,0,L-.263],[side*W*.835,0,L-.359]],.016),design.lamp==='blade'?.009:.013,m.light);
     if(design.lamp==='tourer'||design.lamp==='compact')tube('led-return',onSkin([[side*(lampInset+.05),0,L-.080],[side*.67,0,L-.225]],.016),.010,m.light);
     if(design.lamp==='rally')tube('rally-lamp-hook',onSkin([[side*W*.825,0,L-.34],[side*W*.85,0,L-.21],[side*W*.70,0,L-.12]],.016),.014,m.light);
+    parts.push(panelDecal(scene,'headlamp-clear-lens',body,m.lens??m.glass,lampFootprint,.019));
     const rearY=design.shoulders[0]-.015,rearInner=d.id==='aeris'?.52:d.id==='crest'?.39:.13;
     const lampEnd=W*design.widths[0]*.92;
     tube('rear-lamp-housing',[rearTrim(side*rearInner,rearY),rearTrim(side*(rearInner+lampEnd)/2,rearY+.006),rearTrim(side*lampEnd,rearY+.005)],d.id==='aeris'?.035:.025,m.dark);
     tube('rear-light-guide',[rearTrim(side*(rearInner+.012),rearY+.007,.031),rearTrim(side*(rearInner+lampEnd)/2,rearY+.012,.031),rearTrim(side*(lampEnd-.012),rearY+.012,.031)],.009,m.tail);
+    if(!lite)for(let prism=0;prism<3;prism++){
+      const u=(prism+1)/4,x=mix(rearInner+.025,lampEnd-.025,u),height=.015+(prism===1?.004:0);
+      tube('rear-lamp-separator',[rearTrim(side*x,rearY-height,.034),rearTrim(side*x,rearY+height,.034)],.0028,m.dark);
+    }
     if(d.id==='crest')tube('rear-lamp-hook',[rearTrim(side*lampEnd,rearY,.032),rearTrim(side*lampEnd,rearY-.080,.032)],.010,m.tail);
     const exhaust=MeshBuilder.CreateTorus('exhaust-tip',{diameter:.105,thickness:.010,tessellation:lite?12:24},scene);exhaust.rotation.x=Math.PI/2;exhaust.position.set(side*rear.openingW*.79,-.30,-L+.015);add(exhaust,m.chrome);
   }

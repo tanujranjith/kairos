@@ -116,6 +116,11 @@ export function formulaCoachwork(scene:Scene,d:VehicleDefinition,m:Materials,lit
   for(const side of [-1,1])tube('harness',[[side*.085,.059,-.70],[side*.09,-.10,-.61],[side*.11,-.163,-.32]],.017,m.accent);
   tube('halo',[[ -.27,.085,-.72],[-.30,.205,-.34],[-.23,.245,.20],[0,.265,.39],[.23,.245,.20],[.30,.205,-.34],[.27,.085,-.72]],.025,m.dark);
   tube('halo-front-support',[[0,.025,.46],[0,.245,.40]],.018,m.dark);
+  // Safety-cell detail stays outside the cockpit eye and does not alter the
+  // physical body: padded head surround, camera fairing and antenna mast.
+  for(const side of [-1,1])tube('cockpit-headrest-pad',[[side*.205,.055,-.73],[side*.225,.105,-.61],[side*.235,.115,-.45]],.034,m.dark);
+  const cameraPod=MeshBuilder.CreateCapsule('formula-camera-pod',{height:.16,radius:.035,tessellation:lite?6:10,subdivisions:1,capSubdivisions:2},scene);cameraPod.rotation.x=Math.PI/2;cameraPod.position.set(0,.327,-.90);add(cameraPod,m.paint);
+  tube('formula-antenna',[[0,.35,-.83],[0,.56,-.80]],.006,m.dark);
   tube('steering-column',[[0,-.20,.43],[0,-.015,.23]],.018,m.dark);
   tube('formula-steering-yoke',[[-.13,.025,.23],[-.17,-.035,.22],[-.12,-.085,.21],[.12,-.085,.21],[.17,-.035,.22],[.13,.025,.23]],.022,m.dark);
   box('steering-centre',.17,.065,.04,0,-.025,.225,m.dark);box('steering-screen',.085,.043,.009,0,-.004,.199,m.instruments);
