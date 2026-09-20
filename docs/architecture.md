@@ -22,7 +22,9 @@ Startup emits seven bounded `performance.measure` entries named `kairos:startup:
 
 `preparePresentation` keeps the initial overlay visible while zero-time draws complete the first reflection capture, bind it to the car and compile the scene. Two consecutive ready draws are required; the regular simulation loop and menu navigation start afterward. Each standalone draw explicitly begins/ends an engine frame before yielding: WebGPU must submit its current swap-chain texture in the same task. The wait fails after30seconds through the existing loading error path. This is a readiness gate, not a fixed visual delay. Context/device recovery remains separate work.
 
-## Ground material and controlled draws
+## Ground geometry, materials and controlled draws
+
+`terrain-mesh.ts` assembles road/junction/course-clipped ground with a one-tile halo. Canonical edge vertices are shared before boundary-preserving triangulation; a per-build height cache avoids repeated sampling. Halo polygons contribute only edge information, so independent workers produce matching cell boundaries without emitting overlapping neighboring faces. This repairs actual ground geometry, unlike the material/display-normal operations below. Roads and shoulders keep their own existing triangles and layer metadata.
 
 Terrain worker data carries packed ground-material controls in its existing color buffer. The PBR plugin supplies native GLSL/WGSL world-coordinate blending before standard lighting. It adds no texture sampler or render pass. Terrain display normals use central height-field differences; physical shape positions/indices and contact ranges are preserved. Concrete/gravel shoulders retain their original collision classifications while receiving distinct tints. The backdrop applies the ground treatment only to its recessed valley floor, preserving outer mountain shading.
 

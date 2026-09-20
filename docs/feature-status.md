@@ -1,12 +1,18 @@
 # Feature status — working build, not acceptance certification
 
+## Terrain topology continuation — September 20 (verified checkpoint)
+
+Ground polygons and independently streamed cells now share their clipped edge vertices. This repairs a measured terrain height-gap defect in both rendering and collision geometry. Road/shoulder definitions, vehicle parameters and assists remain unchanged. All324streamable cells pass the independent topology/footprint audit, and188unit tests plus the strict production build pass.
+
+WebGL2 and actual WebGPU repeat supported mountain/lake/forest seam crossings without damage or recovery. The forest route retains a 0.25-second physical hop; this does not guarantee smooth driving over every off-road slope. All 16 real-road cases, layer separation, streaming/retry/resource checks and the supplied keyboard/screenshot loop pass. The 528-frame Low geometry sample remains within budget (288 draws / 488,780 triangles maximum). Chrome and Edge each pass production Free Drive, handling and eight-car race launch/home on both renderers. Preview5192 serves `index-vW5PBuNa.js`. Scenery, terrain shape/material bands, sky and car finish still need work; see [scope and evidence](terrain-continuity.md). The full implementation and target-laptop/endurance/HTTPS acceptance remain unfinished.
+
 ## Ground-cover continuation — September 20 (verified checkpoint)
 
 Terrain now blends grass, dry patches, woodland litter, shoulder soil, shoreline sediment and slope rock in world coordinates on both native renderers. Gravel tint follows its collision classification; concrete stays distinct. Smooth display normals improve lighting without changing driving geometry. Controlled-time WebGPU draws now submit before yielding, fixing an expired-frame error exposed during verification. This does not change tire grip, braking, steering or vehicle models.
 
 181 unit tests, strict Node24 build and both eight-view renderer checks pass. All16real-road shoulder/grass/braking cases, cadence/layers, streaming/retry/resource cycles and the supplied keyboard input/screenshot loop pass. The isolated528-frame Low geometry sample peaks at288draws/488,625triangles on the development RTX3060. Chrome/Edge each pass cold-throttled, third-party-blocked production startup/driving/handling/eight-car launch/home on WebGL2 and actual WebGPU. Preview5192 serves `index-BYDSfaGk.js`; see [evidence](benchmarks.md).
 
-Actual screenshots still show sparse scenery, ground-detail bands and simplified tree/sky/car shapes. Diagnostic backdrop removal reveals narrow terrain gaps; investigate clipped polygon heights and joins separately, without treating shading as a collision fix. These are not accepted as final art. Target8GB laptop, endurance, full remaining feature/strategy acceptance and authorized HTTPS delivery remain outstanding.
+Actual screenshots still show sparse scenery, ground-detail bands and simplified tree/sky/car shapes. Diagnostic backdrop removal at that checkpoint revealed narrow terrain gaps, subsequently repaired by the topology work above rather than by shading. These views are not accepted as final art. Target8GB laptop, endurance, full remaining feature/strategy acceptance and authorized HTTPS delivery remain outstanding.
 
 ## City dressing and actual street illumination — September 20
 

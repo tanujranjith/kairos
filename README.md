@@ -27,7 +27,7 @@ The latest [car-model pass](docs/graphics.md) adds curved glazing, structural wi
 
 City corridors now have original lamp standards, benches, bins, planted beds and shelters. At night, two nearby pooled streetlights illuminate the road and cars; their ownership follows streamed scenery. This is bounded city dressing, not a completed world-art pass or a bus-service feature. The existing handling corrections are unchanged.
 
-Ground materials now blend meadow, dry grass, woodland soil, shore sediment and exposed rock in world coordinates, with smoother lighting and gravel-to-grass transitions. This uses the existing geometry/material passes and preserves physical driving surfaces. Scenery density, terrain joins and broader visual polish remain unfinished; see the current [graphics evidence and limitations](docs/graphics.md).
+Ground materials blend meadow, dry grass, woodland soil, shore sediment and exposed rock in world coordinates. Clipped terrain now shares boundary vertices across polygons and streamed cells, repairing a measured height-gap defect in the actual collision mesh. Authored road/shoulder surfaces and vehicle handling are unchanged. See [terrain continuity and off-road limits](docs/terrain-continuity.md). Scenery density, broader terrain shape and visual polish remain unfinished.
 
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 

@@ -11,6 +11,12 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Stitched terrain geometry — September 20
+
+The ground-material review exposed real sky slits when the visual backdrop was disabled. Neighboring clipped polygons were sampling different points along a supposedly shared edge. `terrain-mesh.ts` now inserts the shared vertices on both sides and triangulates without skipping them, including across independently loaded cells. The three reviewed region views retain their authored appearance; the inspected mountain slits disappear even without a backdrop. Physical grass surfaces use the same repaired triangles.
+
+The complete324-cell numerical audit, seven regressions and real Havok crossing checks are documented in [terrain continuity](terrain-continuity.md). Rough off-road terrain can still produce a short hop, and broad ground-detail bands, forest density, sky and vehicle finish remain separate art limitations. This is a topology repair, not a claim that the full visual target is finished.
+
 ### Continuous ground cover — September 20
 
 `ground-material.ts` adds native GLSL and WGSL hooks to the existing PBR ground material. World-coordinate fields blend grass, dry meadow, woodland litter, exposed shoulder soil, shoreline sediment and steep rock. Existing close-detail textures remain; no cell-sized splat texture, mesh or extra render pass is allocated. The recessed valley floor shares the broad field so unloading detailed scenery does not substitute a different grass pattern. Distant mountain rock remains on its existing material path.

@@ -1,7 +1,6 @@
 import { CELL_SIZE,ROADS,LANDMARKS,CIRCUIT,pointAt,terrainHeight,nearestRoad,inLake,JUNCTIONS,junctionRadius } from '../content/world';
-import { inHandlingCourse,terrainOutsideHandling } from '../content/handling-course';
-import { terrainOutsideJunctions } from '../content/terrain-clipping';
-import { terrainOutsideRoads } from '../content/road-terrain-clipping';
+import { inHandlingCourse } from '../content/handling-course';
+import { buildTerrainMesh } from './terrain-mesh';
 import { TUNNELS } from '../content/structures';
 import { hash,rng } from '../core/math';
 import type { Quality,V3,WorldCellManifest,ContactSurface,ContactRange } from '../core/types';
@@ -30,8 +29,7 @@ const atJunction=(x:number,z:number,roadId?:string)=>JUNCTIONS.some(j=>(!roadId|
 export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlueprint{
   const manifest=cellManifest(cx,cz),key=manifest.id,[x0,z0]=manifest.bounds,meshes:CellMesh[]=[],instances:CellInstance[]=[],signs:CellSign[]=[];
   const add=(name:string,g:MeshDataBuilder,material:CellMaterial,collision=false,contactSurface?:ContactSurface,contactRanges?:ContactRange[])=>{if(!g.positions.length)return;const data=g.finish();if(material==='terrain'){applyGroundChannels(data);smoothGroundNormals(data);}meshes.push({name:`${name}-${key}`,material,collision,data,contactSurface:contactSurface??(collision?{surface:'Concrete',layer:'structure'}:undefined),contactRanges});};
-  const terrain=new MeshDataBuilder();
-  for(let x=x0;x<x0+CELL_SIZE;x+=16)for(let z=z0;z<z0+CELL_SIZE;z+=16)for(const bounds of terrainOutsideHandling([x,z,x+16,z+16]))for(const polygon of terrainOutsideRoads(terrainOutsideJunctions(bounds),bounds))terrain.polygon(polygon.map(p=>({...p,y:terrainHeight(p.x,p.z)})));
+  const terrain=buildTerrainMesh(cx,cz);
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
   const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder();
   const roadContacts:ContactRange[]=[],vergeContacts:ContactRange[]=[];
