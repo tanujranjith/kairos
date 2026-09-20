@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const base = process.env.KAIROS_URL ?? 'http://127.0.0.1:5187';
-const output = 'output/controller-navigation';
+const output = process.argv.find(a=>a.startsWith('--output='))?.slice(9)??'output/controller-navigation';
 await fs.mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -248,6 +248,13 @@ try {
   assert.equal(await page.evaluate(()=>window.kairos.mode),'Quick Race');
   await page.evaluate(()=>{window.kairos.setScreen('pause');liveMenu.seek('[data-action="end-session"]');liveMenu.tap(0);});
   assert.equal(await page.evaluate(()=>window.kairos.screen),'results');
+  await page.evaluate(()=>{liveMenu.seek('[data-results-scroll="1"]');liveMenu.tap(0);});
+  assert.ok(await page.locator('.results-table').evaluate(el=>el.scrollTop)>0);
+  await page.evaluate(()=>{liveMenu.seek('[data-results-scroll="-1"]');liveMenu.tap(0);});
+  assert.equal(await page.locator('.results-table').evaluate(el=>el.scrollTop),0);
+  assert.equal(await page.locator('.results-layout').evaluate(el=>el.scrollTop),0);
+  await capture('results-driver-browsing');
+  checks.push('controller scrolls the driver table without hiding the results heading or actions');
   await page.evaluate(()=>liveMenu.tap(1));
   assert.equal(await page.evaluate(()=>window.kairos.screen),'home');
   checks.push('controller race setup → start → pause/end → results → home does not reopen a finished race');

@@ -42,6 +42,10 @@ Repeated scenery uses thin instances. Each cell owns unique instance-buffer geom
 
 `src/content/race-course.ts` defines race rules and finite-width, height-clipped directional timing gates. `RaceRouteTracker` owns per-entrant physical circuit/pit proof; `RaceManager` consumes interpolated crossing events for ordered checkpoints, sectors, laps, penalties and classification. The pit has its own ordered gate chain and circuit-equivalent progress anchored at entry, the extended finish plane and exit. Stationary service cannot advance race position, and resets/skipped gates cannot fabricate lap credit. See `race-timing.md` for tests and remaining AI/rejoin limitations.
 
+### Session grids
+
+Session grids are identity-ordered `RaceState.grid` lists, separate from the stable entrant roster. `RaceManager.nextSession()` snapshots every earned qualifying position into a `RaceSessionStart`; `Kairos.startRace()` captures it before resetting the manager and retains it for loading retries. Actual chassis spawns, qualifying results and countdown ranking agree. Setup preferences remain independent of the active session. See [grid lifecycle and tie rules](qualifying-grid.md).
+
 ### Racing line control
 
 Racing AI reserves an anchored road-relative lane while another car's body overlaps now or within a1.2-second relative-speed horizon. Height-separated traffic is excluded. The occupied-lane bounds apply after passing decisions, so a later opponent cannot overwrite them. An unanchored reservation was rejected because it accumulated ordinary corner-tracking drift. Weakly owned per-vehicle/road state releases lane reservations once clearance returns and cannot retain disposed cars.

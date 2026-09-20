@@ -31,7 +31,21 @@ for(const vehicleClass of ['GT','FORMULA']){
     if(stage===2)assert.ok(final.race.entrants.every(r=>r.finished),'Not every entrant classified');
     assert.ok(final.race.entrants.every(r=>r.warnings===0&&r.penalty===0),'Warnings or penalties in the normal field');
     assert.ok(vehicleDamage.every(v=>v.damage<.01),'Damaged entrant');
-    if(stage<2){await page.click('[data-action="next-session"]');await page.evaluate(()=>window.kairos.setAutopilot(true));assert.equal(await page.evaluate(()=>window.kairos.race.stage),stage+1);}
+    if(stage<2){
+      const expected=stage===1?await page.evaluate(()=>window.kairos.race.order().map(r=>r.id)):final.race.grid;
+      await page.click('[data-action="next-session"]');
+      const nextGrid=await page.evaluate(async()=>{
+        const g=window.kairos;await g.transitionPromise;await g.advanceTime(0);
+        const {CIRCUIT,pointAt}=await import('/src/content/world.ts');
+        const cars=[g.player,...g.opponents.map(o=>o.vehicle)];
+        const physical=Array.from({length:cars.length},(_,i)=>{const p=pointAt(CIRCUIT,CIRCUIT.length-18-Math.floor(i/2)*14,(i%2===0?-1:1)*3);const car=cars.find(v=>Math.hypot(v.node.position.x-p.x,v.node.position.z-p.z)<.01);return car?.id;});
+        g.setAutopilot(true);return {stage:g.race.stage,stored:g.race.state.grid,physical,loading:g.loading,loadError:g.loadError};
+      });
+      reports.at(-1).nextGrid={expected,...nextGrid};
+      await fs.writeFile(`${output}/report.json`,JSON.stringify({environment:'Installed Edge/WebGL2, controlled time; natural qualifying laps, physical AI practice service and actual UI transitions. Not laptop FPS or wall-clock endurance.',errors,reports},null,2));
+      assert.equal(nextGrid.stage,stage+1);assert.equal(nextGrid.loading,false);assert.equal(nextGrid.loadError,'');
+      assert.deepEqual(nextGrid.stored,expected);assert.deepEqual(nextGrid.physical,expected);
+    }
   }
 }
 assert.deepEqual(errors,[]);console.log('Both race weekends and physical AI pit-service flows completed');

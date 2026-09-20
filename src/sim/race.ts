@@ -1,4 +1,4 @@
-import type {RaceSessionConfig,RaceState,RacerProgress,V3} from '../core/types';
+import type {RaceSessionConfig,RaceSessionStart,RaceState,RacerProgress,V3} from '../core/types';
 import {CIRCUIT} from '../content/world';
 import {RACE_RULES} from '../content/race-course';
 import {RaceRouteTracker,type RaceSample} from './race-route';
@@ -10,17 +10,31 @@ export function validatedRaceDistance(r:RacerProgress){
   return (r.lap-1)*CIRCUIT.length+Math.max(lower,Math.min(upper,r.progress));
 }
 export const DRIVER_NAMES=['You','M. Laurent','A. Kim','S. Moretti','R. Okafor','L. Chen','K. Rivera','J. Berg','E. Sato','T. Walsh','N. Varga','I. Costa','D. Park','H. Rossi','F. Silva','P. Anders'];
+function startingGrid(config:RaceSessionConfig,qualified?:readonly string[]){
+  const roster=Array.from({length:config.entrants},(_,i)=>i===0?'player':`racer-${i}`);
+  if(qualified){
+    if(qualified.length!==roster.length||new Set(qualified).size!==roster.length||qualified.some(id=>!roster.includes(id)))throw new Error('Starting grid must contain every entrant exactly once.');
+    return [...qualified];
+  }
+  const grid=roster.slice(1);grid.splice(Math.max(0,Math.min(grid.length,config.position-1)),0,'player');return grid;
+}
 export class RaceManager {
   state:RaceState;stage=0;
   private offTrack=new Map<string,number>();private limitsLatch=new Set<string>();private pitLatch=new Set<string>();
   private routes=new Map<string,RaceRouteTracker>();private gridPositions=new Map<string,V3>();private checkeredAt=Infinity;private falseStarts=new Set<string>();
-  constructor(){this.state={phase:'idle',elapsed:0,remaining:0,countdown:3,flag:'',entrants:[],session:{kind:'Free Drive',laps:5,entrants:8,difficulty:.65,position:4,vehicleClass:'GT'}};}
-  start(config:RaceSessionConfig,stage=0){
+  constructor(){this.state={phase:'idle',elapsed:0,remaining:0,countdown:3,flag:'',entrants:[],grid:[],session:{kind:'Free Drive',laps:5,entrants:8,difficulty:.65,position:4,vehicleClass:'GT'}};}
+  start(config:RaceSessionConfig,stage=0,qualified?:readonly string[]){
+    const grid=startingGrid(config,qualified);
     this.stage=stage;this.checkeredAt=Infinity;this.falseStarts.clear();this.offTrack.clear();this.limitsLatch.clear();this.pitLatch.clear();this.routes.clear();this.gridPositions.clear();
     const phase=config.kind==='Practice'||config.kind==='Race Weekend'&&stage===0?'practice':config.kind==='Qualifying'||config.kind==='Race Weekend'&&stage===1?'qualifying':'countdown';
-    this.state={phase,elapsed:0,remaining:phase==='qualifying'||config.kind==='Race Weekend'&&stage===0?300:Infinity,countdown:3,flag:phase==='countdown'?'GET READY':'GREEN',session:{...config},entrants:Array.from({length:config.entrants},(_,i)=>({id:i===0?'player':`racer-${i}`,name:DRIVER_NAMES[i],lap:0,checkpoint:0,progress:0,lastProgress:0,lapStart:0,best:Infinity,last:0,sectorStart:0,sectors:[],valid:true,warnings:0,penalty:0,finished:false,finishTime:0,pit:false,pitRoute:false,pitCheckpoint:0,pitValid:false}))};
+    this.state={phase,elapsed:0,remaining:phase==='qualifying'||config.kind==='Race Weekend'&&stage===0?300:Infinity,countdown:3,flag:phase==='countdown'?'GET READY':'GREEN',grid,session:{...config,position:grid.indexOf('player')+1},entrants:Array.from({length:config.entrants},(_,i)=>({id:i===0?'player':`racer-${i}`,name:DRIVER_NAMES[i],lap:0,checkpoint:0,progress:0,lastProgress:0,lapStart:0,best:Infinity,last:0,sectorStart:0,sectors:[],valid:true,warnings:0,penalty:0,finished:false,finishTime:0,pit:false,pitRoute:false,pitCheckpoint:0,pitValid:false}))};
   }
-  nextStage(){if(this.state.session.kind!=='Race Weekend'||this.stage>=2)return false;const config={...this.state.session};if(this.stage===1){const ordered=[...this.state.entrants].sort((a,b)=>a.best-b.best);config.position=ordered.findIndex(r=>r.id==='player')+1;}this.start(config,this.stage+1);return true;}
+  nextSession():RaceSessionStart|null{
+    if(this.state.phase!=='finished'||this.state.session.kind!=='Race Weekend'||this.stage>=2)return null;
+    const grid=this.stage===1?this.order().map(r=>r.id):[...this.state.grid];
+    return {config:{...this.state.session,position:grid.indexOf('player')+1},stage:this.stage+1,grid};
+  }
+  nextStage(){const next=this.nextSession();if(!next)return false;this.start(next.config,next.stage,next.grid);return true;}
   resetLap(id:string){const r=this.state.entrants.find(r=>r.id===id);if(r){r.valid=false;this.routes.get(id)?.reset();r.pitRoute=false;r.pitCheckpoint=0;r.pitValid=false;}}
   end(){this.state.phase='finished';this.state.flag='CHECKERED';}
   update(dt:number,samples:RaceSample[]){
@@ -56,6 +70,16 @@ export class RaceManager {
     const player=state.entrants[0];if(player&&!player.finished&&this.order()[0]?.lap>player.lap+1)state.flag='BLUE';
     if(Number.isFinite(this.checkeredAt)){state.flag='CHECKERED';if(state.entrants.every(r=>r.finished)||state.elapsed-this.checkeredAt>RACE_RULES.finishWindow)this.end();}
   }
-  order():RacerProgress[]{const timing=this.state.phase==='practice'||this.state.phase==='qualifying'||this.state.phase==='finished'&&(this.state.session.kind==='Practice'||this.state.session.kind==='Qualifying'||this.state.session.kind==='Race Weekend'&&this.stage<2);return [...this.state.entrants].sort((a,b)=>timing?a.best-b.best:a.finished&&b.finished?b.lap-a.lap||a.finishTime-b.finishTime:a.finished?-1:b.finished?1:validatedRaceDistance(b)-validatedRaceDistance(a));}
+  order():RacerProgress[]{
+    const timing=this.state.phase==='practice'||this.state.phase==='qualifying'||this.state.phase==='finished'&&(this.state.session.kind==='Practice'||this.state.session.kind==='Qualifying'||this.state.session.kind==='Race Weekend'&&this.stage<2);
+    const gridOrder=(a:RacerProgress,b:RacerProgress)=>this.state.grid.indexOf(a.id)-this.state.grid.indexOf(b.id);
+    if(this.state.phase==='countdown'||this.state.phase==='grid')return [...this.state.entrants].sort(gridOrder);
+    return [...this.state.entrants].sort((a,b)=>{
+      // Equal times (including two drivers without a valid lap) retain their
+      // qualifying starting order. Never reorder the identity-owned roster.
+      const rank=timing?(a.best===b.best?0:a.best-b.best):a.finished&&b.finished?b.lap-a.lap||a.finishTime-b.finishTime:a.finished?-1:b.finished?1:validatedRaceDistance(b)-validatedRaceDistance(a);
+      return rank||gridOrder(a,b);
+    });
+  }
   get player(){return this.state.entrants[0];}
 }

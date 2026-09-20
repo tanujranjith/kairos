@@ -1,5 +1,15 @@
 # Feature status — working build, not acceptance certification
 
+## Latest qualifying-grid checkpoint — September20
+
+155 tests and the isolated strict Node24 production build pass. Race Weekend now preserves every earned qualifying position, not only the player's slot. Driver names, opponent indices and pit assignments retain their identity. Timing ties/no-time drivers retain qualifying starting order; practice times do not set the race grid. Restart weekend resets to fresh practice and the selected grid, while loading retry preserves the captured earned grid. Active-session settings no longer read changed setup preferences.
+
+Both eight-car GT/Formula natural weekends finish cleanly across practice, qualifying and race; every next-stage stored and actual physical grid matches its source order. Races classify all8drivers at377.75s/319.37s; each practice includes a physical AI pit service. Synthetic reversed-time cases independently expose the former identity-order defect and verify eight-car GT/sixteen-car Formula, tied/missing times, later invalid laps, restart, resized Quick Race and failed-load recovery. These are functional development-host checks, not every start order, hardware FPS or full acceptance. See [grid rules and reproduction](qualifying-grid.md).
+
+Results now keep the heading and next action visible while long fields scroll internally. Keyboard/controller-accessible driver paging was added after screenshot review. Car models, scenery and physical vehicle controls are unchanged by this checkpoint; the user-requested art/ambience polish, off-line pit bays, broader strategy cases, adaptive quality, device recovery, KTX2, hardware/endurance and authorizedHTTPS work remain unfinished.
+
+Final real keyboard grid/paging tests,22synthetic-controller checks and the supplied input/screenshot loop pass. The rebuilt production preview passes Chrome/Edge with actualWebGPU and forcedWebGL2, cold throttled cache, blocked third-party hosts, normal drive/handling and clean eight-car race launches/home return. See the dated benchmarks for exact scope and timings; no hardware/endurance/art-finish claim is made.
+
 ## Latest racing-control checkpoint — September20
 
 148 tests and the isolated strict Node24 production build pass. Racing inputs now use anchored lane reservations, continuous line changes, measured chassis yaw-rate feedback and road-edge tracking clearance. Reproduced grid-convergence, first-bend oscillation and sixteen-car outer-lane failures were corrected without changing tire forces, vehicle power, keyboard controls or track-limit tolerances. All new controller parameters are authored `RACE_AI` data.
@@ -8,7 +18,7 @@ Both complete eight-car GT/Formula weekends pass all stages with zero warnings, 
 
 The final144-case keyboard check passes unchanged, including actual acceleration/turn/brake/reverse/reset. Production Chrome and Edge pass WebGPU and forcedWebGL2, cold throttled cache and third-party hosts blocked, through ordinary driving and race-launch/menu flows. The supplied input harness now reports browser/request failures as failures instead of silently returning success; screenshots and state are still reviewed explicitly.
 
-The full game remains incomplete. In particular, service still uses single-file lane stops, full qualifying-grid order currently preserves only the player's qualified slot, and further vehicle/cabin art, broader scenery realism, adaptive quality/device recovery, KTX2, hardware/endurance and authorizedHTTPS verification remain required. See [racing control and reproduction](racing-ai.md) and [dated evidence](benchmarks.md).
+At that checkpoint, full qualifying-grid order still preserved only the player's slot; the newer grid checkpoint above resolves that specific limitation. Service still uses single-file lane stops, and further vehicle/cabin art, broader scenery realism, adaptive quality/device recovery, KTX2, hardware/endurance and authorizedHTTPS verification remain required. See [racing control and reproduction](racing-ai.md) and [dated evidence](benchmarks.md).
 
 ## Latest forecourt checkpoint — September 20
 

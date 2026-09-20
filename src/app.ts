@@ -1,5 +1,6 @@
 import './style.css';
 import './ui/theme.css';
+import './ui/results.css';
 import { Vector3, Quaternion, Color3 } from '@babylonjs/core';
 import { Renderer } from './render/renderer';
 import { WorldRenderer } from './render/world';
@@ -21,7 +22,7 @@ import { DrivingAudio } from './core/audio';
 import { Interface, type ViewModel } from './ui/interface';
 import { ControllerMenuNavigator } from './ui/controller-navigation';
 import { clamp, distance, formatTime, wrap, percentile } from './core/math';
-import type { Screen, SaveGame, RaceSessionConfig, InputFrame, V3, Settings } from './core/types';
+import type { Screen, SaveGame, RaceSessionConfig, RaceSessionStart, InputFrame, V3, Settings } from './core/types';
 
 type Opponent={vehicle:Vehicle;visual:CarVisual;input:InputFrame;retired:boolean;stuck:number;pitDriver:PitDriver};
 export class Kairos {
@@ -85,13 +86,17 @@ export class Kairos {
     this.setScreen('drive');this.toast(handling?'Northstar · Skidpad, slalom, braking, banking and ride tests. No traffic on the pad.':'WASD or arrows to drive · C changes camera · M opens your map',6);
   },()=>this.startDrive(handling));}
   private async createTraffic(){await this.trafficSystem.populate(this.player,this.save.settings.traffic,this.clock);}
-  startRace(stage=0):Promise<void>{return this.session(async ticket=>{
-    this.startAudio();this.prepareDrive();this.mode=this.raceConfig.kind;this.world.clear();this.race.start(this.raceConfig,stage);const playerSlot=this.raceConfig.position-1,d=vehicleById(this.raceConfig.vehicleClass==='FORMULA'?'apex':'gtx');
+  startRace(start:RaceSessionStart={config:this.raceConfig,stage:0}):Promise<void>{
+    // Capture before prepareDrive replaces the manager. The same immutable
+    // request survives a failed world load without losing qualifying results.
+    const request={config:{...start.config},stage:start.stage,grid:start.grid?[...start.grid]:undefined},config=request.config,stage=request.stage;
+    return this.session(async ticket=>{
+    this.startAudio();this.prepareDrive();this.mode=config.kind;this.world.clear();this.race.start(config,stage,request.grid);const order=this.race.state.grid,playerSlot=order.indexOf('player'),d=vehicleById(config.vehicleClass==='FORMULA'?'apex':'gtx');
     const grid=(slot:number)=>pointAt(CIRCUIT,CIRCUIT.length-18-Math.floor(slot/2)*14,(slot%2===0?-1:1)*3),p=grid(playerSlot);
-    await this.world.prepare('racing',Array.from({length:this.raceConfig.entrants},(_,slot)=>grid(slot)));if(ticket!==this.loadingTicket)return;this.changeCar(d.id,p);
-    for(let i=1;i<this.raceConfig.entrants;i++){const slot=i-1>=playerSlot?i:i-1,spawn=grid(slot),vehicle=new Vehicle(this.physics,d,`racer-${i}`,spawn,spawn.yaw),visual=createLodCar(this.renderer.scene,d,{paint:['#ba5239','#65908f','#cdc9bb','#365a92','#dea658','#6b667d','#8cbaad'][i%7],wheels:'#9caaac',livery:1,brakeBias:.6,aero:1});this.renderer.registerCar(visual);this.opponents.push({vehicle,visual,input:neutralInput(),retired:false,stuck:0,pitDriver:new PitDriver(i-1)});}
-    this.setScreen('drive');this.toast(stage===0?'Aster International · Find your braking points.':stage===1?'Qualifying · Your fastest valid lap sets the grid.':'Race · Make the moment count.',5);
-  },()=>this.startRace(stage));}
+    await this.world.prepare('racing',order.map((_,slot)=>grid(slot)));if(ticket!==this.loadingTicket)return;this.changeCar(d.id,p);
+    for(let i=1;i<config.entrants;i++){const id=`racer-${i}`,spawn=grid(order.indexOf(id)),vehicle=new Vehicle(this.physics,d,id,spawn,spawn.yaw),visual=createLodCar(this.renderer.scene,d,{paint:['#ba5239','#65908f','#cdc9bb','#365a92','#dea658','#6b667d','#8cbaad'][i%7],wheels:'#9caaac',livery:1,brakeBias:.6,aero:1});this.renderer.registerCar(visual);this.opponents.push({vehicle,visual,input:neutralInput(),retired:false,stuck:0,pitDriver:new PitDriver(i-1)});}
+    this.setScreen('drive');this.toast(this.race.state.phase==='countdown'?`Race · Starting P${playerSlot+1}. Make the moment count.`:this.race.state.phase==='qualifying'?'Qualifying · Your fastest valid lap sets the grid.':'Aster International · Find your braking points.',5);
+  },()=>this.startRace(request));}
   private resetPlayer(){
     const onCourse=this.mode==='Free Drive'&&inHandlingCourse(this.player.node.position.x,this.player.node.position.z);
     const near=nearestRoadAt(this.player.node.position,this.mode==='Free Drive'?undefined:r=>r.id==='circuit');
@@ -116,7 +121,7 @@ export class Kairos {
     if(action==='navigate'){const landmark=LANDMARKS.find(l=>l.id===value)!;this.destination=landmark.id;this.route=this.graph.route({...this.player.state.position,yaw:this.player.state.yaw},landmarkPosition(landmark));if(!this.route.length)this.toast('No connected road route was found.');else this.toast(`Route set · ${landmark.name}`);this.ui.render(true);return;}
     if(action==='activity'){const l=LANDMARKS.find(l=>l.id===value)!;if(!this.hasDrive)await this.startDrive();this.activity={name:l.name,id:l.id,time:0,score:0,started:false};this.destination=l.id;this.route=this.graph.route({...this.player.state.position,yaw:this.player.state.yaw},landmarkPosition(l));this.setScreen('drive');this.toast(`Drive to ${l.name} to begin.`);return;}
     if(action==='end-session'){this.race.end();this.finishSession();return;}
-    if(action==='next-session'){const stage=this.race.stage;if(stage===1)this.raceConfig.position=this.race.order().findIndex(r=>r.id==='player')+1;await this.startRace(stage+1);return;}
+    if(action==='next-session'){if(this.transitioning)return;const next=this.race.nextSession();if(next)await this.startRace(next);return;}
     if(action==='service'){const p=this.player.state.position;const station=LANDMARKS.find(l=>(l.type==='service'||l.type==='garage')&&atDestination(p,l,35)),pit=nearestRoad(p.x,p.z,r=>r.kind==='pit');if(Math.abs(this.player.state.speed)>1){this.toast('Come to a stop before servicing your car.');return;}if(this.player.state.grounded&&(station||this.mode!=='Free Drive'&&pit.distance<6&&Math.abs(p.y-pit.point.y)<3&&pit.progress>170&&pit.progress<PIT.length-170)){this.serviceTimer=6;this.toast('Service in progress · refueling and replacing tires',6);}else this.toast('Stop at a service station or in the Aster pit service area.');return;}
     if(action==='toggle-sound'){this.save.settings.volume=this.save.settings.volume>0?0:.55;void this.store.write(this.save);this.toast(this.save.settings.volume?'Audio on':'Audio muted');return;}
     if(action==='save-export'){this.store.export(this.save);return;}
@@ -140,7 +145,7 @@ export class Kairos {
       if(v.needsRecovery()||o.stuck>8){const n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='circuit'),p=pointAt(CIRCUIT,n.progress-8,i%2?3:-3);if(all.every(other=>other===v||distance(other.state.position,p)>9)){this.world.requestAround(p);v.reset(p,p.yaw);this.race.resetLap(v.id);o.stuck=0;o.pitDriver.reset();}}
     }
     }
-    let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.raceConfig.difficulty,this.wetness,0,CIRCUIT,dt):this.input.poll(dt,this.player.state.speed,this.player.definition.wheelbase,this.wetness);this.lastInput=input;
+    let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.race.state.session.difficulty,this.wetness,0,CIRCUIT,dt):this.input.poll(dt,this.player.state.speed,this.player.definition.wheelbase,this.wetness);this.lastInput=input;
     const countdown=this.race.state.phase==='countdown';if(countdown&&(this.autoTestDriver||input.throttle<.05))input={...neutralInput(),brake:1};
     if(this.serviceTimer>0){this.serviceTimer-=dt;input={...neutralInput(),brake:1};if(this.serviceTimer<=0){this.player.restore();this.toast('Service complete. Check traffic before rejoining.');}}
     this.player.preStep(input,settings,this.wetness,dt);
@@ -182,7 +187,7 @@ export class Kairos {
   setAutopilot(enabled:boolean){this.autoTestDriver=enabled;}
   teleport(x:number,z:number,roadId?:string){const n=nearestRoad(x,z,roadId?r=>r.id===roadId:undefined);const p=pointAt(n.road,n.progress,2);this.world.requestAround(p,true);this.player.reset(p,p.yaw);this.race.resetLap('player');}
   snapshot(){return {screen:this.screen,mode:this.mode,loading:this.loading,loadError:this.loadError,streaming:this.world.snapshot(),renderer:this.renderer.rendererName,coordinateSystem:'meters; Y up; +Z forward at yaw 0; +X right',player:this.player.state,race:this.race.state,cells:this.world.cells.size,traffic:this.traffic.map(t=>({id:t.vehicle.id,position:t.vehicle.state.position,speed:t.vehicle.state.speed,path:t.agent.pathId,reason:t.agent.reason})),trafficSystem:this.trafficSystem.snapshot(),opponents:this.opponents.map(o=>({id:o.vehicle.id,position:o.vehicle.state.position,speed:o.vehicle.state.speed,pit:o.pitDriver.snapshot()})),destination:this.destination,routePoints:this.route.length,activity:this.activity,weather:this.save.settings.weather,wetness:this.wetness,time:this.save.settings.time,physicsMs:this.physicsMs,overloads:this.overloads,frameTimeP95:percentile(this.frameTimes,.95),message:this.message};}
-  view():ViewModel{return {screen:this.screen,save:this.save,player:this.player.state,race:this.race.state,raceOrder:this.race.order(),raceStage:this.race.stage,raceConfig:this.raceConfig,mode:this.mode,renderer:this.renderer.rendererName,fps:this.renderer.engine.getFps(),cells:this.world.cells.size,drawCalls:this.renderer.scene.getActiveMeshes().length,triangles:this.renderer.scene.getActiveIndices()/3,wetness:this.wetness,clock:this.clock,route:this.route,destination:this.destination,mapSelection:this.mapSelection,activity:this.activity,message:this.message,storageError:this.store.error,pausedFromDrive:this.pausedFromDrive,trafficCount:this.traffic.length,physicsMs:this.physicsMs};}
+  view():ViewModel{return {screen:this.screen,save:this.save,player:this.player.state,race:this.race.state,raceOrder:this.race.order(),raceStage:this.race.stage,raceConfig:this.mode==='Free Drive'||this.screen==='motorsport'?this.raceConfig:this.race.state.session,mode:this.mode,renderer:this.renderer.rendererName,fps:this.renderer.engine.getFps(),cells:this.world.cells.size,drawCalls:this.renderer.scene.getActiveMeshes().length,triangles:this.renderer.scene.getActiveIndices()/3,wetness:this.wetness,clock:this.clock,route:this.route,destination:this.destination,mapSelection:this.mapSelection,activity:this.activity,message:this.message,storageError:this.store.error,pausedFromDrive:this.pausedFromDrive,trafficCount:this.traffic.length,physicsMs:this.physicsMs};}
 }
 
 const game=new Kairos();game.init().catch(e=>{console.error(e);document.querySelector('#loading-message')!.textContent=String(e.message??e);});

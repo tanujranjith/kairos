@@ -1,0 +1,30 @@
+/* Keep session identity and next action visible, even for sixteen entrants. */
+.results-layout {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 2px 4px 5px;
+}
+.results-layout > .eyebrow,
+.results-layout > h1,
+.results-layout > .section-intro,
+.results-layout > .result-actions { flex-shrink: 0; }
+.results-layout .results-table {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 20px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #648a9f #14262f;
+}
+.results-layout .result-row { padding-top: 12px; padding-bottom: 12px; }
+.results-layout .table-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #14262f;
+}
+.results-layout .result-actions { padding: 5px; }
+.results-browse { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+.results-browse button { padding: 10px 13px; }
+.results-browse span { font-size: 8px; letter-spacing: 1px; color: #a1b5be; }
