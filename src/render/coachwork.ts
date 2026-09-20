@@ -2,6 +2,7 @@ import { Color3, Mesh, MeshBuilder, PBRMaterial, Vector3, VertexData, type Mater
 import type { VehicleDefinition } from '../core/types';
 import {roadDesign} from './road-design';
 import {panelStripe,panelHeight,panelSide,panelDecal} from './panel-stripe';
+import {fascia,fasciaDepth} from './fascia';
 
 type Point=[number,number,number];
 const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
@@ -28,7 +29,7 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
       for(let i=0;i<indices.length;i++){const old=indices[i];if(!map.has(old)){map.set(old,p.length/3);p.push(...positions.slice(old*3,old*3+3));uv.push(...uvs.slice(old*2,old*2+2));}indices[i]=map.get(old)!;}positions=p;uvs=uv;
     }
     VertexData.ComputeNormals(positions,indices,normals);
-    if(name==='recessed-headlamp'&&normals.filter((_,i)=>i%3===1).reduce((a,b)=>a+b,0)<0){for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];VertexData.ComputeNormals(positions,indices,normals);}
+    if((name==='recessed-headlamp'&&normals.filter((_,i)=>i%3===1).reduce((a,b)=>a+b,0)<0)||(name.startsWith('kairos-')&&normals.filter((_,i)=>i%3===2).reduce((a,b)=>a+b,0)>0)){for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];VertexData.ComputeNormals(positions,indices,normals);}
     const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;data.uvs=uvs;const mesh=new Mesh(name,scene);data.applyToMesh(mesh);return add(mesh,material);
   };
   const stations=design.stations;
@@ -47,8 +48,9 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
   }
   const body=sheet('sculpted-coachwork',rows,m.paint);
   const onSkin=(points:Point[],offset=.004):Point[]=>points.map(([x,,z])=>[x,(panelHeight(body,x,z)??0)+offset,z]);
-  // End caps are separate surfaces so the bumper does not smear normals across the bonnet.
-  for(const end of [0,rows.length-1]){const edge=rows[end],z=edge[0][2],points=edge.map(p=>new Vector3(...p));points.push(new Vector3(0,-.43,z));const cap=MeshBuilder.CreateRibbon('bumper-cap',{pathArray:[points,points.map(()=>new Vector3(0,-.18,z))],sideOrientation:Mesh.DOUBLESIDE},scene);add(cap,m.paint);}
+  const rear=fascia(scene,d,rows[0],false,lite,m.paint,m.dark),front=fascia(scene,d,rows.at(-1)!,true,lite,m.paint,m.dark);
+  parts.push(...rear.parts,...front.parts);
+  const rearTrim=(x:number,y:number,offset=.007):Point=>[x,y,(fasciaDepth(rear.panel,x,y,-1)??-L)-offset];
   box('undertray',d.width*.82,.045,d.length*.85,0,-.42,0,m.dark);
 
   // Bowed windscreen/backlight and crowned roof, rather than a solid glass box.
@@ -82,23 +84,27 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
     tube('led-signature',onSkin([[side*(lampInset+.04),0,L-.187],[side*.66,0,L-.263],[side*W*.835,0,L-.359]],.016),design.lamp==='blade'?.009:.013,m.light);
     if(design.lamp==='tourer'||design.lamp==='compact')tube('led-return',onSkin([[side*(lampInset+.05),0,L-.080],[side*.67,0,L-.225]],.016),.010,m.light);
     if(design.lamp==='rally')tube('rally-lamp-hook',onSkin([[side*W*.825,0,L-.34],[side*W*.85,0,L-.21],[side*W*.70,0,L-.12]],.016),.014,m.light);
-    box('side-intake',.25,.19,.028,side*W*.68,-.21,L-.008,m.dark);
-    if(!lite)for(let k=0;k<3;k++)box('intake-louvre',.22,.011,.035,side*W*.68,-.28+k*.055,L+.012,m.dark);
     const rearY=design.shoulders[0]-.015,rearInner=d.id==='aeris'?.52:d.id==='crest'?.39:.13;
-    tube('rear-lamp-housing',[[side*rearInner,rearY,-L-.010],[side*W*.82,rearY+.005,-L-.004]],d.id==='aeris'?.055:.036,m.dark);
-    tube('rear-light-guide',[[side*(rearInner+.02),rearY+.012,-L-.046],[side*W*.81,rearY+.02,-L-.042]],.012,m.tail);
-    if(d.id==='crest')tube('rear-lamp-hook',[[side*W*.80,rearY+.02,-L-.043],[side*W*.81,rearY-.095,-L-.034]],.014,m.tail);
-    const exhaust=MeshBuilder.CreateTorus('exhaust-tip',{diameter:.112,thickness:.013,tessellation:lite?12:24},scene);exhaust.rotation.x=Math.PI/2;exhaust.position.set(side*.64,-.33,-L-.048);add(exhaust,m.chrome);
-    box('exhaust-recess',.16,.125,.04,side*.64,-.325,-L-.012,m.dark);
+    const lampEnd=W*design.widths[0]*.92;
+    tube('rear-lamp-housing',[rearTrim(side*rearInner,rearY),rearTrim(side*(rearInner+lampEnd)/2,rearY+.006),rearTrim(side*lampEnd,rearY+.005)],d.id==='aeris'?.035:.025,m.dark);
+    tube('rear-light-guide',[rearTrim(side*(rearInner+.012),rearY+.007,.031),rearTrim(side*(rearInner+lampEnd)/2,rearY+.012,.031),rearTrim(side*(lampEnd-.012),rearY+.012,.031)],.009,m.tail);
+    if(d.id==='crest')tube('rear-lamp-hook',[rearTrim(side*lampEnd,rearY,.032),rearTrim(side*lampEnd,rearY-.080,.032)],.010,m.tail);
+    const exhaust=MeshBuilder.CreateTorus('exhaust-tip',{diameter:.105,thickness:.010,tessellation:lite?12:24},scene);exhaust.rotation.x=Math.PI/2;exhaust.position.set(side*rear.openingW*.79,-.30,-L+.015);add(exhaust,m.chrome);
   }
-  // Broad, inset trapezoidal grille. Thin louvres catch light without covering the opening.
-  const grille=design.grille;sheet('front-grille',[[[-grille,-.09,L+.018],[grille,-.09,L+.018]],[[-grille*.94,-.335,L+.023],[grille*.94,-.335,L+.023]]],m.dark);
-  if(d.id==='nova'){for(let i=-7;i<=7;i++)box('tourer-grille-fin',.009,.205,.024,i*grille/8,-.205,L+.04,m.chrome);}
-  else for(let i=0;i<(lite?3:6);i++)box('grille-louvre',grille*1.80,.009,.027,0,-.12-i*(lite?.083:.038),L+.032,m.dark);
+  // Recessed vanes leave the painted bumper visible around the intake.
+  const grille=design.grille;
+  if(d.id==='nova'){for(let i=-7;i<=7;i++)box('tourer-grille-fin',.006,.175,.018,i*grille/8,-.205,L-.028,m.chrome);}
+  else for(let i=0;i<(lite?2:4);i++)box('grille-louvre',grille*1.75,.006,.018,0,-.14-i*(lite?.115:.038),L-.028,m.dark);
   tube('front-splitter',[[-W*.87,-.395,L-.13],[-W*.70,-.405,L+.045],[0,-.405,L+.095],[W*.70,-.405,L+.045],[W*.87,-.395,L-.13]],gt?.045:.021,m.dark);
-  box('rear-diffuser',1.15,.17,.15,0,-.345,-L+.025,m.dark);
-  for(let i=-3;i<=3;i++)box('diffuser-fin',.012,.15,.29,i*.14,-.39,-L+.026,m.dark);
-  box('rear-registration-inset',.31,.082,.014,0,-.11,-L-.014,m.dark);
+  sheet('shaped-diffuser-ramp',[[[-rear.openingW,-.425,-L+.24],[0,-.425,-L+.27],[rear.openingW,-.425,-L+.24]],[[-rear.openingW*.87,-.365,-L+.015],[0,-.375,-L],[rear.openingW*.87,-.365,-L+.015]]],m.dark);
+  for(let i=-2;i<=2;i++)box('diffuser-fin',.008,.055,.19,i*.16,-.406,-L+.065,m.dark);
+  const plate=box('rear-registration-panel',.28,.068,.010,0,-.060,(fasciaDepth(rear.panel,0,-.060,-1)??-L)-.010,m.dark);
+  // Original line-letter badge and plate, merged into existing trim materials.
+  const glyphs=[[[0,0,0,1],[0,.5,.65,1],[0,.5,.65,0]],[[0,0,.32,1],[.32,1,.65,0],[.12,.4,.53,.4]],[[.1,1,.55,1],[.32,1,.32,0],[.1,0,.55,0]],[[0,0,0,1],[0,1,.6,1],[.6,1,.6,.55],[.6,.55,0,.55],[.3,.55,.65,0]],[[0,0,0,1],[0,1,.65,1],[.65,1,.65,0],[.65,0,0,0]],[[.65,1,0,1],[0,1,0,.5],[0,.5,.65,.5],[.65,.5,.65,0],[.65,0,0,0]]];
+  if(!lite)for(const [letter,strokes]of glyphs.entries())for(const [x0,y0,x1,y1]of strokes){const x=(letter-2.5)*.039-.013,dx=(x1-x0)*.029,dy=(y1-y0)*.027,len=Math.hypot(dx,dy),ox=-dy/len*.0014,oy=dx/len*.0014;
+    sheet('kairos-tail-badge',[[rearTrim(x+x0*.029-ox,.09+y0*.027-oy,.004),rearTrim(x+x0*.029+ox,.09+y0*.027+oy,.004)],[rearTrim(x+x1*.029-ox,.09+y1*.027-oy,.004),rearTrim(x+x1*.029+ox,.09+y1*.027+oy,.004)]],m.chrome);
+    sheet('kairos-registration-letter',[[[x+x0*.029-ox,-.074+y0*.027-oy,plate.position.z-.006],[x+x0*.029+ox,-.074+y0*.027+oy,plate.position.z-.006]],[[x+x1*.029-ox,-.074+y1*.027-oy,plate.position.z-.006],[x+x1*.029+ox,-.074+y1*.027+oy,plate.position.z-.006]]],m.chrome);
+  }
   box('front-badge',.058,.019,.015,0,.035,L+.019,m.chrome);
   if(gt){
     const wing:Point[][]=[];for(let i=0;i<=8;i++){const u=i/8;wing.push([[-W*.96,.50+.11*Math.sin(u*Math.PI),-L-.17+u*.38],[0,.48+.10*Math.sin(u*Math.PI),-L-.22+u*.43],[W*.96,.50+.11*Math.sin(u*Math.PI),-L-.17+u*.38]]);}

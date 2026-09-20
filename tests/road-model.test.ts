@@ -7,9 +7,26 @@ import {wheelModel,wheelStyle} from '../src/render/wheel-model';
 import {panelHeight} from '../src/render/panel-stripe';
 import {createCar} from '../src/render/car';
 import {cameraMounts} from '../src/render/camera-mounts';
+import {fasciaDepth} from '../src/render/fascia';
 import type {VehicleState} from '../src/core/types';
 
 describe('distinct original vehicle models',()=>{
+  it('replaces flat caps with finite outward sculpted bumpers and real recessed openings',()=>{
+    const engine=new NullEngine(),scene=new Scene(engine),m=Object.fromEntries(['paint','glass','dark','chrome','light','tail'].map(k=>[k,new PBRMaterial(k,scene)])) as Record<'paint'|'glass'|'dark'|'chrome'|'light'|'tail',PBRMaterial>;
+    try{for(const d of VEHICLES.filter(d=>d.class!=='FORMULA'))for(const lite of [false,true]){
+      const car=roadCoachwork(scene,d,m,lite);expect(car.parts.some(p=>p.name==='bumper-cap')).toBe(false);
+      for(const front of [false,true]){
+        const sign=front?1:-1,panel=car.parts.find(p=>p.name===`sculpted-${front?'front':'rear'}-bumper`)!,throat=car.parts.find(p=>p.name===(front?'recessed-intake-throat':'recessed-rear-valance'))!;
+        const pos=panel.getVerticesData('position')!,normals=Array.from(panel.getVerticesData('normal')!);expect(pos.every(Number.isFinite)).toBe(true);expect(normals.every(Number.isFinite)).toBe(true);
+        expect(normals.filter((_,i)=>i%3===2).reduce((s,n)=>s+n,0)*sign).toBeGreaterThan(0);
+        const depths=Array.from(pos).filter((_,i)=>i%3===2).map(v=>v*sign);expect(Math.max(...depths)-Math.min(...depths)).toBeGreaterThan(.07);expect(Math.max(...depths)).toBeLessThan(d.length/2+.15);
+        expect(fasciaDepth(panel,0,front?-.205:-.275,sign)).toBeUndefined();
+        expect(fasciaDepth(throat,0,front?-.205:-.275,sign)!*sign).toBeCloseTo(d.length/2+(front?-.105:-.015),5);
+        const backNormals=throat.getVerticesData('normal')!;expect(backNormals[backNormals.length-1]*sign).toBeGreaterThan(.99);
+      }
+      car.parts.forEach(p=>p.dispose());
+    }}finally{scene.dispose();engine.dispose();}
+  });
   it('authors five separate cabin, body and frontal identities without altering physical definitions',()=>{
     const roads=VEHICLES.filter(d=>d.class!=='FORMULA'),styles=roads.map(roadDesign);
     expect(new Set(styles.map(s=>JSON.stringify(s.cabin))).size).toBe(5);expect(new Set(styles.map(s=>JSON.stringify(s.widths))).size).toBe(5);expect(new Set(styles.map(s=>s.lamp)).size).toBe(5);

@@ -15,7 +15,7 @@ export function solarLighting(time:number){
 export function cloudField(width=SKY_WIDTH,height=SKY_HEIGHT){
   const field=new Float32Array(width*height);
   for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-    const az=x/width*Math.PI*2,h=y/(height-1),horizontal=Math.sqrt(1-h*h),distance=horizontal/(h+.13)*1.45;
+    const az=x/Math.max(1,width-1)*Math.PI*2,h=y/(height-1),horizontal=Math.sqrt(1-h*h),distance=horizontal/(h+.10)*3.25;
     const px=Math.sin(az)*distance,pz=Math.cos(az)*distance,wx=landscapeNoise(px*.23+17,pz*.23-9)*1.7,wz=landscapeNoise(px*.23-32,pz*.23+3)*1.7;
     const u=px+wx,v=pz+wz;
     // Project a world-space cloud deck onto the dome. Perspective compresses
@@ -26,12 +26,14 @@ export function cloudField(width=SKY_WIDTH,height=SKY_HEIGHT){
 export function skyPixels(time:number,weather:Weather,field:Float32Array,width=SKY_WIDTH,height=SKY_HEIGHT){
   const pixels=new Uint8Array(width*height*4),sun=solarLighting(time),day=sun.daylight,sunset=sun.golden,cover=weather==='Rain'?.78:weather==='Overcast'?.64:weather==='Cloudy'?.32:0;
   for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-    const h=y/(height-1),t=Math.pow(h,.55),az=x/width*Math.PI*2,alignment=Math.cos(az-sun.azimuth),sunward=Math.pow(Math.max(0,alignment),4),warm=sunset*(.30+sunward*.70)*(1-cover),n=field[y*width+x];
-    const threshold=.49-cover*.19,density=smooth((n-threshold)*8)*smooth(h*32);
+    const h=y/(height-1),t=Math.pow(h,.55),az=x/Math.max(1,width-1)*Math.PI*2,alignment=Math.cos(az-sun.azimuth),sunward=Math.pow(Math.max(0,alignment),4),warm=sunset*(.30+sunward*.70)*(1-cover),n=field[y*width+x];
+    const threshold=.555-cover*.27,density=smooth((n-threshold)*10)*smooth(h*24);
     const glow=Math.exp(-Math.abs(h-Math.max(0,sun.direction.y))*5)*warm;
     const thickness=smooth((n-threshold-.04)*4),rim=(1-thickness)*sunward*sunset;
-    const shade=clamp(.92-thickness*.42-cover*.18,.30,1),light=day;
-    const horizon=[.73,.82,.94],zenith=[.075,.24,.49],night=[.008,.016,.035];
+    // Clear-weather cumulus has bright bodies and soft undersides. Dense grey
+    // shading belongs to overcast/rain, not every sunny sky.
+    const shade=clamp(.99-thickness*(.18+cover*.22)-cover*.24,.36,1),light=day;
+    const horizon=[.76,.85,.96],zenith=[.10,.29,.55],night=[.008,.016,.035];
     for(let c=0;c<3;c++){
       let sky=lerp(horizon[c],zenith[c],t);sky=lerp(sky,[1,.66,.32][c],glow*.88);sky=lerp(sky,[.42,.48,.56][c],cover*.65);
       const cloud=lerp(shade*[.91,.95,1][c],[1,.78,.48][c]*(.90+rim*.22),warm*.72),value=lerp(night[c]*(1-h*.7),lerp(sky,cloud,density),light);

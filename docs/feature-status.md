@@ -1,5 +1,13 @@
 # Feature status — working build, not acceptance certification
 
+## Latest visual checkpoint — September 20
+
+137 tests and the strict Node24 production build pass. Five enclosed cars now have sculpted bumper surfaces, recessed grilles, fitted lights and shallower dark rear valances instead of flat caps and floating inserts. All twelve GLBs were regenerated; Formula geometry is unchanged, with updated shared trim material. Clear clouds are smaller/lighter and longitude sampling is seam-matched. The handling correction below is untouched.
+
+All six exported and generated-fallback cars pass eighteen livery selections, wheel/caliper alignment, live instruments and five driving cameras. Twelve LOD/livery cases restore exactly the original mesh/material/node/texture counts after disposal. Matched front/rear, actual input and circuit/weather screenshots were inspected. An isolated RTX 3060/Edge Low720p audit stays below 300 draws and 500,000 active triangles in eight views, peaking at 296 draws / 485,191 triangles. This is not target-laptop frame pacing or finished-art certification. Detailed cabins, more natural body/glazing transitions and fuller foreground scenery remain required.
+
+Nine streaming/failure/retry checks and repeated region/race-home resource cycles pass without count growth. Installed Chrome and Edge pass the rebuilt production preview with WebGPU and forced WebGL2, cold throttled cache, external hosts blocked, and normal Free Drive/handling/race-launch/menu flows. These development-host checks are not HTTPS deployment, actual-laptop or endurance acceptance.
+
 ## Latest handling checkpoint — September 20
 
 136 unit tests and the Node24 production build pass. The user-reported40mph keyboard spin is reproduced and corrected through speed-sensitive keyboard steering, combined-slip-aware torque control and surface-relative suspension damping. All144 six-car dry/wet left/right tap/hold/coast/throttle cases pass with four contacts, under4.4° peak sideslip and no damage. The full handling suite repeats within numeric tolerances;60/30/20Hz input cadences match acceleration. Actual keyboard acceleration/turn/brake/reverse/reset and screenshot review pass. See [keyboard handling](keyboard-handling.md).

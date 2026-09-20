@@ -11,6 +11,16 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Sculpted bumper and sky continuation — September 20
+
+`fascia.ts` replaces the five enclosed cars' flat end caps and floating grille slabs with shaped bumper rings, recessed front intakes and shallow rear valances. The outer boundary preserves the body loft's edge vertices. Rear lamps, registration panels and original Kairos lettering project onto the actual surface; lower aero trim shares the existing dark-material batch. Smaller diffuser fins and fitted exhaust outlets replace the oversized rear blades. Fine lettering is omitted at distance. Physics, wheel locations and camera mounts are unchanged.
+
+`car-materials.ts` applies the same restrained trim response to generated cars and imported GLBs; Babylon lighting-intensity settings are not carried by glTF itself. All twelve compressed models were regenerated, including Formula's updated trim material. Formula geometry is unchanged in this continuation. `verify-fascia.mjs` retains matched front/rear and weather captures, verifies real asset use and checks imported trim parity. `road-model.test.ts` checks both levels for finite outward normals and actual recessed openings.
+
+Clear-weather clouds are smaller and lighter, with gray shading reserved for heavier weather. The 1024×256 sky still uses one texture and the existing dome. Matching longitude endpoints fixes a seam exposed by the original regression tolerance. This is a generated cloud field, not volumetric weather.
+
+Screenshot review rejected the first deep, shiny rear recess before reducing its depth and making the lower edge dark. The final exported and fallback fleets pass the livery/camera/wheel checks; exact LOD disposal returns to the original resource counts. These changes improve a specific weak area, but cabins, glazing, surface transitions, sparse foregrounds and overall realism still fall short of the user's renewed art request. Current measurements and remaining limitations are recorded in `benchmarks.md`.
+
 ### Aster background and paddock continuation
 
 The bare-background screenshot prompted an authored circuit setting: twelve woodland groves, broad planted banks, a graded rear paddock with service lanes, twelve original team transporters/awnings, marshal shelters, perimeter fencing, a low pit safety wall, lamp standards and a paddock sign. The lamps are scenery, not additional dynamic lights. Paddock lanes are accessible paved space, not new navigation/traffic graph edges. No spectators or moving support crews are claimed.

@@ -2,6 +2,33 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 20 sculpted fascia and sky continuation
+
+137 unit tests and strict Node24 production build pass (index-C0wG3S8j.js, existing large-engine chunk warning). New two-LOD coverage checks finite/outward bumper geometry, real intake/valance recesses and no painted face closing their center. Cloud wrap initially failed its existing seam tolerance; longitude endpoints were corrected without relaxing the test. First rear-recess screenshots were visually rejected and refined before export.
+
+All12GLBs were regenerated. Detailed/low-detail triangle counts: Aeris36,910/11,590, Velara37,502/11,892, Crest37,042/11,672, Nova37,658/12,056, GTX33,790/12,164, Apex31,850/11,042. Formula geometry is unchanged; its trim finish is updated. Both normal assets and blocked-download fallback pass all18car/livery selections, five moving cameras per car, live instruments, wheel contacts and fixed-caliper alignment. Imported trim intensity/roughness matches generated cars. Twelve LOD/livery cases return exactly to128meshes/71materials/35nodes/43textures after disposal; reflection/preset regressions pass.
+
+The supplied input-client screenshot/state was actually opened:3.794694m/s, four asphalt/handling contacts, zero damage and no loading/error state. Matched exported front/rear, sunny/cloudy/rain, circuit pit/wide/paddock/back-straight/grid/wet captures are retained. Six circuit views keep four contacts and no damage; woodland remains exactly two batches/856instances across presets. Art is improved in specific areas but still visibly stylized; cabins/body transitions and bare foreground spaces need further work. Vehicle forces/input/AI/world geometry were unchanged in this continuation.
+
+Final isolated RTX3060/Edge/WebGL2 Low1280x720 audit, including extra passes:
+
+| View | Max draw calls | Max active triangles | Median scene submission |
+|---|---:|---:|---:|
+| Showroom | 184 | 181,510 | 3.9ms |
+| Lakeshore traffic | 245 | 379,801 | 5.8ms |
+| City traffic | 204 | 413,427 | 4.8ms |
+| Wet night | 204 | 412,248 | 5.5ms |
+| Eight-car GT grid | 296 | 485,191 | 4.6ms |
+| Pit/paddock | 120 | 292,989 | 3.0ms |
+| Circuit back straight | 163 | 364,671 | 2.7ms |
+| Eight-car Formula grid | 282 | 478,007 | 4.4ms |
+
+These samples satisfy draw/geometry budgets only, not real-time CPU/GPU/frame-pacing, process-memory or target-laptop acceptance. Reports: output/fascia, output/road-models, output/road-models-fallback, output/render-detail, output/circuit-setting/after and output/render-cost.
+
+Nine streaming/failure/retry checks pass on the final sources. Three visits per region retain identical mesh/material/texture counts: city476/72/44, mountain336/73/45 and lakeshore345/72/44. Three race/home cycles restore128/71/43 with no world cells or retained gantry/detail resources. This short resource check is not the30-minute endurance acceptance.
+
+Final production passes installed Edge and Chrome with forcedWebGL2 and actualWebGPU, cold25Mbps/40ms, third-party hosts blocked and no development hooks. FreeDrive/Northstar/clean8GTlaunch/home flows pass. Menu readiness Edge6.419/5.851s, Chrome5.972/5.723s; input-to-motion Edge5.201/6.978s, Chrome4.776/6.350s. Each transfers11,321,887 bytes through the tested flow. No failed/page/external requests; only the known Windows WebGPU powerPreference warning. Actual production captures were opened. Preview5192 is rebuilt; no runtime changes followed this build. These checks do not establish laptop/FPS/endurance/HTTPS acceptance or erase historical intermittent startup stalls.
+
 ## September 20 keyboard traction correction
 
 The user's40mph keyboard spin was reproduced before tuning. Default Velara,500ms right key plus held throttle:57.740deg peak sideslip and138.891deg accumulated heading change. Corrected keyboard steering envelope, predictive combined-slip TC torque budget, surface-normal suspension damping and COM-relative contact velocity reduce the identical maneuver to2.294deg/10.906deg. Tire friction and vehicle power data are unchanged. See keyboard-handling.md for the diagnosis and scripts.
