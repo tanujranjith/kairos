@@ -11,6 +11,14 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### City streetscape and local lighting — September 20
+
+`content/streetscape.ts` places fixtures at shared road-distance stations along four city corridors, excluding junction mouths, road ends and nearby crossings. `world/streetscape.ts` merges original lamp standards, timber benches, bins, raised planted beds and small shelters into the existing wall/roof/glass cell batches. The two plants in each bed reuse the original oak geometry/atlas. Solid geometry follows normal cell collision ownership; low fixture vertices are tested to remain at least 0.90m outside every driving surface. No per-fixture mesh, material or draw call is added.
+
+`render/street-lighting.ts` owns exactly two unshadowed spotlights. It chooses nearby loaded-detail fixtures at a compatible elevation, with distance hysteresis and faded handoffs. Lamp origins come from the same definitions as the visible heads. Dusk/day settings control intensity; unloading, clearing and showroom entry release ownership. Road, car and vegetation materials allow sun/sky, two player headlamps and these two streetlights. Distant lamp heads are emissive, not additional real lights; no claim of full shadowed city lighting is made.
+
+`verify-streetscape.mjs` checks day/dusk/dry-night/wet-night captures, real rendered illumination, keyboard driving, repeated city/lake streaming, home return and bounded light/resource ownership. Its default forces WebGL2; `--renderer=auto` requires actual WebGPU, and both reject unexpected console/GPU warnings. Diagnostic framebuffer reads submit complete frames and account for the two renderers' pixel origins. `tests/streetscape.test.ts` covers placement, clearance, finite geometry, the pool limit and replacement fade. The Low development-host cost audit remains below 300 draws and 500,000 triangles in all 528 sampled frames; this is not target-laptop performance certification. This pass preserves car geometry, physics, input and AI. The broader environment still has sparse lawns, simplified buildings and an unfinished night sky; it does not meet the final mockup/art target yet.
+
 ### Molded cabins and curved glazing — September 20
 
 `road-cabin.ts` builds the five enclosed passenger cells from one shared loft: curved side glazing, crowned roof, bowed windscreens, bonded black borders, structural A/C pillars, roof/belt rails and weatherseals. The same boundaries place the interior headliner and pillar returns. Molded bucket backs/shells, cushions, closed headrests, door cards, dashboard, console, rear bulkhead and parcel shelf replace the earlier sphere-heavy/open interior. GTX has one seat, flat harness straps and a roll cage. Existing instrument displays, steering wheels and all physical/camera definitions remain intact.

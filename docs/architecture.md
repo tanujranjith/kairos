@@ -22,6 +22,10 @@ Startup emits seven bounded `performance.measure` entries named `kairos:startup:
 
 `preparePresentation` keeps the initial overlay visible while zero-time draws complete the first reflection capture, bind it to the car and compile the scene. Two consecutive ready draws are required; the regular simulation loop and menu navigation start afterward. Each standalone draw explicitly begins/ends an engine frame before yielding: WebGPU must submit its current swap-chain texture in the same task. The wait fails after30seconds through the existing loading error path. This is a readiness gate, not a fixed visual delay. Context/device recovery remains separate work.
 
+## Local street lighting ownership
+
+City fixture stations are shared pure content, used by both worker geometry and the main-thread light selector. Geometry is merged into existing cell batches and disposed with those cells. `StreetLighting` owns two scene-resident, unshadowed spotlights rather than allocating one per pole. Only loaded detail cells and nearby compatible elevations qualify; distance hysteresis and fading limit rank-switch flicker. World clear, daytime and garage visibility disable the pool. Real lights can affect roads, cars and vegetation through the six-light material budget. The persistent two-node pool is disposed with the scene, not repeatedly recreated while driving.
+
 ## Physics
 
 The application manually advances Havok at 120 Hz. Babylon's automatic physics step is disabled. Real-time catch-up is bounded to eight steps; hidden tabs pause and inputs are cleared. Rendering interpolates the preceding and current physical poses. Controlled-time testing bypasses the real-time accumulator and prevents double stepping.

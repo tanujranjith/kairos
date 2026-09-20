@@ -25,6 +25,8 @@ Keyboard turn-in and centering are quicker, with a speed- and surface-aware stee
 
 The latest [car-model pass](docs/graphics.md) adds curved glazing, structural window frames, molded seats/door trim and a closed passenger cell, plus a stripped GTX cabin. It builds on the smoother body surfaces and open Formula intakes. All twelve model/detail exports are rebuilt. Initial showroom loading now waits for actual material/reflection readiness. This is incremental visual progress; cockpit finish and fuller world ambience are still below the finished art target.
 
+City corridors now have original lamp standards, benches, bins, planted beds and shelters. At night, two nearby pooled streetlights illuminate the road and cars; their ownership follows streamed scenery. This is bounded city dressing, not a completed world-art pass or a bus-service feature. The existing handling corrections are unchanged.
+
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.
@@ -78,6 +80,8 @@ node scripts/verify-access.mjs
 node scripts/verify-pits.mjs
 node scripts/verify-pit-timing.mjs
 node scripts/verify-scenery.mjs
+node scripts/verify-streetscape.mjs
+node scripts/verify-streetscape.mjs --renderer=auto --output=output/streetscape-webgpu
 node scripts/verify-graphics-streaming.mjs
 node scripts/verify-worker-recovery.mjs
 node scripts/inspect-handling.mjs

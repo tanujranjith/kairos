@@ -48,6 +48,8 @@ export class Renderer {
   }
   registerCar(car:CarVisual,grounded=true){
     const existing=this.registeredCars.get(car);if(existing){existing.isVisible=grounded;return;}
+    // Sun/sky, two headlamps and at most two nearby street lights.
+    for(const part of car.parts)if(part.material instanceof PBRMaterial)part.material.maxSimultaneousLights=6;
     car.root.metadata={...car.root.metadata,kairosCar:true};
     const patches:Mesh[]=[];
     const patch=(width:number,height:number,x:number,z:number,y:number)=>{const mesh=MeshBuilder.CreateGround('contact-patch',{width,height},this.scene);mesh.position.set(x,y,z);mesh.material=this.contactMaterial;patches.push(mesh);};

@@ -15,6 +15,7 @@ import { buildPitGarage } from './pit-garage';
 import { buildGrandstand } from './grandstand';
 import {buildCircuitSetting} from './circuit-setting';
 import {buildPitForecourt} from './pit-forecourt';
+import {buildStreetscape} from './streetscape';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
@@ -110,6 +111,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     for(const x of [536.6,543.4])roofs.box(x,17,-1415.5,.12,3.65,.12);
   }
   if(cx===3&&cz===-6)signs.push({id:'aster-control',name:'ASTER   /   RACE CONTROL',position:{x:768,y:34.12,z:-1443.94},yaw:0,width:14.5,height:.38,mounted:true});
+  buildStreetscape(cx,cz,{wall:buildings,roof:roofs,glass:windows},instances);
   add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');
   return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
 }

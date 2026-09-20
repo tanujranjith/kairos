@@ -15,6 +15,7 @@ import { CellStreamer } from '../world/cell-streamer';
 import { CellWorkerClient } from '../world/worker-client';
 import { cellCoordinates,cellKey,planCells,type CellDemand,type StreamActor,type StreamingProfile } from '../world/cell-manifest';
 import { ResourcePool } from '../world/resource-pool';
+import {StreetLighting} from './street-lighting';
 
 interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mesh[];detailMeshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];signals:SignalMesh[];collision:boolean;detail:boolean;leases:Map<Mesh,{release:()=>void}>}
 export class WorldRenderer {
@@ -22,15 +23,17 @@ export class WorldRenderer {
   private terrain:PBRMaterial;private road:PBRMaterial;private shoulder:PBRMaterial;private marking:PBRMaterial;private yellow:PBRMaterial;private curb:PBRMaterial;private wall:PBRMaterial;private roof:PBRMaterial;private glass:PBRMaterial;private foliage:PBRMaterial;private trunk:PBRMaterial;
   private treeMesh:Mesh;private oakMesh:Mesh;private trunkMesh:Mesh;private oakTrunkMesh:Mesh;private grassMesh:Mesh;private boulders:Mesh;
   private woodland:ReturnType<typeof createCircuitWoodland>;
+  streetLighting:StreetLighting;
   private quality:Quality='Low';private enabled=true;private trafficScenery:TrafficScenery;
   private worker=new CellWorkerClient();streamer:CellStreamer<CellBlueprint,Cell>;
   private materialPool=new ResourcePool<Material>(m=>m.dispose(false,true));private rootLeases=new Map<number,{release:()=>void}>();
   private warm=new Map<string,{demand:CellDemand;until:number}>();private demand=new Map<string,CellDemand>();private profile:StreamingProfile='exploration';
   constructor(public scene:Scene,public physics:PhysicsWorld){
     this.root=new TransformNode('world',scene);
+    this.streetLighting=new StreetLighting(scene);
     this.streamer=new CellStreamer({load:(d,signal)=>this.worker.build(d.cx,d.cz,this.quality,signal),install:(b,d)=>this.installCell(b,d),mode:(cell,b,d)=>this.setCellMode(cell,b,d),dispose:cell=>this.disposeCell(cell)});
     this.trafficScenery=new TrafficScenery(scene);
-    const mat=(name:string,hex:string)=>{const m=new PBRMaterial(name,scene);m.albedoColor=Color3.FromHexString(hex);m.roughness=.97;m.metallic=0;return m;};
+    const mat=(name:string,hex:string)=>{const m=new PBRMaterial(name,scene);m.albedoColor=Color3.FromHexString(hex);m.roughness=.97;m.metallic=0;m.maxSimultaneousLights=6;return m;};
     this.terrain=mat('meadow','#777c48');this.shoulder=mat('gravel','#9f967a');this.marking=mat('road-paint','#e8e4d1');this.yellow=mat('centerline','#d6b96d');this.curb=mat('red-curbs','#a94435');this.wall=mat('stone-buildings','#c2ba9f');this.roof=mat('roof-metal','#555b59');this.glass=mat('architectural-glass','#344c54');this.foliage=mat('pine-needles','#344b2f');this.trunk=mat('tree-bark','#594939');
     // A millimetric physical separation alone loses depth precision at long range.
     // Raster bias keeps paint above the asphalt without moving contact geometry.
@@ -46,6 +49,7 @@ export class WorldRenderer {
     this.glass.clearCoat.isEnabled=true;this.glass.clearCoat.intensity=1;this.glass.clearCoat.roughness=.10;
     const windowAtlas=RawTexture.CreateRGBATexture(new Uint8Array([0,0,0,255,255,180,103,255]),2,1,scene,false,false,Texture.NEAREST_SAMPLINGMODE);windowAtlas.name='original-occupied-window-emission';windowAtlas.gammaSpace=true;windowAtlas.wrapU=windowAtlas.wrapV=Texture.CLAMP_ADDRESSMODE;this.glass.emissiveTexture=windowAtlas;
     const vegetation=createVegetation(scene);this.treeMesh=vegetation.tree;this.oakMesh=vegetation.oak;this.trunkMesh=vegetation.trunk;this.oakTrunkMesh=vegetation.oakTrunk;this.grassMesh=vegetation.grass;this.foliage=vegetation.foliage;this.trunk=vegetation.bark;
+    for(const source of [this.treeMesh,this.oakMesh,this.trunkMesh,this.oakTrunkMesh,this.grassMesh])(source.material as PBRMaterial).maxSimultaneousLights=6;
     this.woodland=createCircuitWoodland(this.root,this.oakMesh,this.trunkMesh);
     const rockMat=mat('weathered-rock','#ffffff'),rockMaps=surfaceTextures(scene,'concrete');rockMat.albedoTexture=rockMaps.albedo;rockMat.bumpTexture=rockMaps.normal;
     this.boulders=MeshBuilder.CreateSphere('rock-source',{diameter:5,segments:8},scene);const rockPos=this.boulders.getVerticesData('position')!;
@@ -56,7 +60,8 @@ export class WorldRenderer {
     this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene),waves=surfaceTextures(scene,'water',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves.normal;water.bumpTexture.level=.12;waves.albedo.dispose();this.water.material=water;
   }
 
-  setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);}
+  setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);if(!v)this.streetLighting.disable();}
+  updateLighting(position:V3,time:number,dt:number){this.streetLighting.update(position,time,dt,id=>this.cells.get(id)?.detail===true,this.enabled);}
   setQuality(q:Quality){if(q===this.quality)return;this.clear();this.quality=q;this.woodland.setQuality(q);}
   setWetness(v:number){this.road.roughness=.94-v*.70;this.road.albedoColor.set(1-v*.40,1-v*.40,1-v*.40);}
   updateSignals(clock:number,time=12){this.glass.emissiveColor.setAll(windowEmission(time));const waves=(this.water.material as PBRMaterial).bumpTexture as Texture;waves.uOffset=clock*.008;waves.vOffset=clock*.004;for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
@@ -115,6 +120,6 @@ export class WorldRenderer {
   }
   private disposeMesh(cell:Cell,mesh:Mesh){if(mesh.metadata?.ownedMaterial)mesh.material?.dispose(false,true);cell.leases.get(mesh)?.release();cell.leases.delete(mesh);mesh.dispose();const index=cell.meshes.indexOf(mesh);if(index>=0)cell.meshes.splice(index,1);}
   private disposeCell(cell:Cell){for(const c of cell.colliders){c.body.dispose();c.shape.dispose();}cell.colliders=[];for(const mesh of [...cell.meshes])this.disposeMesh(cell,mesh);if(this.cells.get(cell.key)===cell)this.cells.delete(cell.key);}
-  clear(){this.warm.clear();this.demand.clear();this.streamer.clear();this.worker.close();}
+  clear(){this.streetLighting.disable();this.warm.clear();this.demand.clear();this.streamer.clear();this.worker.close();}
   snapshot(){return {...this.streamer.snapshot(),profile:this.profile,collisionCells:[...this.cells.values()].filter(c=>c.collision).length,detailCells:[...this.cells.values()].filter(c=>c.detail).length,blueprintBytes:[...this.streamer.records.values()].reduce((sum,r)=>sum+(r.blueprint?.bytes??0),0),materials:this.materialPool.snapshot()};}
 }

@@ -1,5 +1,13 @@
 # Feature status — working build, not acceptance certification
 
+## City dressing and actual street illumination — September 20
+
+The four city corridors now contain 83 lamp standards, 19 benches, 30 bins, 43 planted beds and 10 shelters. These are original geometry merged into existing streamed batches. Two pooled, unshadowed streetlights follow loaded fixtures and illuminate roads, cars and plants at night; daylight, unloading and home return disable them. Nearby fixture selection uses hysteresis and faded replacement. This does not add bus gameplay, shadowed lights on every pole or equivalent dressing throughout the region.
+
+175 tests and the strict Node24 production build pass, including fixture clearance and light handoffs. Day/dusk/dry-night/wet-night captures and actual pixel readback verify illumination; keyboard driving keeps four contacts and zero damage. Repeated city/lake visits keep exactly two light nodes and stable mesh/material/texture counts; the wider streaming retry and seven-region/race-grid checks also pass. The Low720p cost sample peaks at 289 draws and 488,625 triangles across 528 frames on the development RTX3060. Chrome/Edge each pass cold-throttled, external-host-blocked production checks on WebGL2 and actualWebGPU, including normal driving, handling, clean eight-car launch and home. Preview5192 serves `index-DQfNQrcU.js`; see the latest [benchmark entry](benchmarks.md).
+
+The existing handling and car-model work is preserved. Buildings, lawns, night sky and broader world/cabin finish remain visibly simplified, so this is incremental ambience work, not the finished art target. Actual8GB laptop, endurance, device recovery, broader race/strategy and authorizedHTTPS acceptance remain outstanding.
+
 ## Molded cabins and startup presentation — September 20
 
 The five enclosed cars now use curved glazing and shared structural window/roof surfaces, molded seat shells, closed headrests, door trim, dashboard/console and a rear cabin bulkhead. GTX has one seat, harness straps and a cage. All twelve GLBs are regenerated. No physical vehicle, input, AI or race-rule parameters changed; the shoulder/braking correction below remains intact.
