@@ -30,6 +30,8 @@ try{
       await page.keyboard.down('ArrowUp');await page.waitForFunction(()=>Number(document.querySelector('#speed')?.textContent)>5);await page.keyboard.up('ArrowUp');await page.screenshot({path:`${prefix}-handling.png`});report.handlingCourse=true;
       if(process.argv.includes('--race')){
         await page.keyboard.press('Escape');await page.click('[data-action="home"]');await page.click('[data-action="screen"][data-value="motorsport"]');
+        if(process.argv.includes('--formula'))await page.selectOption('[data-race="vehicleClass"]','FORMULA');
+        report.raceClass=await page.locator('[data-race="vehicleClass"]').inputValue();
         await page.click('#start-race');await page.waitForSelector('#speed');
         await page.waitForFunction(()=>/^\d+$/.test(document.querySelector('#countdown')?.textContent??''));
         assert.match(await page.locator('.race-position small').textContent(),/\/ 8/);

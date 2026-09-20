@@ -5,6 +5,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 | Content | Source / terms |
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
+| Rebuilt Apex body/aero, recessed cockpit, conforming liveries and live gear/speed/RPM/fuel display | Original geometry in `src/render/formula-coachwork.ts`; locally drawn display in `src/render/car-instruments.ts`; both optimized GLB levels generated from the same source, no new third-party content |
 | Aster garage bays, glazing, shutters, canopy, roof plant and working apron | Original code-generated geometry in `src/world/pit-garage.ts` and `src/world/cell-blueprint.ts`; no new external asset |
 | Covered grandstand, individual seats, safety fencing, Kairos gantry, grid/finish paint, authored mountain groups and projected cloud deck | Original code-generated content in `src/world/grandstand.ts`, `src/world/cell-blueprint.ts`, `src/world/landscape.ts` and `src/render/atmosphere.ts`; no new external asset |
 | Brick/limestone/office/factory/house architecture, outer ridges, macro meadow colors, occupied-window atlas | Original code-generated content in `src/world/architecture.ts`, `src/world/landscape.ts` and `src/render/world.ts`; no third-party asset |

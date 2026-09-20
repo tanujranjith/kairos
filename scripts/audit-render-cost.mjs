@@ -11,5 +11,6 @@ try{
   await page.evaluate(async()=>{const g=window.kairos;g.teleport(-1340,-980,'city3');await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);});await sample('city-traffic');
   await page.evaluate(async()=>{const g=window.kairos;g.save.settings.time=22;g.save.settings.weather='Rain';g.wetness=.8;await g.advanceTime(1000);});await sample('wet-night');
   await page.evaluate(async()=>{const g=window.kairos;await g.action('home');g.save.settings.time=17.4;g.save.settings.weather='Clear';g.wetness=0;g.raceConfig.entrants=8;await g.startRace();await g.advanceTime(1000);});await sample('eight-car-grid');
+  await page.evaluate(async()=>{const g=window.kairos;await g.action('home');g.raceConfig.vehicleClass='FORMULA';await g.startRace();await g.advanceTime(1000);});await sample('eight-car-formula-grid');
   await fs.writeFile(`${output}/report.json`,JSON.stringify({description:'Development host, installed Edge WebGL2, 66 controlled 30Hz steps per scene, submission timing includes driver synchronization; not a target laptop FPS result.',results,errors},null,2));if(errors.length)throw new Error(errors.join('\n'));
 }finally{await browser.close();}

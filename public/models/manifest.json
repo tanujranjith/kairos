@@ -66,13 +66,13 @@
       "id": "apex",
       "lod": 0,
       "file": "apex-lod0.glb",
-      "bytes": 172736
+      "bytes": 255268
     },
     {
       "id": "apex",
       "lod": 1,
       "file": "apex-lod1.glb",
-      "bytes": 98736
+      "bytes": 138304
     }
   ]
 }

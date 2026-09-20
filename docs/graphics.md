@@ -11,7 +11,7 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
-Run `node scripts/build-assets.mjs` with the dev server running to regenerate the twelve GLBs. `src/render/car.ts` and `coachwork.ts` are the original mesh sources; `surface-textures.ts`, `vegetation.ts` and `lighting-environment.ts` generate the material content. `camera-mounts.ts` shares physical-scale cockpit/hood/bumper positions with the exported markers.
+Run `node scripts/build-assets.mjs` with the dev server running to regenerate the twelve GLBs. `src/render/car.ts`, `coachwork.ts` and `formula-coachwork.ts` are the original mesh sources; `surface-textures.ts`, `vegetation.ts` and `lighting-environment.ts` generate the material content. `camera-mounts.ts` shares physical-scale cockpit/hood/bumper positions with the exported markers.
 
 Run the supplied `web_game_playwright_client.mjs` for driving inputs and open its screenshot/state, then `verify-graphics-streaming.mjs` for full-UI showroom/day/city/wet-night/grid captures. New pure tests check all six car meshes/detail levels, deterministic normal maps and transferred terrain colors. See `benchmarks.md` for measured checks.
 
@@ -25,13 +25,25 @@ Run the supplied `web_game_playwright_client.mjs` for driving inputs and open it
 
 ## Still below the finished art target
 
+**Required vehicle-art milestone (explicit user request):** substantially upgrade all six car models beyond the earlier coachwork pass. Distinct original class silhouettes, improved proportions/body panels, wheels/brakes, lights, glazing, interiors and aero are required. The Apex body/cockpit pass below begins this milestone; five enclosed-car upgrades and further wheel/brake work remain. Rebuild optimized detail levels and preserve pivots, camera mounts, handling and Low-preset budgets. Judge completion from actual showroom/chase/cockpit captures for each car plus vehicle/LOD/resource/performance regressions, not from material changes alone. This milestone is not yet complete.
+
 Aster's pit garages now use original framed hospitality glazing, shuttered ground-floor bays, deep columns, canopies, roof equipment and a paved/painted working apron. The first underpass inspection also prompted smoothly graded embankments instead of abrupt grass walls. These changes reuse existing per-cell materials/collision batches; see [access verification](circuit-access.md). They improve the paddock's detail but do not establish the reference mockups' realism.
 
 This remains procedural, stylized game art, not the reference images' photorealism. Car families share topology; interiors, glazing, liveries, building variety, roadside dressing, terrain blending, water and vegetation silhouettes need further art direction. The local probe covers a bounded subset of nearby scenery; AI reflections remain analytic. KTX2 compression, broader quality tuning and actual 8GB laptop performance acceptance remain incomplete.
 
 ## Sculpted coachwork and gallery pass
 
-The five enclosed cars now use continuous shaped body panels, separate crowned roofs and bowed/tinted glazing, rolled fender apertures, inset lamp housings/LED guides, flush handles, grilles, sills, visible bolstered seats, instrument bezels and a roof liner. The visual roof now matches the vehicle definition's height instead of exceeding it by roughly 18cm. Formula retains its existing open-wheel body. Lower-cost tubular rim rings replace dense torus grids on every car; the twelve GLBs were rebuilt. Livery meshes and fallback cars use the same source. No vehicle forces, collision dimensions, AI or race rules changed.
+The five enclosed cars now use continuous shaped body panels, separate crowned roofs and bowed/tinted glazing, rolled fender apertures, inset lamp housings/LED guides, flush handles, grilles, sills, visible bolstered seats, instrument bezels and a roof liner. The visual roof now matches the vehicle definition's height instead of exceeding it by roughly 18cm. That earlier pass retained the old Formula body; the later Apex pass below replaces it. Lower-cost tubular rim rings replace dense torus grids on every car; the twelve GLBs were rebuilt. Livery meshes and fallback cars use the same source. No vehicle forces, collision dimensions, AI or race rules changed.
+
+## Apex 01 body and cockpit continuation
+
+`formula-coachwork.ts` replaces the original block wings and flat cockpit with tapered nose/chassis sections, undercut sidepods with recessed intakes, curved multi-element wings/endplates, a contoured floor/diffuser, double-wishbone and pushrod details, a lower engine cover, mirrors, an open cockpit, harness and halo. The Formula eye point and exported marker are lowered into that opening. The physical dimensions, collision body, wheel pivots, forces and race rules are unchanged.
+
+Both liveries are clipped directly against the curved panel triangles and offset only 1.5mm. An initial raised-tube stripe was rejected during actual screenshot review. Tests check decal conformity at both detail levels. `car-instruments.ts` supplies a locally drawn 256×128 gear/speed/RPM/fuel display, updated at most 10Hz from actual vehicle telemetry. It works with exported GLBs and procedural liveries; speed is explicitly labeled km/h regardless of the HUD unit choice. Owned dynamic textures and replaced per-instance embedded texture clones are released on disposal. The steering yoke is not yet animated and there is no driver model.
+
+The detailed uncustomized Apex has 33,186 triangles; LOD1 has 13,434. `verify-formula-model.mjs` checks showroom selection, all three livery choices, five moving race-camera views, live instrument values and menu return. `verify-render-detail.mjs` also checks exact texture-count cleanup. The supplied input client uses `formula-input.json` for an actual keyboard/mouse Free Drive sequence. Screenshots/state are retained in `output/formula-model` and `output/formula-model-input-final`.
+
+This is the first vehicle in the newly requested model-upgrade milestone, not completion of all six. Wheels/brakes, richer Formula surface detail, the five enclosed-car upgrades and the reference-level art target still need further work. No paid or new third-party content was added.
 
 The gallery has clear architectural bays, a lower presentation camera, a polished floor and a 512px blurred planar reflection containing only visible cars and ceiling softboxes. The floor itself is excluded, and the list is empty outside the gallery. This extra pass is confined to menus. It is not a screen-space reflection effect or a full ray-traced lighting system.
 

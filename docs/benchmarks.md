@@ -2,6 +2,38 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 19 Apex model checkpoint
+
+All 114 unit tests, strict TypeScript and the production build pass (the existing large Babylon chunk warning remains). New cases check finite curved Formula geometry, upward-facing aero, lower cover/cockpit scale, the eye point inside the cockpit, detail-level reduction and liveries conforming to the actual panel triangles. The body retains the existing physical definition. Initial excess subdivision, a blank instrument screen and raised sidepod stripes were caught and corrected during build/input/screenshot iteration.
+
+`output/formula-model/report.json` passes all three showroom livery choices and five moving eight-car race camera views: four wheel contacts, zero damage, seven opponents and exact rounded gear/speed/RPM display values. The exported body has 33,186 triangles, versus 13,434 at LOD1; the detailed two-stripe procedural version has 35,563. The new Apex GLBs are 255,268 / 138,304 bytes. The exporter regenerated the other pairs without changing their geometry or byte sizes.
+
+The supplied input client's final screenshot/state in `output/formula-model-input-final` was opened: Free Drive, 6.1875805m/s, four asphalt contacts, zero damage, no loading/error state. Actual front/rear/livery/cockpit screenshots were also opened. A strengthened twelve-rig GLB/livery resource test exposed an orphaned per-instance embedded instrument texture; its ownership/disposal fix returns exactly to 120 meshes, 65 materials, 31 transform nodes and 41 textures after all cycles. No page errors or external requests. These are short tests, not 30-minute memory acceptance.
+
+Both three-lap/eight-car race regressions still classify all eight entrants at 387.783s GT / 300.075s Formula, zero player penalty/damage; the GT player still has two track-limit warnings. That regression precedes the final visual-only decal adjustment, which does not alter any physics/rule input.
+
+Final submission audit: installed Edge/WebGL2, RTX 3060, Low 1280×720, 66 controlled steps per view, including extra passes:
+
+| View | Maximum draw calls | Maximum active triangles | Median scene submission |
+|---|---:|---:|---:|
+| Showroom | 168 | 174,114 | 4.0ms |
+| Lakeshore traffic | 235 | 381,131 | 6.5ms |
+| City traffic | 194 | 405,067 | 5.6ms |
+| Wet night | 194 | 403,888 | 6.0ms |
+| Eight-car GT grid | 272 | 361,645 | 4.6ms |
+| Eight-car Formula grid | 269 | 373,221 | 5.0ms |
+
+All these samples stay below the Low 300-draw/500k-triangle targets. Scene submission timings are not isolated CPU/GPU costs, real-time frame pacing or integrated-GPU FPS. The five enclosed-car model upgrades, richer wheels/brakes, actual-laptop/endurance acceptance and the full approved game remain unfinished.
+
+The rebuilt production preview passes cold-cache 25Mbps/40ms emulation in installed Edge and Chrome, both forced WebGL2 and actual WebGPU, with third-party hosts blocked. Each path verifies Free Drive motion, Northstar, an eight-car Formula countdown/launch and return home. No page errors, failed/external requests or exposed development hooks; only the known Windows WebGPU `powerPreference` warning. Each run transfers 11,139,669 bytes through those flows.
+
+| Browser | WebGL2 menu ready / click-to-motion | WebGPU menu ready / click-to-motion |
+|---|---:|---:|
+| Edge | 6.076s / 4.738s | 5.883s / 6.734s |
+| Chrome | 5.549s / 4.675s | 5.604s / 6.333s |
+
+Reports/captures: `output/apex-delivery-edge` and `output/apex-delivery-chrome`. The final production race screenshot was opened. These localhost development-PC samples do not establish HTTPS, target-laptop FPS/process memory/endurance, full cold-playable acceptance or resolution of the earlier intermittent startup stalls. Refresh the existing port-5192 preview to load this build.
+
 ## September 19 mountain atmosphere and circuit presentation checkpoint
 
 All 111 tests and strict TypeScript/build pass. Four additional tests cover supported grandstand geometry/material buffers and budget, nonphysical detail/correct gantry cell ownership, mountain valley clearance/slope continuity and seamless cloud projection. Screenshot iteration rejected the original continuous mountain wall, excessive rock normal noise and mirrored lettering; the final finer-ridge slope failure was fixed by reducing geometry amplitude, not weakening its bound.

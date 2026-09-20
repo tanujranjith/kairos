@@ -12,7 +12,7 @@ try{
   await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForFunction(()=>window.kairos?.ui);await page.evaluate(()=>window.advanceTime(0));await capture('showroom');
   const lods=await page.evaluate(async()=>{
     const g=window.kairos,{createLodCar}=await import('/src/render/car-lod.ts'),{VEHICLES}=await import('/src/content/vehicles.ts');
-    const scene=g.renderer.scene,baseline={meshes:scene.meshes.length,materials:scene.materials.length,nodes:scene.transformNodes.length},rows=[];
+    const scene=g.renderer.scene,baseline={meshes:scene.meshes.length,materials:scene.materials.length,nodes:scene.transformNodes.length,textures:scene.textures.length},rows=[];
     for(const d of VEHICLES)for(const livery of [0,1]){
       const car=createLodCar(scene,d,{paint:'#bc4321',wheels:'#718595',livery,brakeBias:.6,aero:1});g.renderer.registerCar(car);
       const root=car.root,parts=car.parts.length,paint=car.paint.albedoColor.asArray();
@@ -23,7 +23,7 @@ try{
       rows.push({id:d.id,livery,near,far,paint,nearPaint,farPaint,stableRoot:root===car.root,partsStable:car.parts.length===parts,pivots:car.wheels.length,finite:car.wheels.every(w=>w.position.asArray().every(Number.isFinite)),contacts:car.root.getChildMeshes().filter(m=>m.name==='car-contact-shadow').length});
       car.dispose();car.dispose();
     }
-    return {rows,baseline,after:{meshes:scene.meshes.length,materials:scene.materials.length,nodes:scene.transformNodes.length}};
+    return {rows,baseline,after:{meshes:scene.meshes.length,materials:scene.materials.length,nodes:scene.transformNodes.length,textures:scene.textures.length}};
   });
   for(const row of lods.rows){assert.ok(row.far<row.near*.72,JSON.stringify(row));assert.equal(row.stableRoot,true);assert.equal(row.partsStable,true);assert.equal(row.pivots,4);assert.equal(row.finite,true);assert.equal(row.contacts,1);assert.deepEqual(row.nearPaint,row.farPaint);}
   assert.deepEqual(lods.after,lods.baseline);checks.push('six GLB and six livery rigs switch detail, preserve paint/pivots, reduce geometry and dispose without resource growth');
