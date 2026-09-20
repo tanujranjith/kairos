@@ -9,6 +9,7 @@ import { loadCarAssets } from './render/car-assets';
 import { PhysicsWorld, Vehicle, FIXED_DT, neutralInput } from './sim/physics';
 import { RaceManager } from './sim/race';
 import { racingInput } from './sim/ai';
+import { PitDriver } from './sim/pit-driver';
 import { TrafficRuntime } from './runtime/traffic';
 import { WorldLoadingOverlay } from './ui/world-loading';
 import { VEHICLES, vehicleById, defaultSave } from './content/vehicles';
@@ -22,7 +23,7 @@ import { ControllerMenuNavigator } from './ui/controller-navigation';
 import { clamp, distance, formatTime, wrap, percentile } from './core/math';
 import type { Screen, SaveGame, RaceSessionConfig, InputFrame, V3, Settings } from './core/types';
 
-type Opponent={vehicle:Vehicle;visual:CarVisual;input:InputFrame;retired:boolean;stuck:number;pit:boolean;service:number};
+type Opponent={vehicle:Vehicle;visual:CarVisual;input:InputFrame;retired:boolean;stuck:number;pitDriver:PitDriver};
 export class Kairos {
   renderer!:Renderer;physics!:PhysicsWorld;world!:WorldRenderer;player!:Vehicle;visual!:CarVisual;save!:SaveGame;ui!:Interface;input!:Input;
   store=new SaveStore();audio=new DrivingAudio();race=new RaceManager();graph=new RoadGraph();
@@ -88,7 +89,7 @@ export class Kairos {
     this.startAudio();this.prepareDrive();this.mode=this.raceConfig.kind;this.world.clear();this.race.start(this.raceConfig,stage);const playerSlot=this.raceConfig.position-1,d=vehicleById(this.raceConfig.vehicleClass==='FORMULA'?'apex':'gtx');
     const grid=(slot:number)=>pointAt(CIRCUIT,CIRCUIT.length-18-Math.floor(slot/2)*14,(slot%2===0?-1:1)*3),p=grid(playerSlot);
     await this.world.prepare('racing',Array.from({length:this.raceConfig.entrants},(_,slot)=>grid(slot)));if(ticket!==this.loadingTicket)return;this.changeCar(d.id,p);
-    for(let i=1;i<this.raceConfig.entrants;i++){const slot=i-1>=playerSlot?i:i-1,spawn=grid(slot),vehicle=new Vehicle(this.physics,d,`racer-${i}`,spawn,spawn.yaw),visual=createLodCar(this.renderer.scene,d,{paint:['#ba5239','#65908f','#cdc9bb','#365a92','#dea658','#6b667d','#8cbaad'][i%7],wheels:'#9caaac',livery:1,brakeBias:.6,aero:1});this.renderer.registerCar(visual);this.opponents.push({vehicle,visual,input:neutralInput(),retired:false,stuck:0,pit:false,service:0});}
+    for(let i=1;i<this.raceConfig.entrants;i++){const slot=i-1>=playerSlot?i:i-1,spawn=grid(slot),vehicle=new Vehicle(this.physics,d,`racer-${i}`,spawn,spawn.yaw),visual=createLodCar(this.renderer.scene,d,{paint:['#ba5239','#65908f','#cdc9bb','#365a92','#dea658','#6b667d','#8cbaad'][i%7],wheels:'#9caaac',livery:1,brakeBias:.6,aero:1});this.renderer.registerCar(visual);this.opponents.push({vehicle,visual,input:neutralInput(),retired:false,stuck:0,pitDriver:new PitDriver(i-1)});}
     this.setScreen('drive');this.toast(stage===0?'Aster International · Find your braking points.':stage===1?'Qualifying · Your fastest valid lap sets the grid.':'Race · Make the moment count.',5);
   },()=>this.startRace(stage));}
   private resetPlayer(){
@@ -133,21 +134,15 @@ export class Kairos {
     if(this.mode==='Free Drive')this.trafficSystem.beforeStep(this.player,this.clock,dt);
     const raceActive=this.mode!=='Free Drive',all=[this.player,...this.opponents.map(o=>o.vehicle),...this.traffic.map(t=>t.vehicle)];
     if(this.aiClock>=.1){const elapsed=this.aiClock;this.aiClock=0;for(let i=0;i<this.opponents.length;i++){
-      const o=this.opponents[i],v=o.vehicle,n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='circuit');
-      const needsService=v.state.fuel<v.definition.tank*.18||v.state.wheels.some(w=>w.wear<.55);
-      if(needsService&&n.progress>CIRCUIT.length-300&&n.progress<CIRCUIT.length-140)o.pit=true;
-      o.input=racingInput(v,all,this.raceConfig.difficulty,this.wetness,i,o.pit?PIT:CIRCUIT);
-      if(o.pit){const p=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='pit'),box=260+i*25;
-        if(needsService&&p.progress>box-45&&p.progress<box+30){o.input.throttle=0;o.input.brake=clamp((45-(box-p.progress))/35,0,1);if(Math.abs(v.state.speed)<.7){o.service+=elapsed;o.input.brake=1;if(o.service>=6){v.restore();o.service=0;}}}
-        if(!needsService&&p.progress>PIT.length-18)o.pit=false;
-      }
-      o.stuck=Math.abs(v.state.speed)<1.5&&!o.pit?o.stuck+elapsed:0;
-      if(v.needsRecovery()||o.stuck>8){const p=pointAt(CIRCUIT,n.progress-8,i%2?3:-3);if(all.every(other=>other===v||distance(other.state.position,p)>9)){this.world.requestAround(p);v.reset(p,p.yaw);this.race.resetLap(v.id);o.stuck=0;}}
+      const o=this.opponents[i],v=o.vehicle;
+      const decision=o.pitDriver.update(elapsed,v,all,this.race.state,this.wetness);o.input=decision.input;if(decision.serviceComplete)v.restore();
+      o.stuck=Math.abs(v.state.speed)<1.5&&(o.input.throttle>.2||!v.state.grounded)?o.stuck+elapsed:0;
+      if(v.needsRecovery()||o.stuck>8){const n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='circuit'),p=pointAt(CIRCUIT,n.progress-8,i%2?3:-3);if(all.every(other=>other===v||distance(other.state.position,p)>9)){this.world.requestAround(p);v.reset(p,p.yaw);this.race.resetLap(v.id);o.stuck=0;o.pitDriver.reset();}}
     }
     }
-    let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.raceConfig.difficulty,this.wetness,0):this.input.poll(dt,this.player.state.speed);this.lastInput=input;
+    let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.raceConfig.difficulty,this.wetness,0):this.input.poll(dt,this.player.state.speed,this.player.definition.wheelbase,this.wetness);this.lastInput=input;
     const countdown=this.race.state.phase==='countdown';if(countdown&&(this.autoTestDriver||input.throttle<.05))input={...neutralInput(),brake:1};
-    if(this.serviceTimer>0){this.serviceTimer-=dt;input={...neutralInput(),brake:1};if(this.serviceTimer<=0){this.player.restore();this.toast('Service complete. Clear to rejoin.');}}
+    if(this.serviceTimer>0){this.serviceTimer-=dt;input={...neutralInput(),brake:1};if(this.serviceTimer<=0){this.player.restore();this.toast('Service complete. Check traffic before rejoining.');}}
     this.player.preStep(input,settings,this.wetness,dt);
     const aiSettings={...settings,automatic:true,abs:true,tc:true,esc:true};
     for(const o of this.opponents){if(o.retired)continue;o.vehicle.preStep(countdown?{...neutralInput(),brake:1}:o.input,aiSettings,this.wetness,dt);}
@@ -186,7 +181,7 @@ export class Kairos {
   resumeRealTime(){this.manual=false;this.last=performance.now();this.accumulator=0;}
   setAutopilot(enabled:boolean){this.autoTestDriver=enabled;}
   teleport(x:number,z:number,roadId?:string){const n=nearestRoad(x,z,roadId?r=>r.id===roadId:undefined);const p=pointAt(n.road,n.progress,2);this.world.requestAround(p,true);this.player.reset(p,p.yaw);this.race.resetLap('player');}
-  snapshot(){return {screen:this.screen,mode:this.mode,loading:this.loading,loadError:this.loadError,streaming:this.world.snapshot(),renderer:this.renderer.rendererName,coordinateSystem:'meters; Y up; +Z forward at yaw 0; +X right',player:this.player.state,race:this.race.state,cells:this.world.cells.size,traffic:this.traffic.map(t=>({id:t.vehicle.id,position:t.vehicle.state.position,speed:t.vehicle.state.speed,path:t.agent.pathId,reason:t.agent.reason})),trafficSystem:this.trafficSystem.snapshot(),opponents:this.opponents.map(o=>({id:o.vehicle.id,position:o.vehicle.state.position,speed:o.vehicle.state.speed})),destination:this.destination,routePoints:this.route.length,activity:this.activity,weather:this.save.settings.weather,wetness:this.wetness,time:this.save.settings.time,physicsMs:this.physicsMs,overloads:this.overloads,frameTimeP95:percentile(this.frameTimes,.95),message:this.message};}
+  snapshot(){return {screen:this.screen,mode:this.mode,loading:this.loading,loadError:this.loadError,streaming:this.world.snapshot(),renderer:this.renderer.rendererName,coordinateSystem:'meters; Y up; +Z forward at yaw 0; +X right',player:this.player.state,race:this.race.state,cells:this.world.cells.size,traffic:this.traffic.map(t=>({id:t.vehicle.id,position:t.vehicle.state.position,speed:t.vehicle.state.speed,path:t.agent.pathId,reason:t.agent.reason})),trafficSystem:this.trafficSystem.snapshot(),opponents:this.opponents.map(o=>({id:o.vehicle.id,position:o.vehicle.state.position,speed:o.vehicle.state.speed,pit:o.pitDriver.snapshot()})),destination:this.destination,routePoints:this.route.length,activity:this.activity,weather:this.save.settings.weather,wetness:this.wetness,time:this.save.settings.time,physicsMs:this.physicsMs,overloads:this.overloads,frameTimeP95:percentile(this.frameTimes,.95),message:this.message};}
   view():ViewModel{return {screen:this.screen,save:this.save,player:this.player.state,race:this.race.state,raceOrder:this.race.order(),raceStage:this.race.stage,raceConfig:this.raceConfig,mode:this.mode,renderer:this.renderer.rendererName,fps:this.renderer.engine.getFps(),cells:this.world.cells.size,drawCalls:this.renderer.scene.getActiveMeshes().length,triangles:this.renderer.scene.getActiveIndices()/3,wetness:this.wetness,clock:this.clock,route:this.route,destination:this.destination,mapSelection:this.mapSelection,activity:this.activity,message:this.message,storageError:this.store.error,pausedFromDrive:this.pausedFromDrive,trafficCount:this.traffic.length,physicsMs:this.physicsMs};}
 }
 

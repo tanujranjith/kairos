@@ -13,6 +13,7 @@ import { buildArchitecture,type BuildingStyle } from './architecture';
 import { buildServicePavilion } from './service-pavilion';
 import { buildPitGarage } from './pit-garage';
 import { buildGrandstand } from './grandstand';
+import {buildCircuitSetting} from './circuit-setting';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
@@ -77,6 +78,9 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     roadContacts.push({start,end:asphalt.indices.length/3,surface:'Asphalt',layer:'surface',roadId:'pit'});
     for(let bay=0;bay<12;bay++){const px=x-105.6+bay*19.2;for(const side of [-1,1])white.box(px+side*3.2,17.05,-1450.7,.10,.004,6.5);white.box(px,17.05,-1453.9,6.5,.004,.10);}
   }
+  const settingStart=asphalt.indices.length/3;
+  buildCircuitSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows},asphalt,white);
+  if(asphalt.indices.length/3>settingStart)roadContacts.push({start:settingStart,end:asphalt.indices.length/3,surface:'Asphalt',layer:'surface'});
   add('verge',verge,'shoulder');add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('paint',white,'marking');add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
   const random=rng(hash(cx,cz)),urban=x0<-650&&z0<-300,count=quality==='Low'&&urban?32:{Low:44,Medium:60,High:80,Ultra:105}[quality];
   for(let i=0;i<count;i++){
@@ -98,6 +102,8 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   if(cx===2&&cz===-6){
     for(const z of [-1512,-1488])buildings.box(680,17,z,.65,7,.65);roofs.box(680,23.6,-1500,1.2,1.4,25);
     signs.push({id:'aster-gantry',name:'K A I R O S    /    ASTER INTERNATIONAL',position:{x:679.35,y:24.3,z:-1500},yaw:Math.PI/2,width:23,height:1.05,mounted:true});
+    signs.push({id:'aster-paddock',name:'ASTER  /  TEAM PADDOCK',position:{x:540,y:20,z:-1415.5},yaw:0,width:7,height:1.15,mounted:true});
+    for(const x of [536.6,543.4])roofs.box(x,17,-1415.5,.12,3.65,.12);
   }
   add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');
   return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};

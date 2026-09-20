@@ -3,6 +3,7 @@ import type { PhysicsBody,PhysicsShape } from '@babylonjs/core';
 import { windowLighting } from './atmosphere';
 import { CELL_SIZE,landHeight,LAKE } from '../content/world';
 import { createVegetation } from './vegetation';
+import {createCircuitWoodland} from './circuit-woodland';
 import { surfaceTextures } from './surface-textures';
 import type { PhysicsWorld } from '../sim/physics';
 import type { V3,Quality } from '../core/types';
@@ -20,6 +21,7 @@ export class WorldRenderer {
   cells=new Map<string,Cell>();root:TransformNode;backdrop:Mesh;water:Mesh;
   private terrain:PBRMaterial;private road:PBRMaterial;private shoulder:PBRMaterial;private marking:PBRMaterial;private yellow:PBRMaterial;private curb:PBRMaterial;private wall:PBRMaterial;private roof:PBRMaterial;private glass:PBRMaterial;private foliage:PBRMaterial;private trunk:PBRMaterial;
   private treeMesh:Mesh;private oakMesh:Mesh;private trunkMesh:Mesh;private oakTrunkMesh:Mesh;private grassMesh:Mesh;private boulders:Mesh;
+  private woodland:ReturnType<typeof createCircuitWoodland>;
   private quality:Quality='Low';private enabled=true;private trafficScenery:TrafficScenery;
   private worker=new CellWorkerClient();streamer:CellStreamer<CellBlueprint,Cell>;
   private materialPool=new ResourcePool<Material>(m=>m.dispose(false,true));private rootLeases=new Map<number,{release:()=>void}>();
@@ -40,6 +42,7 @@ export class WorldRenderer {
     this.road.roughness=.94;this.road.metallic=0;this.glass.albedoColor=Color3.FromHexString('#78909b').toLinearSpace();this.glass.metallic=.15;this.glass.roughness=.25;
     const windowAtlas=RawTexture.CreateRGBATexture(new Uint8Array([0,0,0,255,255,180,103,255]),2,1,scene,false,false,Texture.NEAREST_SAMPLINGMODE);windowAtlas.name='original-occupied-window-emission';windowAtlas.gammaSpace=true;windowAtlas.wrapU=windowAtlas.wrapV=Texture.CLAMP_ADDRESSMODE;this.glass.emissiveTexture=windowAtlas;
     const vegetation=createVegetation(scene);this.treeMesh=vegetation.tree;this.oakMesh=vegetation.oak;this.trunkMesh=vegetation.trunk;this.oakTrunkMesh=vegetation.oakTrunk;this.grassMesh=vegetation.grass;this.foliage=vegetation.foliage;this.trunk=vegetation.bark;
+    this.woodland=createCircuitWoodland(this.root,this.oakMesh,this.trunkMesh);
     const rockMat=mat('weathered-rock','#ffffff'),rockMaps=surfaceTextures(scene,'concrete');rockMat.albedoTexture=rockMaps.albedo;rockMat.bumpTexture=rockMaps.normal;
     this.boulders=MeshBuilder.CreateSphere('rock-source',{diameter:5,segments:8},scene);const rockPos=this.boulders.getVerticesData('position')!;
     for(let i=0;i<rockPos.length;i+=3){const x=rockPos[i],y=rockPos[i+1],z=rockPos[i+2],n=1+.17*Math.sin(x*2.1+z*.7)*Math.cos(y*1.9);rockPos[i]*=n;rockPos[i+1]*=n*.65;rockPos[i+2]*=n;}this.boulders.updateVerticesData('position',rockPos);this.boulders.material=rockMat;this.boulders.isVisible=false;
@@ -50,7 +53,7 @@ export class WorldRenderer {
   }
 
   setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);}
-  setQuality(q:Quality){if(q===this.quality)return;this.clear();this.quality=q;}
+  setQuality(q:Quality){if(q===this.quality)return;this.clear();this.quality=q;this.woodland.setQuality(q);}
   setWetness(v:number){this.road.roughness=.94-v*.70;this.road.albedoColor.set(1-v*.40,1-v*.40,1-v*.40);}
   updateSignals(clock:number,time=12){this.glass.emissiveColor.setAll(windowLighting(time)*1.1);const waves=(this.water.material as PBRMaterial).bumpTexture as Texture;waves.uOffset=clock*.008;waves.vOffset=clock*.004;for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
   private around(position:V3,detail=true){const {cx,cz}=cellCoordinates(position),result:CellDemand[]=[];for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){const x=cx+dx,z=cz+dz;if(x< -9||x>8||z< -9||z>8)continue;result.push({id:cellKey(x,z),cx:x,cz:z,priority:-1200+dx*dx+dz*dz,collision:true,detail,owners:new Set(['warmup'])});}return result;}

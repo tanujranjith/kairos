@@ -4,6 +4,7 @@ import { HANDLING, handlingTerrainBlend, inHandlingCourse } from './handling-cou
 import { LaneGraph, samplePath, projectPath } from '../sim/lane-graph';
 import { resolveJunctions, PRIVATE_TRAFFIC_ROADS } from './junctions';
 import { configureRoadLayers,roadLayerAt } from './road-layers';
+import {circuitBankHeight,paddockBlend} from './circuit-landscape';
 
 export const CELL_SIZE=256;
 export const WORLD_SIZE=4096;
@@ -79,7 +80,8 @@ export function pointAt(road:Road,s:number,offset=0):RoadPoint {
 export function terrainHeight(x:number,z:number) {
   if(inLake(x,z))return 2.5;
   const near=nearestRoad(x,z,undefined,1),blend=1-smooth((near.distance-near.road.width*.5-2)/20);
-  const natural=lerp(landHeight(x,z)+Math.sin(x*.017)*Math.sin(z*.019)*1.3,(near.point.terrainY??near.point.y)-.16,blend);
+  const bank=circuitBankHeight(x,z)*smooth((near.distance-near.road.width*.5-22)/30);
+  const natural=lerp(lerp(landHeight(x,z)+Math.sin(x*.017)*Math.sin(z*.019)*1.3+bank,(near.point.terrainY??near.point.y)-.16,blend),16.84,paddockBlend(x,z));
   return lerp(natural,HANDLING.height-.16,handlingTerrainBlend(x,z));
 }
 export const LANDMARKS:Landmark[]=[

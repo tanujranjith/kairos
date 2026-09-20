@@ -15,17 +15,21 @@ npm run build
 npm run preview -- --port 5192
 ```
 
-The bundled Windows runtime is `C:/Users/tanuj/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe`. If `npm.cmd` selects Node 20, invoke `C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js` with the bundled Node executable explicitly.
+The bundled Windows runtime is `C:/Users/tanuj/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe`. Prepend that runtime's `bin` directory to the current shell's `PATH` before invoking npm, so npm's child scripts also use Node24. Merely invoking `npm-cli.js` through Node24 leaves child scripts on the machine's default Node20.
 
 Open the local URL in hardware-accelerated Chrome or Edge. `?renderer=webgl` forces WebGL2. The default attempts WebGPU and falls back to WebGL2.
 
 ## Play
+
+Keyboard road-speed steering and traction control have been corrected, including the reported40mph spin. The suspension no longer mistakes horizontal motion for damper compression. See [handling evidence and controls](docs/keyboard-handling.md). All six cars retain their original tire-grip and power parameters.
 
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.
 
 Pit visits use their own ordered timing route. Stay below **60 km/h (37 mph)**, stop in the service area and select **SERVICE / PIT** for fuel and tires. The HUD displays the limit; speeding incurs a penalty. See [timing and pit verification](docs/race-timing.md).
+
+Aster now has planted banks/tree belts and a dressed rear paddock. Racing AI can request fuel/tire service and follow the actual pit connectors, with exit yielding. Service currently queues single-file; the GT low-fuel opening-lap stress case still has a known track-limits defect. See the [feature status](docs/feature-status.md) and [measured checks](docs/benchmarks.md), rather than treating the working build as final acceptance.
 
 **Handling course** in the sidebar opens Northstar's traffic-free proving ground with the selected car. It contains braking lanes, a slalom, three skidpad rings, measured bumps, a banked road, a gradient, a curb and a launch ramp. It is also connected to the public road network. Reset inside the course returns to its braking lane. See [course layout and measured tests](docs/handling-course.md).
 

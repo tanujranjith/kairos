@@ -2,6 +2,48 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 20 keyboard traction correction
+
+The user's40mph keyboard spin was reproduced before tuning. Default Velara,500ms right key plus held throttle:57.740deg peak sideslip and138.891deg accumulated heading change. Corrected keyboard steering envelope, predictive combined-slip TC torque budget, surface-normal suspension damping and COM-relative contact velocity reduce the identical maneuver to2.294deg/10.906deg. Tire friction and vehicle power data are unchanged. See keyboard-handling.md for the diagnosis and scripts.
+
+-136 unit tests and strict TypeScript pass.144 six-car/dry-wet/left-right/tap-hold/coast-throttle cases pass with four wheel contacts, no damage and maximum sideslip4.3964deg. Actual keyboard acceleration-to40mph/turn/brake/reverse/reset passes. Required skill-client screenshot/state opened and verified (3.79m/s, grounded/asphalt, no error). Initial contact failure is retained, not counted as a pass.
+- Full handling suite repeats within numeric tolerances.0-100km/h: Aeris8.817s, Velara5.192s, Crest5.192s, Nova6.050s, GTX4.658s, Apex3.817s. Velara30m/s braking:49.556m dry,57.701m wet,62.894m worn. Dry/wet skidpad RMS0.717/1.247m; slalom RMS0.145m. Bumps/curb/bank/jump/barrier/slope/low-speed/empty-fuel checks pass.60/30/20Hz cadence traces match acceleration21.654334m/s, with braking29.576/29.591/29.576m.
+-8-car3-lap quick races classify all entrants: GT378.467s, Formula360.867s; player zero damage/penalty. GT has one AI warning and one lapped entrant; Formula has two AI warnings. Strict GT low-fuel stress still FAILS a track-limit warning at11s/s228 despite completing service/subsequent lap. Prior failure report preserved as pre-handling-failure-report.json. Previous weekend/worn-pit results are historical, not retested here.
+- Final Node24 production build passes; index-B35REVA9.js, Babylon chunk-size warning remains. Both installed browsers pass forced WebGL2 and actual WebGPU cold25Mbps/40ms with external hosts blocked, no dev hooks, FreeDrive/Northstar/8-car clean launch/home. Menu readiness Edge5.929/5.921s, Chrome5.962/5.703s; totalbytes11,242,548 each. Only Windows powerPreference warning. These are development-host functional checks, not integrated-laptop, FPS, endurance or HTTPS acceptance.
+
+Reports: output/keyboard-grip/{before,first-fix,suspension-fix,final,input-final,production-edge,production-chrome}, output/handling, output/physics, output/racing and output/ai-pits-8-fuel. Car models/background ambience remain below the user's renewed art request; this checkpoint primarily corrects handling.
+
+## September 19 circuit setting and automatic AI pit checkpoint
+
+All 130 pure tests and strict TypeScript pass. New coverage includes pit strategy/route continuity, legal contiguous service, merge blockers, wear-aware pace, direction-correct adjacent avoidance, early following and behind-car exclusion; plus deterministic woodland placement, road/paddock clearance, preserved road grades and bounded scenery buffers. The first fence geometry budget failed at 26,244 triangles; reducing repeated posts/rails resolved it without increasing the test budget.
+
+The final-source eight-car three-lap race regression finishes all eight entrants in both classes: GT 374.775s, Formula 313.875s. Every entrant has zero warnings and penalties; both player cars have zero damage. Player best laps are 117.850s / 98.097s. This is a selected deterministic input scenario, not exhaustive race reliability or laptop FPS.
+
+Before the background changes, both eight-car worn-tire AI scenarios passed a proper physical entry/service/rejoin and subsequent lap, at 431s GT / 436s Formula. Each made one stop, proved all24 pit gates and had no sampled invalidity, warnings, penalties or damage; Formula exercised yielding. `output/ai-pits-8-fuel` is explicitly a **failed** strict GT low-fuel case: a track-limit warning/invalid opening lap near s249 at11s, followed by completed service/rejoin. Do not mislabel that run as passing just because its pit portion worked. Retain this reproducible grid/low-fuel handling defect for further AI work; the test assertions were not relaxed. Final-scene worn-tire and separate Formula-fuel reruns are recorded separately when complete.
+
+Final isolated development RTX3060/Edge/WebGL2 submission audit, Low1280×720, 66 controlled steps per view including extra passes:
+
+| View | Max draw calls | Max active triangles | Median scene submission |
+|---|---:|---:|---:|
+| Showroom | 184 | 175,432 | 5.0ms |
+| Lakeshore traffic | 245 | 373,969 | 7.1ms |
+| City traffic | 204 | 409,863 | 5.9ms |
+| Wet night | 204 | 408,684 | 6.2ms |
+| Eight-car GT grid | 296 | 472,967 | 5.6ms |
+| Pit/paddock | 120 | 289,425 | 3.0ms |
+| Circuit back straight | 163 | 361,107 | 3.2ms |
+| Eight-car Formula grid | 282 | 478,007 | 4.4ms |
+
+The first woodland version was within the triangle target but close to it (Formula498,551); retained as `output/render-cost/circuit-first-close-budget.json`. Low now uses13 leaf sprays, Medium17 and High/Ultra25 per crown. These are bounded submission samples, not 30FPS/p95 CPU/GPU/process-memory/endurance acceptance on the integrated-GPU laptop. The new scenery uses original geometry and existing local atlases, with no paid or new external assets.
+
+Final-scenery reruns pass both worn-tire visits at431s GT /436s Formula, plus Formula's low-fuel visit at341s. All three selected cars complete one stop and the following valid lap with all24 pit gates and zero sampled invalidity/warnings/penalties/damage; both Formula cases yield at the merge. The failed GT fuel case above remains unresolved and is not overwritten by these passes.
+
+The nine streaming/failure/retry/resource checks pass. Three repeated visits retain identical mesh/material/texture counts: city476/72/44, mountain336/73/45 and lakeshore345/72/44. Three race/home cycles return exactly to128/71/43 with zero world cells and no retained sign/detail resources. The two permanent woodland batches remain as designed; no accumulating geometry or materials were found in these short cycles. This does not replace the30-minute endurance test.
+
+Final visual checks capture six circuit views with four wheel contacts, zero damage, and no page/external errors. Opened matching before/after pit views, the wider final pit view, paddock, back straight, grid and wet pit. Preset changes retain exactly two woodland batches/856 crown instances with234/306/450/450 leaf indices for Low/Medium/High/Ultra, returning to234 on Low. The supplied input client's final screenshot/state were opened:3.710974m/s, four asphalt contacts, zero damage, no loading/error state. Art remains visibly procedural; the terrain/road transition facets, simple transporter detail, sparse foreground spaces and distant lighting need further polish.
+
+The production build passes with the existing large Babylon chunk warning. Cold-cache25Mbps/40ms checks pass in Edge and Chrome with forced WebGL2 and actual WebGPU, third-party hosts blocked and development hooks absent. Menu readiness is7.705/5.965s Edge,6.601/5.889s Chrome; drive-click-to-motion5.186/8.603s Edge,4.893/6.787s Chrome. All four transfer11,242,266 bytes through the tested flow. Free Drive, Northstar, eight-car clean launch (GT in Edge, Formula in Chrome) and home return pass. No page/failed/external requests; only the known Windows WebGPU powerPreference warning. Preview5192 has been rebuilt. No authorized HTTPS deployment or target-laptop certification has occurred.
+
 ## September 19 enclosed-car and six-car wheel checkpoint
 
 All 118 unit tests, strict TypeScript and the production build pass; the existing large Babylon engine-chunk warning remains. New tests cover five distinct body/cabin profiles, open passenger cells, roof/headrest/steering clearance and instrument sightlines, conforming liveries at both detail levels, six wheel styles, finite/outward geometry, bounded detail cost and calipers following suspension/steering without tire rotation. No vehicle-force or race-rule parameters changed.

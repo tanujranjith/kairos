@@ -16,4 +16,16 @@ The report and actual pit/service/rejoin screenshots are in `output/pit-timing/`
 
 ## Remaining limitations
 
-Automatic AI pit decisions and approach control still need integration with a proper entry route, service-box selection and traffic-aware safe rejoining. The physical visit test uses one entrant; it does not certify a contested merge, a dense field or race strategy. Gate/rule tests are not a complete motorsport rulebook, performance benchmark or target-laptop acceptance. Visual pit signs, service-box presentation and track surroundings still need polish.
+The independent physical visit test uses one entrant; it does not certify every contested merge or race strategy. Gate/rule tests are not a complete motorsport rulebook, performance benchmark or target-laptop acceptance. Visual service-box presentation still needs polish.
+
+## Automatic AI pit strategy
+
+`content/pit-plan.ts` defines a continuous circuit approach → entry connector → pit lane → exit connector → rejoin path. `sim/pit-driver.ts` decides from actual fuel use, wear and remaining race distance, then drives through normal controls and vehicle physics. It decelerates before committing, requires six contiguous grounded/stationary seconds at its assigned stop, and yields at the exit for a conservative main-track time gap. Only the runtime performs refueling/tire replacement after the controller requests completed service. No position, velocity, power or grip bonus is used by the pit controller.
+
+The development snapshot reports phase, reason, assigned stop, elapsed service, completed stops, merge blocker and fuel-per-lap estimate. Wear-aware race inputs include a limp-home pace and additional combined braking/turning margin. Following now measures distance around bends; avoidance steers away from adjacent cars, and slow obstacle bypass is permitted when clear. Intentional queue braking no longer triggers the stuck-car reset.
+
+`node scripts/verify-ai-pits.mjs` injects one worn-tire fault after the normal grid departure in eight-car GT and Formula practice. Both scenarios have completed a valid visit and subsequent lap, including Formula yielding at the merge, with no sampled warnings, penalties or damage. `--fault=fuel`, `--formula` and `--entrants=16` select additional scenarios; an available flag is not evidence it has passed. The selected AI's proof is not a claim that every other entrant is fault-free. Historical failed/queue traces remain in `output/`.
+
+The assigned service stops are separated longitudinal positions on the single-file pit centerline, **not physical off-lane garage boxes**; cars queue behind service. Dense 16-car fields, simultaneous stops, service-overshoot recovery and all fuel-depletion/retirement cases remain incomplete or unverified. The conservative merge gap is not a full trajectory planner.
+
+With the final circuit setting, both eight-car worn-tire runs re-pass, and the separate Formula low-fuel run passes including a merge yield. GT's low-fuel run completes service but fails the strict assertion because it runs wide on its opening lap (one warning/invalid lap near s249 at11s). This failure is retained, not a passing fuel-strategy certification. The normal eight-car three-lap GT/Formula races finish all entrants with zero warnings/penalties in the latest regression.

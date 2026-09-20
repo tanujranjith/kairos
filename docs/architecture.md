@@ -28,6 +28,8 @@ Each chassis is a dynamic box. Four rays find suspension contacts. Spring/damper
 
 Tune mass/geometry, springs/damping, tire limits, gearing/torque, then aero in that order. Re-run identical acceleration/braking/turning traces at multiple render frame rates. Never compensate for poor AI with hidden grip or engine multipliers. AI feeds the same physical model and assists; its pace and corner-exit throttle are input decisions.
 
+Keyboard steering has a speed/wheelbase-aware input envelope; analog range is unchanged. TC budgets next-step wheelspin against combined-slip capacity. Suspension damping uses surface-normal compression speed, not forward motion projected onto a tilted chassis. See `keyboard-handling.md` for the reported40mph spin, diagnosis and numerical regressions.
+
 Northstar's validation rig creates a fresh physical vehicle per scenario, settles it with held brakes, then uses only normal controls through Havok. Braking/jump scenarios specify initial body and wheel velocity; subsequent motion is not position-corrected. The suite repeats scenarios and compares tolerances. It does not certify all vehicles under every maneuver or model chassis deformation. Detailed dimensions and measured results are in `handling-course.md`.
 
 ## Roads and cells

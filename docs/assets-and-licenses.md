@@ -5,6 +5,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 | Content | Source / terms |
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
+| Aster planted banks/woodland, rear paddock lanes, transporters/canopies, pit wall, fencing, shelters and lamp standards | Original geometry and placements in `src/content/circuit-landscape.ts`, `src/world/circuit-setting.ts`, `src/render/circuit-woodland.ts`; reuses original local vegetation atlases/materials, no new external asset |
 | Five enclosed-car design profiles, open passenger cells, projected lamp/livery surfaces, deep six-style wheels and fixed calipers | Original sources `src/render/road-design.ts`, `coachwork.ts`, `panel-stripe.ts`, `wheel-model.ts`; no manufacturer geometry, paid content or new external asset. Road/GT instruments reuse the original local canvas display. |
 | Rebuilt Apex body/aero, recessed cockpit, conforming liveries and live gear/speed/RPM/fuel display | Original geometry in `src/render/formula-coachwork.ts`; locally drawn display in `src/render/car-instruments.ts`; both optimized GLB levels generated from the same source, no new third-party content |
 | Aster garage bays, glazing, shutters, canopy, roof plant and working apron | Original code-generated geometry in `src/world/pit-garage.ts` and `src/world/cell-blueprint.ts`; no new external asset |

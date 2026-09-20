@@ -11,6 +11,14 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Aster background and paddock continuation
+
+The bare-background screenshot prompted an authored circuit setting: twelve woodland groves, broad planted banks, a graded rear paddock with service lanes, twelve original team transporters/awnings, marshal shelters, perimeter fencing, a low pit safety wall, lamp standards and a paddock sign. The lamps are scenery, not additional dynamic lights. Paddock lanes are accessible paved space, not new navigation/traffic graph edges. No spectators or moving support crews are claimed.
+
+`content/circuit-landscape.ts` defines the groves, banks and paddock grading; `world/circuit-setting.ts` generates deterministic placements and geometry. Road anchors and the immediate verge remain unchanged. All tree centers keep at least 27 metres beyond the nearest road edge. Props and paving reuse the existing per-cell material/collision batches, so streaming owns their disposal. The 642 trees and 214 lower crowns use two permanent, bounded, shared-material instance batches under the world root: no per-tree materials/colliders or extra shadow passes. Forked low-detail trunks and reduced leaf sprays keep this middle-distance layer inexpensive and avoid losing the whole tree line at the detail-cell boundary. It remains resident while hidden in the showroom, like the existing mountain backdrop.
+
+`scripts/verify-circuit-setting.mjs --before` captures a baseline; without that flag it checks the populated setting. Actual matching-camera pit views, a wider view, the paddock, circuit, grid and wet conditions are retained under `output/circuit-setting/`. The user-facing art target is still higher than this stylized generated environment; see the newest benchmark entry for budget and regression evidence.
+
 Run `node scripts/build-assets.mjs` with the dev server running to regenerate the twelve GLBs. `src/render/car.ts`, `coachwork.ts` and `formula-coachwork.ts` are the original mesh sources; `surface-textures.ts`, `vegetation.ts` and `lighting-environment.ts` generate the material content. `camera-mounts.ts` shares physical-scale cockpit/hood/bumper positions with the exported markers.
 
 Run the supplied `web_game_playwright_client.mjs` for driving inputs and open its screenshot/state, then `verify-graphics-streaming.mjs` for full-UI showroom/day/city/wet-night/grid captures. New pure tests check all six car meshes/detail levels, deterministic normal maps and transferred terrain colors. See `benchmarks.md` for measured checks.

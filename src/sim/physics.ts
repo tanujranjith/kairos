@@ -5,7 +5,9 @@ import havokUrl from '@babylonjs/havok/lib/esm/HavokPhysics.wasm?url';
 import type { VehicleDefinition, VehicleState, InputFrame, Settings, Customization, V3 } from '../core/types';
 import { clamp, approach } from '../core/math';
 import { nearestRoadAt, terrainHeight, inLake } from '../content/world';
-import { tireForces } from './tire';
+import { tireForces, tractionTorque } from './tire';
+import { steeringLock } from '../core/steering';
+import { compressionSpeed } from './suspension';
 import { contactForTriangle,SURFACE_GRIP } from './contacts';
 
 export const FIXED_DT=1/120;
@@ -43,6 +45,7 @@ export class Vehicle {
     const d=this.definition,s=this.state;
     this.previousPosition.copyFrom(this.node.position);this.previousRotation.copyFrom(this.node.rotationQuaternion!);
     const matrix=this.node.computeWorldMatrix(true);this.body.getLinearVelocityToRef(this.linear);this.body.getAngularVelocityToRef(this.angular);
+    const centerOfMass=Vector3.TransformCoordinates(new Vector3(0,-.12,d.drive==='FWD'?.12:-.05),matrix);
     Vector3.TransformNormalToRef(Vector3.Forward(),matrix,this.forward);Vector3.TransformNormalToRef(Vector3.Right(),matrix,this.right);Vector3.TransformNormalToRef(Vector3.Up(),matrix,this.up);
     const vLong=Vector3.Dot(this.linear,this.forward),speed=this.linear.length();s.speed=vLong;
     this.shiftTimer=Math.max(0,this.shiftTimer-dt);let throttle=input.throttle;
@@ -56,7 +59,7 @@ export class Vehicle {
     s.rpm=approach(s.rpm,clamp(Math.max(950+throttle*1400,wheelRpm),900,d.redline+200),14,dt);
     if(settings.automatic&&this.shiftTimer===0&&s.gear>0){if(s.rpm>d.redline*.9&&s.gear<d.gears.length){s.gear++;this.shiftTimer=.18;}else if(s.rpm<d.redline*.37&&s.gear>1){s.gear--;this.shiftTimer=.18;}}
     ratio=(s.gear===-1?3.1:d.gears[s.gear-1])*d.finalDrive;
-    const maxSteer=clamp(.57/(1+Math.abs(vLong)*.055),.115,.57);s.steer=approach(s.steer,input.steer*maxSteer,9,dt);
+    const maxSteer=steeringLock(vLong);s.steer=approach(s.steer,input.steer*maxSteer,9,dt);
     const rpmFraction=s.rpm/d.redline,torque=d.torque*(.55+.45*Math.sin(clamp(rpmFraction,0,1)*Math.PI))*(1-s.damage*.16);
     if(this.shiftTimer>0)throttle*=.12;
     if(s.fuel<=0||s.rpm>d.redline)throttle=0;
@@ -77,9 +80,9 @@ export class Vehicle {
       contacts++;
       const compression=clamp(rest-(this.hit.hitDistance-d.wheelRadius),0,rest);
       wheel.compression=compression;
-      const contact=this.hit.hitPointWorld.clone(),r=contact.subtract(this.node.position),velocity=this.linear.add(Vector3.Cross(this.angular,r));
+      const contact=this.hit.hitPointWorld.clone(),r=contact.subtract(centerOfMass),velocity=this.linear.add(Vector3.Cross(this.angular,r));
       const material=contactForTriangle(this.hit.body?.transformNode.metadata,this.hit.triangleIndex);wheel.surface=material.surface==='Grass'&&inLake(contact.x,contact.z)?'Water':material.surface;wheel.layer=material.layer;wheel.roadId=material.roadId;const surfaceMu=SURFACE_GRIP[wheel.surface];
-      const normal=this.hit.hitNormalWorld;const compressionVelocity=-Vector3.Dot(velocity,this.up);
+      const normal=this.hit.hitNormalWorld;const compressionVelocity=compressionSpeed(velocity,normal,this.up);
       const antiRoll=(prevCompression-s.wheels[i^1].compression)*d.spring*.2;
       const load=clamp(compression*d.spring+compressionVelocity*d.damper+antiRoll,0,d.mass*9.81*1.8);
       wheel.load=load;this.body.applyForce(this.up.scale(load),origin);
@@ -87,21 +90,24 @@ export class Vehicle {
       let fwd=this.forward.scale(Math.cos(steer)).add(this.right.scale(Math.sin(steer)));
       fwd.subtractInPlace(normal.scale(Vector3.Dot(fwd,normal))).normalize();const sideDir=Vector3.Cross(normal,fwd).normalize();
       const longitudinal=Vector3.Dot(velocity,fwd),lateral=Vector3.Dot(velocity,sideDir);
+      const angle=Math.atan2(lateral,Math.max(2,Math.abs(longitudinal)));
+      const temperatureGrip=d.class==='ROAD'?1:clamp(.82+(wheel.temperature-25)*.004,.8,1.08);
+      const mu=d.grip*surfaceMu*wetMu*(.65+.35*wheel.wear)*temperatureGrip*(input.handbrake&&!front?.62:1);
       const drivenWheel=driven.includes(i),inertia=1.8;
       let driveTorque=drivenWheel?torque*ratio*throttle*.87/driven.length*(s.gear===-1?-1:1):0;
-      const slipBefore=(wheel.omega*d.wheelRadius-longitudinal)/Math.max(3,Math.abs(longitudinal));
-      if(settings.tc&&slipBefore>.14&&throttle>0&&drivenWheel){driveTorque*=clamp(.14/slipBefore,.06,1);s.tcActive=true;}
       if(drivenWheel)driveTorque-=(1-throttle)*Math.sign(wheel.omega)*Math.min(65,Math.abs(wheel.omega)*2);
       const partner=s.wheels[i^1];if(drivenWheel)driveTorque+=(partner.omega-wheel.omega)*(d.drive==='FWD'?6:12);
+      if(settings.tc&&throttle>0&&drivenWheel&&!input.handbrake){
+        const controlled=tractionTorque(driveTorque,wheel.omega,longitudinal,angle,load,mu,d.wheelRadius,inertia,dt,s.gear===-1?-1:1);
+        if(Math.abs(controlled)<Math.abs(driveTorque)-.5)s.tcActive=true;
+        driveTorque=controlled;
+      }
       wheel.omega+=driveTorque*dt/inertia;
       const brakeDistribution=front?this.setup.brakeBias:1-this.setup.brakeBias;
       let brakeTorque=input.brake*d.mass*9.81*.16*brakeDistribution+(input.handbrake&&!front?2200:0);
       if(settings.abs&&input.brake>0&&longitudinal>3&&wheel.omega*d.wheelRadius<longitudinal*.82){brakeTorque*=.12;s.absActive=true;}
       wheel.omega=Math.sign(wheel.omega)*Math.max(0,Math.abs(wheel.omega)-brakeTorque*dt/inertia);
       const slip=(wheel.omega*d.wheelRadius-longitudinal)/Math.max(3,Math.abs(longitudinal));
-      const angle=Math.atan2(lateral,Math.max(2,Math.abs(longitudinal)));
-      const temperatureGrip=d.class==='ROAD'?1:clamp(.82+(wheel.temperature-25)*.004,.8,1.08);
-      const mu=d.grip*surfaceMu*wetMu*(.65+.35*wheel.wear)*temperatureGrip*(input.handbrake&&!front?.62:1);
       // Implicit wheel/contact solve. Explicit tire torque at 120 Hz exaggerates slip
       // because the light rotating wheel can change speed much faster than the chassis.
       const relative=wheel.omega*d.wheelRadius-longitudinal;

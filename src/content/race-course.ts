@@ -3,6 +3,7 @@ import {CIRCUIT,PIT,pointAt,nearestRoad} from './world';
 import {clamp,lerp} from '../core/math';
 
 export const RACE_RULES={checkpoints:12,trackMargin:1.5,trackLimitDelay:.65,warningInterval:3,trackPenalty:5,falseStartPenalty:10,pitSpeed:60/3.6,pitSpeedTolerance:.83,pitPenalty:5,finishWindow:120} as const;
+export const RACE_AI={wornTireThreshold:.55,wornTireSpeed:{ROAD:27,GT:27,FORMULA:18}} as const;
 export interface TimingGate {id:string;position:V3;yaw:number;halfWidth:number;roadS:number;mainCheckpoint?:number}
 const gate=(road:Road,s:number,id:string,halfWidth:number,mainCheckpoint?:number):TimingGate=>{const p=pointAt(road,s);return {id,position:p,yaw:p.yaw,halfWidth,roadS:s,mainCheckpoint};};
 export const CIRCUIT_GATES=Array.from({length:RACE_RULES.checkpoints},(_,i)=>gate(CIRCUIT,i*CIRCUIT.length/RACE_RULES.checkpoints,`circuit-${i}`,CIRCUIT.width/2+RACE_RULES.trackMargin,i));
