@@ -11,6 +11,10 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Direction-based atmosphere — September 20
+
+The painted sky texture and separate sun sphere are replaced by one native GLSL/WGSL sky material. Per-pixel directions project a packed cloud atlas into low cloud and high wisps, with softer edges, weather-dependent coverage, warm sunward haze and cloud-obscured angular sun/moon discs. Stars and a dark blue gradient make clear nights legible. The existing ACES pipeline remains the sole display transform. See [implementation and limits](atmosphere.md); this is layered cloud shading, not volumetric cloud rendering, and does not finish the sparse landscape or car art.
+
 ### Stitched terrain geometry — September 20
 
 The ground-material review exposed real sky slits when the visual backdrop was disabled. Neighboring clipped polygons were sampling different points along a supposedly shared edge. `terrain-mesh.ts` now inserts the shared vertices on both sides and triangulates without skipping them, including across independently loaded cells. The three reviewed region views retain their authored appearance; the inspected mountain slits disappear even without a backdrop. Physical grass surfaces use the same repaired triangles.

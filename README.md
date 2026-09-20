@@ -29,6 +29,8 @@ City corridors now have original lamp standards, benches, bins, planted beds and
 
 Ground materials blend meadow, dry grass, woodland soil, shore sediment and exposed rock in world coordinates. Clipped terrain now shares boundary vertices across polygons and streamed cells, repairing a measured height-gap defect in the actual collision mesh. Authored road/shoulder surfaces and vehicle handling are unchanged. See [terrain continuity and off-road limits](docs/terrain-continuity.md). Scenery density, broader terrain shape and visual polish remain unfinished.
 
+The [directional sky](docs/atmosphere.md) now has layered clouds, sunward dusk haze, a small cloud-obscured sun, and a readable night gradient with stars and moon. It uses one shared cloud atlas and native shaders on both renderers, not a low-resolution coloured sky repainted every time the clock changes. This does not change driving physics or complete the wider scenery upgrade.
+
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.

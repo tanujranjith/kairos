@@ -5,6 +5,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 | Content | Source / terms |
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
+| Directional sky, packed periodic cloud atlas, layered clouds, sun/moon/stars | Original source in `src/render/sky-field.ts` and `sky-material.ts`. Native GLSL/WGSL, no downloaded sky image, external runtime request or new dependency. |
 | Shared clipped-ground vertices, streamed-cell halo and boundary-preserving terrain triangulation | Original geometry tooling in `src/world/terrain-mesh.ts`; reuses authored local road/junction/course definitions, with no new asset or external dependency. |
 | Continuous ground-cover palette, world-space blending fields, shoulder tint and smooth terrain display normals | Original Kairos code in `src/render/ground-material.ts` and `src/world/ground-cover.ts`; reuses existing original surface textures, with no new external asset or runtime host. |
 | City lamp standards, benches, bins, planted beds and shelters | Original geometry/placement in `src/content/streetscape.ts` and `src/world/streetscape.ts`; small plants reuse the original oak atlas. Local light pool in `src/render/street-lighting.ts`. No new texture, third-party or paid asset. |

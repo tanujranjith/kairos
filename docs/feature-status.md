@@ -1,5 +1,9 @@
 # Feature status — working build, not acceptance certification
 
+## Directional atmosphere — September 20 (verified checkpoint)
+
+Native GLSL/WGSL sky shading replaces the low-resolution painted dome. It adds layered clouds, warm sunward dusk, a small cloud-obscured sun, restrained night stars/moon and weather-desaturated distant haze. One packed atlas is generated once; time/weather changes update uniforms. No vehicle parameters, tire forces or physical terrain geometry change. The full 194-test suite, strict build, both native eight-view renderer checks and supplied input/screenshot loop pass. All 528 Low geometry samples remain within 300 draws / 500,000 triangles; Chrome and Edge each pass local production Free Drive, handling and clean eight-car launch/home on both renderers. Static RTX3060 GPU measurements are recorded separately from unmeasured target-laptop frame pacing. This is layered cloud shading, not volumetric clouds, cloud shadows or astronomical moon phases. Vegetation density, boulder materials, car detailing and the larger game acceptance work remain unfinished; see [scope](atmosphere.md).
+
 ## Terrain topology continuation — September 20 (verified checkpoint)
 
 Ground polygons and independently streamed cells now share their clipped edge vertices. This repairs a measured terrain height-gap defect in both rendering and collision geometry. Road/shoulder definitions, vehicle parameters and assists remain unchanged. All324streamable cells pass the independent topology/footprint audit, and188unit tests plus the strict production build pass.

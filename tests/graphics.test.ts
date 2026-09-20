@@ -9,7 +9,7 @@ import { cameraMounts } from '../src/render/camera-mounts';
 import { mountainMesh,mountainHeight,meadowColor } from '../src/world/landscape';
 import { buildArchitecture,type BuildingStyle } from '../src/world/architecture';
 import { MeshDataBuilder } from '../src/world/mesh-data';
-import { cloudField,skyPixels,solarLighting,windowLighting } from '../src/render/atmosphere';
+import { solarLighting,windowLighting } from '../src/render/atmosphere';
 import { buildServicePavilion } from '../src/world/service-pavilion';
 
 describe('original graphics assets',()=>{
@@ -64,10 +64,6 @@ describe('original graphics assets',()=>{
       for(const g of Object.values(b)){const d=g.finish();total+=d.indices.length/3;expect(d.colors?.length).toBe(d.positions.length/3*4);expect([...d.positions,...d.normals,...d.colors!].every(Number.isFinite)).toBe(true);expect(Math.max(...d.positions.filter((_,i)=>i%3===1))).toBeLessThanOrEqual(12+result.height+.001);}counts.add(total);expect(total).toBeLessThan(7000);
       const eave=style==='house'?5.1:style==='brick'?19:28;expect(Math.max(...b.glass.positions.filter((_,i)=>i%3===1))).toBeLessThan(12+eave-.4);
     }expect(counts.size).toBeGreaterThanOrEqual(4);
-  });
-  it('produces a distinct warm sunset, blue daytime sky, dark night and cloud cover',()=>{
-    const field=cloudField(64,32),clear=skyPixels(12,'Clear',field,64,32),sunset=skyPixels(17.4,'Clear',field,64,32),rain=skyPixels(12,'Rain',field,64,32),night=skyPixels(0,'Clear',field,64,32);
-    expect(clear).not.toEqual(sunset);expect(clear).not.toEqual(rain);const sum=(v:Uint8Array)=>v.reduce((s,n,i)=>i%4===3?s:s+n,0);expect(sum(night)).toBeLessThan(sum(clear)*.1);const top=(31*64+20)*4;expect(clear[top+2]).toBeGreaterThan(clear[top]*2);expect(field).toEqual(cloudField(64,32));
   });
   it('batches lit and unlit panes in one glass material and fades occupancy lighting at dusk',()=>{
     const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()};buildArchitecture(b,{x:0,y:0,z:0,width:21,depth:16,height:24,yaw:0,style:'office',seed:5});const slots=new Set(b.glass.uvs.filter((_,i)=>i%2===0));expect(slots).toEqual(new Set([.25,.75]));expect(windowLighting(12)).toBe(0);expect(windowLighting(22)).toBe(1);expect(windowLighting(18)).toBeCloseTo(.5);expect(windowLighting(24)).toEqual(windowLighting(0));

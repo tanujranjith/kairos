@@ -1,20 +1,22 @@
-import { Engine, WebGPUEngine, AbstractEngine, Scene, FreeCamera, Vector3, Color3, Color4, HemisphericLight, DirectionalLight, ShadowGenerator, MeshBuilder, StandardMaterial, VertexBuffer, DefaultRenderingPipeline, Texture, ImageProcessingConfiguration, Quaternion, Mesh, LinesMesh, PBRMaterial, TransformNode, DynamicTexture, SpotLight, Light, RawTexture } from '@babylonjs/core';
+import { Engine, WebGPUEngine, AbstractEngine, Scene, FreeCamera, Vector3, Color3, Color4, HemisphericLight, DirectionalLight, ShadowGenerator, MeshBuilder, StandardMaterial, VertexBuffer, DefaultRenderingPipeline, ImageProcessingConfiguration, Quaternion, Mesh, LinesMesh, PBRMaterial, TransformNode, DynamicTexture, SpotLight, Light } from '@babylonjs/core';
 import type { Settings } from '../core/types';
 import { clamp, approach } from '../core/math';
 import type { Vehicle } from '../sim/physics';
 import type { CarVisual } from './car';
 import { configureLocalResources, localShaderOptions } from './local-resources';
 import { lightingEnvironment } from './lighting-environment';
-import { cloudField,skyPixels,solarLighting,SKY_WIDTH,SKY_HEIGHT } from './atmosphere';
+import { solarLighting } from './atmosphere';
+import { SkyDome } from './sky-material';
+import { atmosphereFog } from './sky-field';
 import { LocalReflections } from './local-reflections';
 import { createShowroom } from './showroom';
 import { cameraMounts } from './camera-mounts';
 import type { MirrorTexture,BaseTexture } from '@babylonjs/core';
 
 export class Renderer {
-  scene:Scene;camera:FreeCamera;sun:DirectionalLight;ambient:HemisphericLight;shadow:ShadowGenerator;sky:Mesh;sunDisc:Mesh;
-  showroom:TransformNode;rendererName:string;lightsEnabled=true;private skyGradient:RawTexture;private shadowParts=new Set<Mesh>();private headlights:SpotLight[]=[];private cameraPosition=new Vector3();private look=new Vector3();private wasGarage=true;private rain:LinesMesh;private rainPositions:Float32Array;
-  private outdoorEnvironment:ReturnType<typeof lightingEnvironment>;private studioEnvironment:ReturnType<typeof lightingEnvironment>;private pipeline:DefaultRenderingPipeline;private contactMaterial:StandardMaterial;private skyStamp='';private clouds=cloudField();
+  scene:Scene;camera:FreeCamera;sun:DirectionalLight;ambient:HemisphericLight;shadow:ShadowGenerator;sky:Mesh;atmosphere:SkyDome;
+  showroom:TransformNode;rendererName:string;lightsEnabled=true;private shadowParts=new Set<Mesh>();private headlights:SpotLight[]=[];private cameraPosition=new Vector3();private look=new Vector3();private wasGarage=true;private rain:LinesMesh;private rainPositions:Float32Array;
+  private outdoorEnvironment:ReturnType<typeof lightingEnvironment>;private studioEnvironment:ReturnType<typeof lightingEnvironment>;private pipeline:DefaultRenderingPipeline;private contactMaterial:StandardMaterial;
   reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];private floorReflection:MirrorTexture;private galleryEnvironment:BaseTexture;
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
@@ -29,11 +31,7 @@ export class Renderer {
     this.outdoorEnvironment=lightingEnvironment(scene);this.studioEnvironment=lightingEnvironment(scene,true);scene.environmentTexture=this.outdoorEnvironment;
     const shadowTexture=new DynamicTexture('original-contact-occlusion',128,scene,true),sctx=shadowTexture.getContext(),gradient=sctx.createRadialGradient(64,64,12,64,64,62);gradient.addColorStop(0,'rgba(0,0,0,.58)');gradient.addColorStop(.55,'rgba(0,0,0,.30)');gradient.addColorStop(1,'rgba(0,0,0,0)');sctx.fillStyle=gradient;sctx.fillRect(0,0,128,128);shadowTexture.update();shadowTexture.hasAlpha=true;
     this.contactMaterial=new StandardMaterial('contact-occlusion',scene);this.contactMaterial.diffuseTexture=shadowTexture;this.contactMaterial.emissiveTexture=shadowTexture;this.contactMaterial.useAlphaFromDiffuseTexture=true;this.contactMaterial.disableLighting=true;this.contactMaterial.emissiveColor=Color3.White();this.contactMaterial.zOffset=-1;this.contactMaterial.backFaceCulling=false;
-    this.sky=MeshBuilder.CreateSphere('atmosphere',{diameter:13000,segments:24,sideOrientation:Mesh.BACKSIDE},scene);this.sky.infiniteDistance=true;this.sky.isPickable=false;this.sky.applyFog=false;const skyMat=new StandardMaterial('sky-gradient',scene);skyMat.disableLighting=true;skyMat.emissiveColor=Color3.White();skyMat.backFaceCulling=false;this.sky.material=skyMat;const pos=this.sky.getVerticesData(VertexBuffer.PositionKind)!,colors:number[]=[];for(let i=0;i<pos.length;i+=3){const h=clamp(pos[i+1]/3500,0,1);const bottom=new Color3(.96,.77,.50),top=new Color3(.22,.43,.63),c=Color3.Lerp(bottom,top,Math.pow(h,.6));colors.push(c.r,c.g,c.b,1);}this.sky.setVerticesData(VertexBuffer.ColorKind,colors,true);
-    this.skyGradient=RawTexture.CreateRGBATexture(new Uint8Array(SKY_WIDTH*SKY_HEIGHT*4),SKY_WIDTH,SKY_HEIGHT,scene,false,false,Texture.BILINEAR_SAMPLINGMODE);this.skyGradient.wrapU=Texture.WRAP_ADDRESSMODE;this.skyGradient.wrapV=Texture.CLAMP_ADDRESSMODE;this.skyGradient.gammaSpace=true;skyMat.emissiveColor=Color3.Black();skyMat.emissiveTexture=this.skyGradient;this.sky.useVertexColors=false;const skyUvs:number[]=[],sphereUvs=this.sky.getVerticesData(VertexBuffer.UVKind)!;for(let i=0;i<pos.length;i+=3)skyUvs.push(sphereUvs[i/3*2],clamp(pos[i+1]/6500,0,1));this.sky.setVerticesData(VertexBuffer.UVKind,skyUvs);
-    // Sphere U=0 faces +X and increases toward -Z: azimuth = PI/2 - U*2PI.
-    this.skyGradient.uScale=-1;this.skyGradient.uOffset=.25;
-    this.sunDisc=MeshBuilder.CreateSphere('sun-disc',{diameter:100,segments:16},scene);this.sunDisc.isPickable=false;this.sunDisc.applyFog=false;const sm=new StandardMaterial('sun-glow',scene);sm.disableLighting=true;sm.emissiveColor=new Color3(1,.90,.61);this.sunDisc.material=sm;
+    this.atmosphere=new SkyDome(scene);this.sky=this.atmosphere.mesh;
     const gallery=createShowroom(scene);this.showroom=gallery.root;this.floorReflection=gallery.reflection;this.galleryEnvironment=gallery.environment;
     for(const [name,p,power,color]of [['studio-key',new Vector3(-4,-994,4),900,new Color3(1,.86,.70)],['studio-fill',new Vector3(4,-996,-3),480,new Color3(.68,.82,1)]] as const){const lamp=new SpotLight(name,p,new Vector3(0,-999,0).subtract(p).normalize(),1.8,1,scene);lamp.diffuse=color;lamp.falloffType=Light.FALLOFF_GLTF;lamp.intensity=power;lamp.range=22;this.studioLights.push(lamp);}
     for(const side of [-1,1]){const light=new SpotLight(`headlamp-${side}`,Vector3.Zero(),Vector3.Forward(),.85,3,scene);light.diffuse=new Color3(.82,.91,1);light.falloffType=Light.FALLOFF_GLTF;light.intensity=0;light.range=100;this.headlights.push(light);}
@@ -70,10 +68,8 @@ export class Renderer {
     this.ambient.intensity=garage?.35:.32+day*.60;this.sun.intensity=garage?2.8:day*(2.8+golden*.9)*(1-overcast);this.sun.diffuse=Color3.Lerp(new Color3(.96,.96,.89),new Color3(1,.66,.34),golden);this.scene.environmentIntensity=garage?.65:.22+day*.78;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;
     this.scene.imageProcessingConfiguration.exposure=garage?1.1:1.12+day*.06+golden*.15;
     if(garage)this.sun.direction.set(.55,-.6,-.65).normalize();else this.sun.direction.set(-solar.direction.x,-Math.max(.02,solar.direction.y),-solar.direction.z).normalize();
-    const daytimeFog=Color3.Lerp(new Color3(.54,.66,.79),new Color3(.76,.67,.58),golden*(1-overcast)*.40);this.scene.fogColor=Color3.Lerp(new Color3(.035,.05,.08),daytimeFog,day);this.scene.fogDensity=.00013+golden*.000025+wetness*.0006;
-    this.sky.visibility=1;const stamp=`${Math.round(time*50)}:${settings.weather}`;
-    if(stamp!==this.skyStamp){this.skyStamp=stamp;this.skyGradient.update(skyPixels(time,settings.weather,this.clouds));}
-    this.sunDisc.position.copyFrom(this.camera.position).addInPlace(this.sun.direction.scale(-5000));this.sunDisc.setEnabled(solar.elevation>0&&overcast<.5);
+    this.scene.fogColor.set(...atmosphereFog(time,settings.weather));this.scene.fogDensity=.00013+golden*.000025+wetness*.0006;
+    this.sky.visibility=1;this.atmosphere.update(time,settings.weather,clock);
     this.showroom.setEnabled(garage);
     // Planar reflection is confined to the gallery; driving never pays for this pass.
     this.floorReflection.renderList=garage?this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.name!=='car-contact-shadow'&&(mesh.metadata?.floorReflection||(()=>{let node=mesh.parent;while(node){if(node.metadata?.kairosCar)return true;node=node.parent;}return false;})())):[];

@@ -3,7 +3,6 @@ import {buildGrandstand} from '../src/world/grandstand';
 import {MeshDataBuilder} from '../src/world/mesh-data';
 import {buildCellBlueprint} from '../src/world/cell-blueprint';
 import {mountainHeight,MOUNTAIN_MASSIFS} from '../src/world/landscape';
-import {cloudField} from '../src/render/atmosphere';
 
 describe('original circuit presentation and depth',()=>{
   it('builds supported seating/canopy inside a bounded off-track footprint',()=>{
@@ -25,10 +24,5 @@ describe('original circuit presentation and depth',()=>{
     for(const p of MOUNTAIN_MASSIFS){const r=Math.hypot(p.x,p.z);expect(mountainHeight(p.x,p.z)).toBeGreaterThan(mountainHeight(p.x/r*3000,p.z/r*3000)+150);}
     expect(mountainHeight(0,4600)).toBeLessThan(200);
     for(let x=-6000;x<=6000;x+=120)for(let z=-6000;z<=6000;z+=120)expect(Math.abs(mountainHeight(x+5,z)-mountainHeight(x-5,z))).toBeLessThan(20);
-  });
-  it('projects a seamless cloud deck with one shared zenith sample',()=>{
-    const width=1024,height=64,field=cloudField(width,height);expect(field.every(Number.isFinite)).toBe(true);
-    for(let x=1;x<width;x++)expect(field[(height-1)*width+x]).toBeCloseTo(field[(height-1)*width],6);
-    for(let y=8;y<height;y++)expect(Math.abs(field[y*width]-field[y*width+width-1])).toBeLessThan(.04);
   });
 });

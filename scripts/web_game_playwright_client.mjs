@@ -8,6 +8,7 @@ function parseArgs(argv) {
     iterations: 3,
     pauseMs: 250,
     headless: true,
+    channel: null,
     screenshotDir: "output/web-game",
     actionsFile: null,
     actionsJson: null,
@@ -28,6 +29,9 @@ function parseArgs(argv) {
       i++;
     } else if (arg === "--headless" && next) {
       args.headless = next !== "0" && next !== "false";
+      i++;
+    } else if (arg === "--channel" && next) {
+      args.channel = next;
       i++;
     } else if (arg === "--screenshot-dir" && next) {
       args.screenshotDir = next;
@@ -265,7 +269,7 @@ async function main() {
 
   const browser = await chromium.launch({
     headless: args.headless,
-    args: ["--use-gl=angle", "--use-angle=swiftshader"],
+    ...(args.channel ? {channel: args.channel} : {args: ["--use-gl=angle", "--use-angle=swiftshader"]}),
   });
   const page = await browser.newPage();
   try {
@@ -294,6 +298,11 @@ async function main() {
   if (args.clickSelector) {
     try {
       await page.waitForSelector(args.clickSelector, { state: "visible", timeout: 90000 });
+      // Kairos mounts menu buttons while material/reflection preparation still
+      // owns pointer input. Wait for actual startup readiness, not a longer click.
+      if (await page.locator("#loading").count()) {
+        await page.waitForSelector("#loading", { state: "detached", timeout: 90000 });
+      }
       await page.click(args.clickSelector, { timeout: 5000 });
       await page.waitForTimeout(250);
     } catch (err) {

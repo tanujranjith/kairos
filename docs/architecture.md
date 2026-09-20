@@ -24,6 +24,8 @@ Startup emits seven bounded `performance.measure` entries named `kairos:startup:
 
 ## Ground geometry, materials and controlled draws
 
+`SkyDome` owns one mesh, one native-backend shader material and one mipmapped 512² density atlas. `sky-field.ts` builds periodic packed noise once. Renderer updates feed the common solar direction plus daylight, golden-hour, weather coverage and wind uniforms. Shader output is linear for the scene's existing image-processing pipeline. The previous CPU-coloured sky and separate sun mesh are gone. The sky is visual-only and has no physics ownership.
+
 `terrain-mesh.ts` assembles road/junction/course-clipped ground with a one-tile halo. Canonical edge vertices are shared before boundary-preserving triangulation; a per-build height cache avoids repeated sampling. Halo polygons contribute only edge information, so independent workers produce matching cell boundaries without emitting overlapping neighboring faces. This repairs actual ground geometry, unlike the material/display-normal operations below. Roads and shoulders keep their own existing triangles and layer metadata.
 
 Terrain worker data carries packed ground-material controls in its existing color buffer. The PBR plugin supplies native GLSL/WGSL world-coordinate blending before standard lighting. It adds no texture sampler or render pass. Terrain display normals use central height-field differences; physical shape positions/indices and contact ranges are preserved. Concrete/gravel shoulders retain their original collision classifications while receiving distinct tints. The backdrop applies the ground treatment only to its recessed valley floor, preserving outer mountain shading.
