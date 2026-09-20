@@ -9,6 +9,7 @@ import { createLodCar } from './render/car-lod';
 import { loadCarAssets } from './render/car-assets';
 import { PhysicsWorld, Vehicle, FIXED_DT, neutralInput } from './sim/physics';
 import {steeringContactGrip} from './sim/contacts';
+import {preparePresentation,renderPreparationFrame} from './core/presentation-ready';
 import { RaceManager } from './sim/race';
 import { racingInput } from './sim/ai';
 import { PitDriver } from './sim/pit-driver';
@@ -30,6 +31,7 @@ export class Kairos {
   renderer!:Renderer;physics!:PhysicsWorld;world!:WorldRenderer;player!:Vehicle;visual!:CarVisual;save!:SaveGame;ui!:Interface;input!:Input;
   store=new SaveStore();audio=new DrivingAudio();race=new RaceManager();graph=new RoadGraph();
   private menuNavigation!:ControllerMenuNavigator;
+  private preparingPresentation=true;
   loading=false;loadError='';private transitioning=false;private loadingTicket=0;private retryOperation:(()=>Promise<void>)|null=null;private transitionPromise=Promise.resolve();private advanceQueue=Promise.resolve();
   private loadingOverlay=new WorldLoadingOverlay(()=>{if(this.retryOperation)void this.retryOperation();else{this.loadError='';this.world.retry();}},()=>{void this.action('home');});
   screen:Screen='home';mode='Free Drive';clock=0;wetness=0;pausedFromDrive=false;hasDrive=false;
@@ -49,6 +51,13 @@ export class Kairos {
     this.ui=new Interface(document.querySelector<HTMLElement>('#ui')!,()=>this.view(),(action,value)=>void this.action(action,value));this.store.onError=message=>this.toast(message,12);this.applySettings();this.ui.render();
     this.menuNavigation=new ControllerMenuNavigator(document.querySelector<HTMLElement>('#ui')!,{isActive:()=>this.screen!=='drive'&&!this.loading,context:()=>this.screen,onBack:()=>{void this.action('resume');}});
     for(const [i,id]of ['gtx','apex'].entries()){const car=createCar(this.renderer.scene,vehicleById(id),undefined,true);car.root.position.set(i===0?-6:6,-999.3,-5);car.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(i===0?.5:-.4,0,0);this.showcase.push(car);}
+    timed('interface');
+    const loadingMessage=document.querySelector('#loading-message');if(loadingMessage)loadingMessage.textContent='Preparing car materials and showroom lighting…';
+    await preparePresentation(()=>renderPreparationFrame(this.renderer.engine,()=>this.draw(0,1)),()=>{
+      const reflection=this.renderer.reflections.snapshot();
+      return reflection.ready&&reflection.pendingFace<0&&this.visual.paint.reflectionTexture!==null&&this.renderer.scene.isReady(true);
+    });
+    timed('presentation');this.preparingPresentation=false;this.input.clear();this.last=performance.now();
     this.renderer.engine.runRenderLoop(()=>this.frame());
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&this.screen==='drive')this.setScreen('pause');this.input.clear();this.accumulator=0;this.last=performance.now();});
     window.addEventListener('beforeunload',()=>{void this.store.write(this.save);});
@@ -56,7 +65,7 @@ export class Kairos {
     if(import.meta.env.DEV||import.meta.env.MODE==='test'){
       window.render_game_to_text=()=>JSON.stringify(this.snapshot());window.advanceTime=(ms)=>this.advanceTime(ms);window.kairos=this;
     }
-    timed('interface');document.querySelector('#loading')?.remove();if(this.store.error)this.toast(this.store.error,10);
+    document.querySelector('#loading')?.remove();if(this.store.error)this.toast(this.store.error,10);
     window.addEventListener('gamepaddisconnected',()=>{this.input.clear();if(this.screen==='drive')this.setScreen('pause');this.toast('Controller disconnected. Reconnect it or continue with the keyboard.',10);});
   }
   private freeSpawn(){return pointAt(ROADS.find(r=>r.id==='lakeshore')!,1790,2.1);}
@@ -64,7 +73,7 @@ export class Kairos {
   private applySettings(){this.renderer.applySettings(this.save.settings);this.world.setQuality(this.save.settings.quality);this.world.setWetness(this.wetness);if(this.hasDrive){this.world.requestAround(this.player.node.position,true);for(const other of [...this.traffic,...this.opponents])this.world.requestAround(other.vehicle.node.position);}}
   toast(message:string,seconds=4){this.message=message;this.messageUntil=this.cameraClock+seconds;this.ui?.update();}
   setScreen(screen:Screen){if(this.screen==='drive'&&screen!=='drive'){this.pausedFromDrive=true;this.audio.pause();}if(screen==='drive'){this.pausedFromDrive=false;this.input.clear();this.accumulator=0;}this.screen=screen;this.world.setEnabled(!this.garage);this.showcase.forEach(c=>c.root.setEnabled(this.garage));this.ui.render(true);}
-  private handleInputAction(action:string){if(this.loading){if(action==='pause')void this.action('home');return;}if(action==='pause'){if(this.screen==='drive')this.setScreen('pause');else if(this.pausedFromDrive)this.setScreen('drive');else this.setScreen('home');return;}
+  private handleInputAction(action:string){if(this.preparingPresentation)return;if(this.loading){if(action==='pause')void this.action('home');return;}if(action==='pause'){if(this.screen==='drive')this.setScreen('pause');else if(this.pausedFromDrive)this.setScreen('drive');else this.setScreen('home');return;}
     if(action==='map'){this.setScreen(this.screen==='map'&&this.hasDrive?'drive':'map');return;}
     if(action==='fullscreen'){void (document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen());return;}
     if(action==='telemetry'){this.save.settings.showTelemetry=!this.save.settings.showTelemetry;return;}
@@ -174,7 +183,7 @@ export class Kairos {
     for(const o of [...this.opponents,...this.traffic]){o.visual.root.setEnabled(!this.garage&&distance(o.vehicle.state.position,this.player.state.position)<650);o.visual.root.position.copyFrom(Vector3.Lerp(o.vehicle.previousPosition,o.vehicle.node.position,alpha));o.visual.root.rotationQuaternion=Quaternion.Slerp(o.vehicle.previousRotation,o.vehicle.node.rotationQuaternion!,alpha);o.visual.selectDetail?.(Vector3.Distance(o.visual.root.position,this.renderer.camera.position),this.save.settings.quality);o.visual.update(o.vehicle.state);this.renderer.registerCar(o.visual,o.vehicle.state.grounded);}
     this.showcase.forEach(c=>c.root.setEnabled(this.garage));this.renderer.prepareReflections(this.visual,this.save.settings,this.garage,this.cameraClock);this.renderer.render();this.audio.update(this.player.state,this.player.definition,this.lastInput.throttle,this.save.settings.volume,this.screen==='drive'&&!this.loading,this.save.settings.camera===2,this.wetness,this.save.settings.weather==='Rain');
     if(this.player.state.damage>this.lastDamage){this.audio.impact((this.player.state.damage-this.lastDamage)*5);this.input.rumble((this.player.state.damage-this.lastDamage)*8);this.lastDamage=this.player.state.damage;}
-    this.uiClock+=dt;if(this.uiClock>.1){this.uiClock=0;this.ui.update();}this.menuNavigation.update();this.loadingOverlay.update();
+    this.uiClock+=dt;if(this.uiClock>.1){this.uiClock=0;this.ui.update();}if(!this.preparingPresentation)this.menuNavigation.update();this.loadingOverlay.update();
   }
   advanceTime(ms:number){
     this.manual=true;if(ms<=0){this.draw(0,1);this.ui.update();return Promise.resolve();}

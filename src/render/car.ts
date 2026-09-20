@@ -27,7 +27,11 @@ export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,l
   }else{
     staticParts.push(...roadCoachwork(scene,d,{paint,glass,dark,chrome,light,tail,accent,instruments:instruments.material},lite,setup?.livery??0).parts);
   }
-  function merge(parts:Mesh[],parent:TransformNode){const groups=new Map<Material,Mesh[]>();for(const m of parts){if(!m.material)continue;const list=groups.get(m.material)??[];list.push(m);groups.set(m.material,list);}const result:Mesh[]=[];for(const [mat,list]of groups){const m=list.length>1?Mesh.MergeMeshes(list,true,true,undefined,false,false)!:list[0];m.material=mat;m.parent=parent;m.isPickable=false;result.push(m);}return result;}
+  function merge(parts:Mesh[],parent:TransformNode){const groups=new Map<Material,Mesh[]>();for(const m of parts){if(!m.material)continue;const list=groups.get(m.material)??[];list.push(m);groups.set(m.material,list);}const result:Mesh[]=[];for(const [mat,list]of groups){
+    // A few molded panels use vertex tint instead of another material. Complete
+    // the attribute with neutral white on their untinted batch neighbours.
+    if(list.some(p=>p.isVerticesDataPresent('color')))for(const p of list)if(!p.isVerticesDataPresent('color'))p.setVerticesData('color',new Float32Array(p.getTotalVertices()*4).fill(1));
+    const m=list.length>1?Mesh.MergeMeshes(list,true,true,undefined,false,false)!:list[0];m.material=mat;m.parent=parent;m.isPickable=false;result.push(m);}return result;}
   const parts=merge(staticParts,root);
   const display=parts.find(p=>p.material===instruments.material);
   const wheels:TransformNode[]=[],brakes:TransformNode[]=[];

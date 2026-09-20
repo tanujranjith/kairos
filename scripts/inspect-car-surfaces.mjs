@@ -15,6 +15,13 @@ try{
       await page.evaluate(async position=>{const g=window.kairos,{Vector3}=await import('/node_modules/@babylonjs/core/Maths/math.vector.js');document.querySelector('#ui').style.visibility='hidden';g.renderer.camera.position.set(...position);g.renderer.camera.setTarget(new Vector3(0,-999,0));g.renderer.camera.fov=.60;g.renderer.scene.render();await g.renderer.scene.whenReadyAsync();g.renderer.scene.render();},position);
       await page.screenshot({path:`${output}/${id}-${view}.png`});
     }
+    if(process.argv.includes('--cabin')&&id!=='apex')for(const view of ['dashboard','seats']){
+      await page.evaluate(async view=>{const g=window.kairos,{Vector3}=await import('/node_modules/@babylonjs/core/Maths/math.vector.js'),d=g.player.definition,roof=d.height-(.32+d.wheelRadius),matrix=g.visual.root.computeWorldMatrix(true);
+        const eye=view==='dashboard'?[-.34,roof-.17,-.32]:[0,roof-.12,.30],aim=view==='dashboard'?[-.34,roof-.17,5]:[0,.08,-.70];
+        g.visual.glass.alpha=.13;g.renderer.camera.position.copyFrom(Vector3.TransformCoordinates(Vector3.FromArray(eye),matrix));g.renderer.camera.setTarget(Vector3.TransformCoordinates(Vector3.FromArray(aim),matrix));g.renderer.camera.fov=1.12;
+        g.renderer.scene.render();await g.renderer.scene.whenReadyAsync();g.renderer.scene.render();
+      },view);await page.screenshot({path:`${output}/${id}-${view}.png`});
+    }
     rows.push(await page.evaluate(id=>{const v=window.kairos.visual;return {id,asset:v.parts.some(p=>p.name.includes('instance')),triangles:v.parts.reduce((n,p)=>n+p.getTotalIndices()/3,0),parts:v.parts.length,paint:{metallic:v.paint.metallic,roughness:v.paint.roughness,coat:v.paint.clearCoat.roughness,environment:v.paint.environmentIntensity},finite:v.parts.filter(p=>p.getTotalVertices()>0).every(p=>p.getVerticesData('normal')?.every(Number.isFinite))};},id));
     await page.evaluate(()=>document.querySelector('#ui').style.visibility='');console.log(id,'matched body views captured');
   }

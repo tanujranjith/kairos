@@ -54,7 +54,12 @@ export class Renderer {
     patch(2.55,5.2,0,0,-car.groundOffset+.006);
     for(const wheel of car.wheels)patch(.65,1.05,wheel.position.x,wheel.position.z,-car.groundOffset+.007);
     const contact=Mesh.MergeMeshes(patches,true,true)!;contact.name='car-contact-shadow';contact.parent=car.root;contact.material=this.contactMaterial;contact.isPickable=false;contact.isVisible=grounded;this.registeredCars.set(car,contact);
-    for(const part of car.parts){this.shadowParts.add(part);part.onDisposeObservable.addOnce(()=>{this.shadowParts.delete(part);this.shadow.removeShadowCaster(part);});}
+    for(const part of car.parts){
+      // Glass and tiny emissive faces are not opaque sun occluders. The body,
+      // cabin/wing, tyres and wheels provide the car's actual shadow silhouette.
+      if(part.material===car.glass||part.material===car.lights||part.material===car.tail||part.material?.name.includes('-instruments'))continue;
+      this.shadowParts.add(part);part.onDisposeObservable.addOnce(()=>{this.shadowParts.delete(part);this.shadow.removeShadowCaster(part);});
+    }
   }
   prepareReflections(car:CarVisual,settings:Settings,garage:boolean,clock:number){this.reflections.update({position:car.root.position,garage,clock,stamp:`${Math.round(settings.time*4)}:${settings.weather}`},settings.quality,[car.paint,car.glass]);}
   applySettings(settings:Settings){const profiles={Low:[1280,720,1024],Medium:[1600,900,1536],High:[1920,1080,2048],Ultra:[2560,1440,4096]},profile=profiles[settings.quality],scale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(scale/settings.resolution);this.shadow.getShadowMap()?.resize(profile[2]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}

@@ -4,6 +4,7 @@ import {roadDesign} from './road-design';
 import {panelStripe,panelHeight,panelSide,panelDecal} from './panel-stripe';
 import {fascia,fasciaDepth} from './fascia';
 import {profileCurve} from './profile-curve';
+import {roadCabin} from './road-cabin';
 
 type Point=[number,number,number];
 const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
@@ -11,7 +12,7 @@ const mix=(a:number,b:number,t:number)=>a+(b-a)*t;
 /** Original continuous body surfaces, separate glazing and inset trim. Metres, +Z nose. */
 export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMaterial;glass:PBRMaterial;dark:PBRMaterial;chrome:PBRMaterial;light:PBRMaterial;tail:PBRMaterial;accent?:PBRMaterial;instruments?:PBRMaterial},lite:boolean,livery=0){
   const parts:Mesh[]=[],W=d.width/2,L=d.length/2,roof=d.height-(.32+d.wheelRadius),gt=d.class==='GT',design=roadDesign(d);
-  const [cabinRear,backRoof,frontRoof,frontBase,roofWidth]=design.cabin,baseWidth=d.id==='crest'?.82:.78,belt=d.id==='crest'?.30:.245;
+  const [cabinRear,backRoof,frontRoof,frontBase]=design.cabin;
   const add=(mesh:Mesh,material:Material)=>{mesh.material=material;parts.push(mesh);return mesh;};
   const box=(name:string,w:number,h:number,l:number,x:number,y:number,z:number,material:Material)=>{const mesh=MeshBuilder.CreateBox(name,{width:w,height:h,depth:l},scene);mesh.position.set(x,y,z);return add(mesh,material);};
   const tube=(name:string,points:Point[],radius:number,material:Material)=>add(MeshBuilder.CreateTube(name,{path:points.map(p=>Vector3.FromArray(p)),radius,tessellation:lite?4:8},scene),material);
@@ -74,20 +75,8 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
   const rearTrim=(x:number,y:number,offset=.007):Point=>[x,y,(fasciaDepth(rear.panel,x,y,-1)??-L)-offset];
   box('undertray',d.width*.82,.045,d.length*.85,0,-.42,0,m.dark);
 
-  // Bowed windscreen/backlight and crowned roof, rather than a solid glass box.
-  const span=(z:number,y:number,width:number,crown:number):Point[]=>Array.from({length:lite?9:17},(_,i)=>{const u=i/(lite?8:16)*2-1;return [u*width,y+crown*(1-u*u),z] as Point;});
-  const windshield:Point[][]=[],rearGlass:Point[][]=[],roofRows:Point[][]=[];
-  for(let i=0;i<=8;i++){const t=i/8;windshield.push(span(mix(frontBase,frontRoof,t),mix(belt,roof-.03,t)+Math.sin(t*Math.PI)*.016,mix(W*baseWidth,W*roofWidth,t),.025));rearGlass.push(span(mix(backRoof,cabinRear,t),mix(roof-.03,belt,t),mix(W*roofWidth,W*baseWidth,t),.018));roofRows.push(span(mix(backRoof,frontRoof,t),roof-.024+Math.sin(t*Math.PI)*.018,W*(roofWidth+Math.sin(t*Math.PI)*.025),.025));}
-  sheet('panoramic-windscreen',windshield,m.glass);sheet('fastback-backlight',rearGlass,m.glass);const roofPanel=sheet('crowned-roof',roofRows,m.paint);
-  const cowl=span(frontBase+.075,0,W*baseWidth,0);sheet('windscreen-cowl',[onSkin(cowl,.004),windshield[0]],m.dark);
-  sheet('interior-headliner',[...roofRows].reverse().map(row=>row.map(([x,y,z])=>[x,y-.028,z] as Point)),m.dark);
+  const cabin=roadCabin(scene,d,m,lite,body),roofPanel=cabin.roofPanel;parts.push(...cabin.parts);
   for(const side of [-1,1]){
-    const corners:Point[]=[[side*W*baseWidth,belt,cabinRear],[side*W*roofWidth,roof-.026,backRoof],[side*W*roofWidth,roof-.010,frontRoof],[side*W*baseWidth,belt,frontBase]];
-    sheet('side-glazing',[[corners[0],corners[3]],[corners[1],corners[2]]],m.glass);
-    tube('window-surround',[...corners,corners[0]],.023,m.paint);
-    tube('window-rubber',[corners[0],corners[3]],.009,m.dark);
-    const pillar=mix(backRoof,frontRoof,.27);tube('b-pillar',[[side*W*(roofWidth+.005),roof-.008,pillar],[side*W*baseWidth,belt,pillar-.05]],d.id==='crest'?.040:.023,m.dark);
-    sheet('rear-quarter-sail',[[corners[0],[side*W*(baseWidth+.085),belt-.014,cabinRear-.05]],[corners[1],[side*W*(roofWidth+.05),roof-.04,backRoof-.17]]],m.paint);
     // Fender lips follow the tire aperture and leave the suspension clearance open.
     for(const zc of [-d.wheelbase/2,d.wheelbase/2]){const points:Point[]=[];for(let k=0;k<=20;k++){const a=k/20*Math.PI,y=-.32+Math.sin(a)*(d.wheelRadius+.051),z=zc+Math.cos(a)*(d.wheelRadius+.051);points.push([side*(profiles[0].at(z)*.98+.003),y,z]);}tube('rolled-fender-lip',points,.010,m.paint);}
     tube('rocker-sill',[[side*W*.97,-.385,-d.wheelbase/2+.38],[side*W*.94,-.40,0],[side*W*.98,-.385,d.wheelbase/2-.38]],gt?.045:.027,m.dark);
@@ -133,18 +122,7 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
     for(const side of [-1,1]){for(let slot=0;slot<(lite?2:5);slot++)tube('fender-extractor',[[side*.75,.30,d.wheelbase/2-.15-slot*.06],[side*.87,.283,d.wheelbase/2-.16-slot*.06]],.009,m.dark);tube('front-diveplane',[[side*W*.9,-.26,L-.05],[side*W*1.035,-.21,L-.19],[side*W*1.02,-.14,L-.39]],.018,m.dark);}
   }else if(d.id==='crest'){box('roof-spoiler',W*1.35,.040,.20,0,roof-.065,backRoof-.075,m.paint);}
   else tube('integrated-rear-lip',[[-W*.81,design.shoulders[0]+.016,-L+.04],[0,design.centres[0]+.02,-L-.008],[W*.81,design.shoulders[0]+.016,-L+.04]],.014,m.paint);
-  // Visible interior: low dash, bolstered seats and door cards. Shared trim material.
-  box('cockpit-floor',W*1.68,.05,frontBase-cabinRear+.22,0,-.30,(frontBase+cabinRear)/2,m.dark);
   const dashDrop=gt?.06:0;
-  box('footwell-firewall',W*1.66,.52,.065,0,-.075,frontBase-.07,m.dark);box('dashboard',W*1.64,.115,.28,0,.21-dashDrop,.65,m.dark);
-  box('centre-console',.17,.18,.83,0,-.12,-.08,m.dark);
-  for(const side of [-1,1]){
-    const cushion=MeshBuilder.CreateSphere('seat-cushion',{diameter:1,segments:lite?8:16},scene);cushion.scaling.set(.40,.14,.46);cushion.position.set(side*.36,-.12,-.39);add(cushion,m.dark);
-    const back=MeshBuilder.CreateSphere('bucket-seat-back',{diameter:1,segments:lite?8:16},scene);back.scaling.set(.40,Math.min(.53,roof*.90),.13);back.position.set(side*.36,.17,-.65);back.rotation.x=-.13;add(back,m.dark);
-    box('seat-headrest',.19,.11,.08,side*.36,Math.min(.43,roof-.095),-.675,m.dark);
-    for(const edge of [-1,1])tube('seat-bolster',[[side*.36+edge*.16,-.11,-.20],[side*.36+edge*.17,.09,-.56],[side*.36+edge*.13,.36,-.65]],.038,m.dark);
-    box('door-card',.06,.29,1.18,side*.71,-.07,-.08,m.dark);
-  }
   box('instrument-binnacle',.28,.12,.08,-.34,.29-dashDrop,.50,m.dark);box('driver-instruments',.225,.098,.008,-.34,.291-dashDrop,.455,m.instruments??m.dark);
   if(!lite){box('centre-display',.135,.086,.015,.06,.275-dashDrop,.495,m.dark);for(const side of [-1,1])for(let i=0;i<3;i++)box('dash-vent',.032,.032,.012,side*.54+i*.046,.27-dashDrop,.485,m.dark);}
   const steeringY=gt?.14:.20,steeringRadius=gt?.13:.15;

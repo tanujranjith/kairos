@@ -21,6 +21,7 @@ try{
       const start=Date.now();await page.goto(`http://127.0.0.1:5192/${renderer==='webgl'?'?renderer=webgl':''}`,{waitUntil:'domcontentloaded'});
       await page.waitForSelector('#start-drive');await page.waitForSelector('#loading',{state:'detached'});
       Object.assign(report,{readyMs:Date.now()-start,initialBytes:bytes,phases:await page.evaluate(()=>performance.getEntriesByType('measure').filter(e=>e.name.startsWith('kairos:startup:')).map(e=>({name:e.name,start:e.startTime,duration:e.duration}))),initialResourceCount:await page.evaluate(()=>performance.getEntriesByType('resource').length)});
+      assert.equal(report.phases.filter(p=>p.name==='kairos:startup:presentation'&&p.duration>0).length,1);
       assert.equal(await page.evaluate(()=>typeof window.advanceTime),'undefined');assert.equal(await page.evaluate(()=>typeof window.kairos),'undefined');
       await page.screenshot({path:`${prefix}-showroom.png`});console.log(`${channel??'Chromium'} ${renderer}: menu ready and showroom captured`);
       const driveStart=Date.now();await page.click('#start-drive');await page.waitForSelector('#speed');await page.keyboard.down('ArrowUp');await page.waitForFunction(()=>Number(document.querySelector('#speed')?.textContent)>5);await page.keyboard.up('ArrowUp');
@@ -42,6 +43,8 @@ try{
       }
       const metrics=await cdp.send('Performance.getMetrics');Object.assign(report,{bytes,jsHeapBytes:metrics.metrics.find(m=>m.name==='JSHeapUsedSize')?.value,network:{downloadMbps:25,uploadMbps:5,latencyMs:40},environment:'Local development host, cold browser cache. Input-to-motion includes streaming and acceleration. Not target-laptop, HTTPS, FPS or whole-process-memory certification.'});
       assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert.deepEqual(failed,[]);
+      // WebGPU validation failures arrive as console messages, not pageerror.
+      assert.deepEqual(warnings.filter(w=>!w.includes('The powerPreference option is currently ignored when calling requestAdapter() on Windows')),[]);
     }catch(error){Object.assign(report,{failure:String(error),pending:[...pending.values()]});await page.screenshot({path:`${prefix}-failure.png`,timeout:10000}).catch(()=>{});throw error;}
     finally{reports.push(report);await fs.writeFile(`${output}/report.json`,JSON.stringify(reports,null,2));console.log(JSON.stringify(report,null,2));await context.close();}
   }

@@ -5,6 +5,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 | Content | Source / terms |
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
+| Shared curved cabin/glazing, molded seats and door cards, closed headrests/rear bulkhead, GT harness and cage | Original geometry in `src/render/road-cabin.ts`; existing car materials and local GLB exporter, no external asset or paid content |
 | Continuous body profiles/normals, fitted arch trim and open Formula intake throats | Original source in `src/render/profile-curve.ts`, `coachwork.ts` and `formula-coachwork.ts`; twelve regenerated GLBs, no new external assets or paid content |
 | Aster race-control tower, external stairs/rails, forecourt links, benches/pergola, raised planters and pit tool/wheel racks | Original geometry in `src/world/pit-forecourt.ts`; planting definitions in `src/content/circuit-landscape.ts` reuse the existing original oak atlas. No new third-party or paid content. |
 | Sculpted front/rear bumper surfaces, recessed grilles/valances, fitted trim and vector Kairos lettering | Original geometry in `src/render/fascia.ts` and `coachwork.ts`; shared trim response in `car-materials.ts`. No external model, texture, logo or paid content added. |

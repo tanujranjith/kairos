@@ -23,7 +23,7 @@ Open the local URL in hardware-accelerated Chrome or Edge. `?renderer=webgl` for
 
 Keyboard turn-in and centering are quicker, with a speed- and surface-aware steering limit. Gravel/concrete shoulders now have matching physical support. Predictive ABS and split-surface brake-pressure control address the reproduced70mph spin without increasing tire grip. See [current handling evidence](docs/surface-handling.md) and the [earlier40mph correction](docs/keyboard-handling.md). All six cars retain their original tire-grip and power parameters.
 
-The latest [car-surface pass](docs/graphics.md) smooths body reflections, reshapes the Velara/GTX bonnet and waist, fits wheel-arch trim, and opens the Formula sidepod intakes. All twelve model/detail exports are rebuilt. This is incremental visual progress; car interiors and fuller world ambience are still below the finished art target.
+The latest [car-model pass](docs/graphics.md) adds curved glazing, structural window frames, molded seats/door trim and a closed passenger cell, plus a stripped GTX cabin. It builds on the smoother body surfaces and open Formula intakes. All twelve model/detail exports are rebuilt. Initial showroom loading now waits for actual material/reflection readiness. This is incremental visual progress; cockpit finish and fuller world ambience are still below the finished art target.
 
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 

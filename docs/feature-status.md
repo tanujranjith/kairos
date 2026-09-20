@@ -1,5 +1,15 @@
 # Feature status — working build, not acceptance certification
 
+## Molded cabins and startup presentation — September 20
+
+The five enclosed cars now use curved glazing and shared structural window/roof surfaces, molded seat shells, closed headrests, door trim, dashboard/console and a rear cabin bulkhead. GTX has one seat, harness straps and a cage. All twelve GLBs are regenerated. No physical vehicle, input, AI or race-rule parameters changed; the shoulder/braking correction below remains intact.
+
+171 tests and the strict Node24 production build pass. Both exported and fallback fleets pass all six cars, eighteen liveries, five moving cameras, instruments and fixed-caliper checks. Twelve LOD/disposal cases restore exact resources. The cabin/shadow rendering audit stays within300draws/500,000triangles across528Low frames (max288/488625), on the development RTX3060 rather than the target laptop.
+
+Startup now keeps the overlay until submitted zero-time frames complete material/reflection readiness. An initial WebGPU submission failure was caught by screenshot/console review and corrected; the startup harness now rejects GPU console validation errors. Final Chrome/Edge WebGL2/WebGPU cold-throttled, external-host-blocked runs show the complete car on first exposure and pass drive, handling, clean eight-car launch and home return. Preview5192 serves `index-UlwEjRgs.js`. See [dated evidence](benchmarks.md).
+
+This is an incremental model/presentation checkpoint, not finished art or full acceptance. Cockpit trim remains dark/plain, body proportions and wheel finish remain stylized, and terrain transitions/night scenery/world ambience need further work. Off-line pit boxes, broader AI/strategy and sixteen-car regression after the handling change, adaptive quality/device recovery, KTX2, actual8GB laptop/endurance and authorizedHTTPS verification remain outstanding.
+
 ## Shoulder and braking continuation — September20
 
 Visible road shoulders now carry matching layered collision surfaces. Predictive ABS and paired split-friction pressure control address the reproduced70mph spin; digital steering responds faster and adapts to actual contact materials. Tire friction and engine specifications are unchanged. All48six-car braking cases,36surface turns,144keyboard maneuvers and16real-road transition/shoulder runs pass. The broad physical handling suite repeats within its original tolerances. See [scope and reproduction](surface-handling.md).

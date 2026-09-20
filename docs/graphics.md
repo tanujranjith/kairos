@@ -11,6 +11,16 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Molded cabins and curved glazing — September 20
+
+`road-cabin.ts` builds the five enclosed passenger cells from one shared loft: curved side glazing, crowned roof, bowed windscreens, bonded black borders, structural A/C pillars, roof/belt rails and weatherseals. The same boundaries place the interior headliner and pillar returns. Molded bucket backs/shells, cushions, closed headrests, door cards, dashboard, console, rear bulkhead and parcel shelf replace the earlier sphere-heavy/open interior. GTX has one seat, flat harness straps and a roll cage. Existing instrument displays, steering wheels and all physical/camera definitions remain intact.
+
+The full and distant meshes share the support profile. Seat-shell tint uses vertex colors; untinted neighbors receive white colors before material batching. Stitching/harness trim reuses the existing accent material, adding one static batch on an otherwise plain road car. Transparent glass, lamp faces and instrument displays no longer enter the opaque sun-shadow pass. All twelve GLBs are regenerated; Formula geometry is unchanged. No new texture, paid asset or third-party model is introduced.
+
+The initial showroom now renders behind its loading overlay until the local reflection is complete and bound, with scene resources ready on two consecutive draws. This handles the actual shader/reflection transition rather than postponing a test screenshot. Warmup does not advance simulation or controller navigation; failure is bounded and shown in the existing loading error screen. A separate production timing entry records this preparation.
+
+`inspect-car-surfaces.mjs --cabin --fallback --output=...` adds labeled dashboard/rear-seat diagnostic viewpoints to matched exterior comparisons. Those are inspection cameras, not user camera modes. The standard fleet check also exercises all five actual moving cameras, liveries, live instruments, steering and calipers. The cabin refinement does not finish the requested realistic-car/world art target; body proportions, material detail and environmental richness still need review against the mockups.
+
 ### Continuous body surfaces and open Formula intakes — September 20
 
 `profile-curve.ts` interpolates authored stations using their real metre spacing, with a shared physical tangent and no local overshoot. It replaces uniform-parameter interpolation in both body generators. Enclosed-car crowns have more lateral samples with a corresponding reduction in longitudinal/fascia samples; continuous skin normals prevent wheel-arch triangulation from creasing the door reflections. Fender trim follows the authored body's changing width instead of a fixed width. Velara and GTX have less pinched waists and shallower bonnet valleys. These are visual surfaces only: physical dimensions, suspension, tire grip, steering and racing inputs are unchanged.
