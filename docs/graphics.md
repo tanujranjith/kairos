@@ -11,6 +11,16 @@ The September 19 passes respond to the request to move away from the blocky plac
 
 ## Rebuild and review
 
+### Aster forecourt and race-control landmark — September 20
+
+`world/pit-forecourt.ts` adds an original race-control tower with a glazed upper cabin, balcony, external stair flights/rails and aerials, plus paved garage-gap forecourts, sheltered benches, twelve raised planting beds and twelve rolling-cabinet/wheel-rack stations. The tower occupies the gap between existing garages rather than the pit lane. Solids reuse the existing cell collision/material batches; the mounted control sign follows normal cell ownership. All new paving and prop vertices are tested for pit/access-road clearance. The first entry cabinet and exit planter failed that check and were repositioned, not accepted with a wider tolerance.
+
+Forty-eight small crowns share the existing local oak atlas in one bounded, world-parented instance batch. They add no material, collider or shadow pass per plant. Low now uses twelve leaf sprays per crown, Medium seventeen, High/Ultra twenty-five; tree/plant counts remain unchanged. The first full-detail planting version exceeded the Low GT-grid geometry target, so this detail reduction was measured and visually rechecked. It keeps the foreground features while staying within the sampled draw/geometry budgets. Permanent batches are hidden with the world root in the showroom.
+
+Architectural glass uses a darker opaque-interior approximation and a clearcoat response. Squaring the existing dusk activation avoids washing all sunlit panes pink/orange while retaining full occupied-window emission at night. This is not a modeled building interior or a live window reflection system. Actual screenshots still show simplified material response; the mockups' realism, natural terrain transitions and broader street/world dressing remain unfinished.
+
+`verify-circuit-setting.mjs --label=forecourt-final` now captures nine views, including tower, seating and equipment, and verifies both woodland and planter detail changes. Full physical GT/Formula pit visits and public-road access/return checks pass with the new solids. The supplied input loop, seven-region/day/night review and repeated streaming/resource checks supplement those geometry checks. See `benchmarks.md` for scoped evidence and remaining limitations.
+
 ### Sculpted bumper and sky continuation — September 20
 
 `fascia.ts` replaces the five enclosed cars' flat end caps and floating grille slabs with shaped bumper rings, recessed front intakes and shallow rear valances. The outer boundary preserves the body loft's edge vertices. Rear lamps, registration panels and original Kairos lettering project onto the actual surface; lower aero trim shares the existing dark-material batch. Smaller diffuser fins and fitted exhaust outlets replace the oversized rear blades. Fine lettering is omitted at distance. Physics, wheel locations and camera mounts are unchanged.

@@ -4,6 +4,9 @@ import { landscapeNoise } from '../world/landscape';
 
 export const SKY_WIDTH=1024,SKY_HEIGHT=256;
 export const windowLighting=(time:number)=>smooth((Math.abs(time-12)-5)/2);
+/** Interior light becomes noticeable as dusk deepens, rather than tinting the
+ * entire glass facade orange while the exterior is still sunlit. */
+export const windowEmission=(time:number)=>windowLighting(time)**2*1.1;
 /** One sun definition for directional light, sky texture, visible disc and fog. */
 export function solarLighting(time:number){
   const phase=(time-6)/12*Math.PI,elevation=Math.sin(phase)*1.12;

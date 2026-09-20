@@ -11,6 +11,17 @@ export const ASTER_GROVES=[
 ] as const;
 
 export const inPaddock=(x:number,z:number,margin=0)=>x>515-margin&&x<1305+margin&&z> -1446-margin&&z< -1340+margin;
+/** Forecourt planters are outside both the timed lane and garage service boxes. */
+export const PIT_GARDENS=[
+  ...[768,1024,1280].flatMap(x=>[-1,1].map(side=>({x:x+side*7.6,z:x===1280?-1442:-1449.2,width:4.8,depth:1.9}))),
+  ...[640,896,1152].flatMap(x=>[-1,1].map(side=>({x:x+side*44,z:-1420.7,width:15,depth:2.8}))),
+] as const;
+export function pitGardenPlants(){
+  return PIT_GARDENS.flatMap((p,index)=>Array.from({length:p.width>5?6:2},(_,i)=>({
+    x:p.x+(i-(p.width>5?2.5:.5))*(p.width>5?2.2:2),y:17.96,z:p.z+Math.sin(i*2.4+index)*.16,
+    scale:{x:.25,y:.16,z:p.depth>2?.20:.13},yaw:Math.PI*(index%2),
+  })));
+}
 export function paddockBlend(x:number,z:number){
   return smooth((x-495)/25)*smooth((1325-x)/25)*smooth((z+1460)/18)*smooth((-1320-z)/25);
 }

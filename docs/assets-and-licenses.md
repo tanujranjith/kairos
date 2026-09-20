@@ -5,6 +5,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 | Content | Source / terms |
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
+| Aster race-control tower, external stairs/rails, forecourt links, benches/pergola, raised planters and pit tool/wheel racks | Original geometry in `src/world/pit-forecourt.ts`; planting definitions in `src/content/circuit-landscape.ts` reuse the existing original oak atlas. No new third-party or paid content. |
 | Sculpted front/rear bumper surfaces, recessed grilles/valances, fitted trim and vector Kairos lettering | Original geometry in `src/render/fascia.ts` and `coachwork.ts`; shared trim response in `car-materials.ts`. No external model, texture, logo or paid content added. |
 | Aster planted banks/woodland, rear paddock lanes, transporters/canopies, pit wall, fencing, shelters and lamp standards | Original geometry and placements in `src/content/circuit-landscape.ts`, `src/world/circuit-setting.ts`, `src/render/circuit-woodland.ts`; reuses original local vegetation atlases/materials, no new external asset |
 | Five enclosed-car design profiles, open passenger cells, projected lamp/livery surfaces, deep six-style wheels and fixed calipers | Original sources `src/render/road-design.ts`, `coachwork.ts`, `panel-stripe.ts`, `wheel-model.ts`; no manufacturer geometry, paid content or new external asset. Road/GT instruments reuse the original local canvas display. |

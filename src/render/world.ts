@@ -1,6 +1,6 @@
 import { Scene,Mesh,MeshBuilder,VertexData,StandardMaterial,PBRMaterial,Color3,Vector3,Matrix,Quaternion,Material,DynamicTexture,TransformNode,RawTexture,Texture } from '@babylonjs/core';
 import type { PhysicsBody,PhysicsShape } from '@babylonjs/core';
-import { windowLighting } from './atmosphere';
+import { windowEmission } from './atmosphere';
 import { CELL_SIZE,landHeight,LAKE } from '../content/world';
 import { createVegetation } from './vegetation';
 import {createCircuitWoodland} from './circuit-woodland';
@@ -39,7 +39,11 @@ export class WorldRenderer {
     for(const [material,kind,scale] of [[this.road,'asphalt',12],[this.terrain,'meadow',2],[this.shoulder,'gravel',6],[this.wall,'concrete',1],[this.roof,'stone',1]] as const){
       const maps=surfaceTextures(scene,kind,scale);material.albedoColor=Color3.White();material.albedoTexture=maps.albedo;material.bumpTexture=maps.normal;material.bumpTexture.level=kind==='meadow'?.55:.35;
     }
-    this.road.roughness=.94;this.road.metallic=0;this.glass.albedoColor=Color3.FromHexString('#78909b').toLinearSpace();this.glass.metallic=.15;this.glass.roughness=.25;
+    this.road.roughness=.94;this.road.metallic=0;
+    // Opaque architectural glazing approximates an unmodeled dark interior.
+    // A pale diffuse base used to overwhelm reflections and read as pink panels.
+    this.glass.albedoColor=Color3.FromHexString('#35464e').toLinearSpace();this.glass.metallic=.35;this.glass.roughness=.14;
+    this.glass.clearCoat.isEnabled=true;this.glass.clearCoat.intensity=1;this.glass.clearCoat.roughness=.10;
     const windowAtlas=RawTexture.CreateRGBATexture(new Uint8Array([0,0,0,255,255,180,103,255]),2,1,scene,false,false,Texture.NEAREST_SAMPLINGMODE);windowAtlas.name='original-occupied-window-emission';windowAtlas.gammaSpace=true;windowAtlas.wrapU=windowAtlas.wrapV=Texture.CLAMP_ADDRESSMODE;this.glass.emissiveTexture=windowAtlas;
     const vegetation=createVegetation(scene);this.treeMesh=vegetation.tree;this.oakMesh=vegetation.oak;this.trunkMesh=vegetation.trunk;this.oakTrunkMesh=vegetation.oakTrunk;this.grassMesh=vegetation.grass;this.foliage=vegetation.foliage;this.trunk=vegetation.bark;
     this.woodland=createCircuitWoodland(this.root,this.oakMesh,this.trunkMesh);
@@ -55,7 +59,7 @@ export class WorldRenderer {
   setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);}
   setQuality(q:Quality){if(q===this.quality)return;this.clear();this.quality=q;this.woodland.setQuality(q);}
   setWetness(v:number){this.road.roughness=.94-v*.70;this.road.albedoColor.set(1-v*.40,1-v*.40,1-v*.40);}
-  updateSignals(clock:number,time=12){this.glass.emissiveColor.setAll(windowLighting(time)*1.1);const waves=(this.water.material as PBRMaterial).bumpTexture as Texture;waves.uOffset=clock*.008;waves.vOffset=clock*.004;for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
+  updateSignals(clock:number,time=12){this.glass.emissiveColor.setAll(windowEmission(time));const waves=(this.water.material as PBRMaterial).bumpTexture as Texture;waves.uOffset=clock*.008;waves.vOffset=clock*.004;for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
   private around(position:V3,detail=true){const {cx,cz}=cellCoordinates(position),result:CellDemand[]=[];for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){const x=cx+dx,z=cz+dz;if(x< -9||x>8||z< -9||z>8)continue;result.push({id:cellKey(x,z),cx:x,cz:z,priority:-1200+dx*dx+dz*dz,collision:true,detail,owners:new Set(['warmup'])});}return result;}
   private commitDemand(){
     const combined=new Map<string,CellDemand>();for(const [key,d]of this.demand)combined.set(key,{...d,owners:new Set(d.owners)});

@@ -1,6 +1,7 @@
 import {Matrix,Quaternion,Vector3,Mesh,MeshBuilder,type TransformNode} from '@babylonjs/core';
 import {circuitWoodland} from '../world/circuit-setting';
 import type {Quality} from '../core/types';
+import {pitGardenPlants} from '../content/circuit-landscape';
 
 /** Two shared-material draws for the entire authored tree belt. No per-tree
  * materials, colliders, lights or additional shadow passes. */
@@ -27,6 +28,12 @@ export function createCircuitWoodland(parent:TransformNode,leaves:Mesh,trunk:Mes
     mesh.isVisible=true;mesh.isPickable=false;mesh.receiveShadows=true;mesh.metadata={worldCaster:false,backgroundWoodland:true};
   }
   fork.dispose();
-  const setQuality=(quality:Quality)=>{const indices:number[]=[];for(let cluster=0;cluster<25;cluster++)if(quality==='Low'?cluster%2===0:quality==='Medium'?cluster%3!==1:true)indices.push(...leafIndices.slice(cluster*18,cluster*18+18));leafMesh.setIndices(indices);};
+  // One bounded batch for all forecourt planters, sharing the existing oak atlas.
+  // No per-plant materials/colliders/shadow passes or distant streaming pop-in.
+  const planting=leaves.clone('aster-forecourt-planting',parent)!;planting.makeGeometryUnique();
+  const plants=pitGardenPlants(),plantMatrices=new Float32Array(plants.length*16);
+  plants.forEach((p,i)=>Matrix.Compose(new Vector3(p.scale.x,p.scale.y,p.scale.z),Quaternion.RotationYawPitchRoll(p.yaw,0,0),new Vector3(p.x,p.y,p.z)).copyToArray(plantMatrices,i*16));
+  planting.thinInstanceSetBuffer('matrix',plantMatrices,16,true);planting.thinInstanceRefreshBoundingInfo(true);planting.isVisible=true;planting.isPickable=false;planting.receiveShadows=true;planting.metadata={worldCaster:false,forecourtPlanting:true};
+  const setQuality=(quality:Quality)=>{const indices:number[]=[];for(let cluster=0;cluster<25;cluster++)if(quality==='Low'?cluster%2===0&&cluster!==10:quality==='Medium'?cluster%3!==1:true)indices.push(...leafIndices.slice(cluster*18,cluster*18+18));leafMesh.setIndices(indices);planting.setIndices(indices);};
   setQuality('Low');return {setQuality};
 }

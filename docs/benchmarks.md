@@ -2,6 +2,33 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 20 working pit forecourt
+
+142 pure tests and strict Node24 production build pass (index-BqhwEn-q.js, cell-worker-wq6AnC2o.js). New coverage checks finite/cost-bounded foreground geometry, all solid and paved vertices against pit/access clearance, deterministic planting inside authored beds, control-sign ownership, dusk emission, and Vite's output-path exclusion. The first entry cabinet and exit planter failed at4.467m/5.670m from the pit center; repositioned without lowering the clearance thresholds. Actual screenshot review added stair rails and corrected flat pink/orange daytime panes. Glazing remains an opaque dark-interior approximation, not a modeled interior/live reflection system.
+
+Nine circuit/forecourt views and seven world/day/night views pass with four contacts and no browser/external errors. Actual tower, planting, equipment, wet-pit, city/day/night, service and rejoin screenshots were opened. The final supplied input client exits cleanly; opened screenshot/state shows3.794694m/s, four asphalt contacts, zero damage and no loading/error. Reports/captures: output/circuit-setting/forecourt-{first,refined,glass,final}, output/forecourt/input-final and output/scenery.
+
+Physical navigation passes the2106.99m inbound and5249.07m outbound routes with0.969/1.375m maximum path error, zero airborne time, damage or non-asphalt contacts. Layer/reset and Aster arrival checks pass. Complete input-only GT/Formula pit entries, service, rejoin and the following valid lap pass at340/310s, all24pit gates, max errors0.626/0.769m, zero warnings/penalties/damage and restored fuel/tires. These single-car results do not resolve the historical multi-car GT low-fuel failure or establish16-car/weekend reliability. Prior reports are retained under output/forecourt/*-prior.json; current reports under output/circuit-access and output/pit-timing.
+
+Initial Low GT grid failed the geometry target at298draws/505,963triangles (retained output/forecourt/render-cost-first.json). Shared crown LOD now uses12/17/25 sprays on Low/Medium/High+, with all856woodland crowns and48planter crowns retained. Final isolated RTX3060/Edge/WebGL2 Low720p,66controlled samples/view including extra passes:
+
+| View | Max draw calls | Max active triangles | Median scene submission |
+|---|---:|---:|---:|
+| Showroom | 184 | 181,510 | 4.1ms |
+| Lakeshore traffic | 245 | 379,801 | 5.6ms |
+| City traffic | 204 | 413,427 | 5.0ms |
+| Wet night | 204 | 412,248 | 5.5ms |
+| Eight-car GT grid | 297 | 496,571 | 4.3ms |
+| Pit/paddock | 115 | 307,149 | 2.7ms |
+| Circuit back straight | 163 | 359,535 | 2.7ms |
+| Eight-car Formula grid | 283 | 489,387 | 4.0ms |
+
+These are bounded submission/geometry measurements, not real-time frame pacing, GPU time, process memory or8GB laptop certification. Nine streaming/failure/retry checks pass; three region cycles retain city477/72/44, mountain337/73/45 and lake346/72/44 meshes/materials/textures. Three race/home cycles restore129/71/43 with no world cells. The extra permanently bounded planter batch shares an existing material/atlas; no short-cycle resource growth. This does not replace30-minute endurance testing.
+
+The first physical-test launches failed because the development server had actually exited: Windows EBUSY while Vite watched a copied test report. Its original process handle supplied the terminal stack. Vite now excludes generated output files from source watching; path tests and subsequent artifact-heavy checks pass with HTTP200. This diagnoses one development-server failure, not every earlier browser/startup stall.
+
+Final production passes Edge and Chrome x forcedWebGL2/actualWebGPU, cold25Mbps/40ms, third-party hosts blocked, no development hooks. FreeDrive/Northstar/clean eight-car GT(Edge)/Formula(Chrome) launch/home flows pass. Menu readiness Edge5.727/5.752s, Chrome5.761/5.697s; input-to-motion Edge4.762/7.000s, Chrome4.817/6.675s.11,323,522 bytes each through the tested flow. No failed/page/external requests; only known Windows WebGPU powerPreference warning. Actual production captures opened and preview5192 current, with no runtime edits after the final build. These results remain development-host checks, not authorizedHTTPS or actual-laptop/endurance acceptance.
+
 ## September 20 sculpted fascia and sky continuation
 
 137 unit tests and strict Node24 production build pass (index-C0wG3S8j.js, existing large-engine chunk warning). New two-LOD coverage checks finite/outward bumper geometry, real intake/valance recesses and no painted face closing their center. Cloud wrap initially failed its existing seam tolerance; longitude endpoints were corrected without relaxing the test. First rear-recess screenshots were visually rejected and refined before export.

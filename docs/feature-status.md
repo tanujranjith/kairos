@@ -1,5 +1,15 @@
 # Feature status — working build, not acceptance certification
 
+## Latest forecourt checkpoint — September 20
+
+142 tests and the strict Node24 production build pass. The formerly empty garage gaps now contain a control tower, paved forecourts, sheltered seating and planting; twelve garage-side equipment stations add working-pit detail. New solids and paving pass road-clearance tests after correcting two placements near the curved pit mouths. Architectural glazing and dusk emission were refined through actual screenshot review. Nine circuit views and seven world/day/night captures pass with four contacts and no browser errors. Art remains stylized and below the full reference target.
+
+Both input-only GT/Formula pit visits complete service, all24 pit gates, safe rejoining and a subsequent valid lap without warning, penalty or damage. Inbound/outbound public-road access also passes with no airborne or wrong-material contacts. These are selected single-car checks, not resolution of the existing multi-car GT low-fuel AI warning. Three region cycles retain matching resources and race/home cycles return to129meshes/71materials/43textures; the extra permanent planter batch is intentional. Final Low sampling peaks at297draws/496,571triangles, not a target-laptop FPS claim.
+
+A confirmed Windows dev-server EBUSY crash came from watching a copied test report. Vite now excludes generated `output/` files, with path-regression coverage; source/models remain watched. Subsequent physical and artifact-writing checks pass with the server still available. This diagnosis does not explain every historical startup stall.
+
+The final production build passes Chrome/Edge with WebGPU and forced WebGL2, cold throttled cache and third-party hosts blocked. Normal drive/handling and clean eight-car GT/Formula launches return to the menu correctly. No external deployment or target-laptop/endurance acceptance is claimed.
+
 ## Latest visual checkpoint — September 20
 
 137 tests and the strict Node24 production build pass. Five enclosed cars now have sculpted bumper surfaces, recessed grilles, fitted lights and shallower dark rear valances instead of flat caps and floating inserts. All twelve GLBs were regenerated; Formula geometry is unchanged, with updated shared trim material. Clear clouds are smaller/lighter and longitude sampling is seam-matched. The handling correction below is untouched.

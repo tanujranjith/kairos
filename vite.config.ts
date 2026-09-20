@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite';
 export default defineConfig({
-  server: { port: 5173, strictPort: true },
+  server: {
+    port: 5173, strictPort: true,
+    // Generated captures/reports aren't source. On Windows a copying report can
+    // briefly be locked, and watching it caused an unhandled EBUSY server exit.
+    watch: { ignored: /(^|[/\\])output([/\\]|$)/ },
+  },
   build: {
     target: 'es2022', chunkSizeWarningLimit: 1800, sourcemap: true,
     // Keep Babylon's interdependent modules together. Hundreds of tiny preload
