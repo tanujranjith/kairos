@@ -33,7 +33,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   for(let x=x0;x<x0+CELL_SIZE;x+=16)for(let z=z0;z<z0+CELL_SIZE;z+=16)for(const bounds of terrainOutsideHandling([x,z,x+16,z+16]))for(const polygon of terrainOutsideRoads(terrainOutsideJunctions(bounds),bounds))terrain.polygon(polygon.map(p=>({...p,y:terrainHeight(p.x,p.z)})));
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
   const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder();
-  const roadContacts:ContactRange[]=[];
+  const roadContacts:ContactRange[]=[],vergeContacts:ContactRange[]=[];
   // Paint comes from the same authored finish/grid positions as session spawns.
   const finish=pointAt(CIRCUIT,0);
   if(Math.floor(finish.x/CELL_SIZE)===cx&&Math.floor(finish.z/CELL_SIZE)===cz){
@@ -54,7 +54,9 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       const decoration=rng(hash(index,road.id.length*17));
       for(const side of [-1,1])for(let clump=0;clump<4;clump++){const offset=side*(road.width/2+2.3+decoration()*5),along=decoration()*8,x=a.x+Math.cos(a.yaw)*offset+Math.sin(a.yaw)*along,z=a.z-Math.sin(a.yaw)*offset+Math.cos(a.yaw)*along;if(inLake(x,z)||inHandlingCourse(x,z,12)||atJunction(x,z))continue;const s=.45+decoration()*.7;instances.push({kind:'grass',position:{x,y:terrainHeight(x,z)-.035,z},scale:{x:s,y:.55+decoration()*.45,z:s},yaw:decoration()*Math.PI});}
     }
-    if(!junction){const start=asphalt.indices.length/3;strip(asphalt,0,road.width,.025);roadContacts.push({start,end:asphalt.indices.length/3,surface:'Asphalt',layer:roadLayerAt(road,(a.s+b.s)/2),roadId:road.id});strip(verge,0,road.width+3,-.015);for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046);}
+    if(!junction){const start=asphalt.indices.length/3,layer=roadLayerAt(road,(a.s+b.s)/2);strip(asphalt,0,road.width,.025);roadContacts.push({start,end:asphalt.indices.length/3,surface:'Asphalt',layer,roadId:road.id});
+      const vergeStart=verge.indices.length/3;strip(verge,0,road.width+3,-.015);vergeContacts.push({start:vergeStart,end:verge.indices.length/3,surface:span?.kind==='bridge'||road.id.startsWith('city')?'Concrete':'Gravel',layer,roadId:road.id});
+      for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046);}
     if(!junction&&road.id.startsWith('city'))for(const side of [-1,1]){
       // Flush visual paving leaves suspension/contact behaviour unchanged.
       const start=pavement.positions.length/3;strip(pavement,side*(road.width/2+1.45),2.7,.030);pavement.tintSince(start,[.69,.71,.69,1]);
@@ -83,7 +85,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   buildCircuitSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows},asphalt,white);
   buildPitForecourt(cx,cz,{wall:buildings,roof:roofs,glass:windows},asphalt,white);
   if(asphalt.indices.length/3>settingStart)roadContacts.push({start:settingStart,end:asphalt.indices.length/3,surface:'Asphalt',layer:'surface'});
-  add('verge',verge,'shoulder');add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('paint',white,'marking');add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
+  add('verge',verge,'shoulder',true,{surface:'Gravel',layer:'surface'},vergeContacts);add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('paint',white,'marking');add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
   const random=rng(hash(cx,cz)),urban=x0<-650&&z0<-300,count=quality==='Low'&&urban?32:{Low:44,Medium:60,High:80,Ultra:105}[quality];
   for(let i=0;i<count;i++){
     const x=x0+random()*CELL_SIZE,z=z0+random()*CELL_SIZE,near=nearestRoad(x,z,undefined,1);if(inHandlingCourse(x,z,12)||inLake(x,z)||atJunction(x,z)||near.distance<near.road.width*.5+5)continue;const y=terrainHeight(x,z),city=x<-650&&z<-650,industrial=x<-850&&z<-300&&z>-780,circuit=x>300&&z<-450;

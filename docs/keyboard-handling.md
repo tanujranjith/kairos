@@ -1,5 +1,7 @@
 # Keyboard handling correction — September 20, 2026
 
+Historical first correction below. The later [shoulder/braking update](surface-handling.md) adds predictive ABS, split-surface pressure control and faster surface-aware keyboard input, with fresh results and different measured stopping distances.
+
 The user reported spinning from a slight keyboard turn at about 40 mph, in the default Velara and other cars. This was not covered by the previous AI-followed skidpad test.
 
 ## Causes and changes

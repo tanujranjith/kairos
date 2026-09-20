@@ -8,6 +8,7 @@ import { createCar, type CarVisual } from './render/car';
 import { createLodCar } from './render/car-lod';
 import { loadCarAssets } from './render/car-assets';
 import { PhysicsWorld, Vehicle, FIXED_DT, neutralInput } from './sim/physics';
+import {steeringContactGrip} from './sim/contacts';
 import { RaceManager } from './sim/race';
 import { racingInput } from './sim/ai';
 import { PitDriver } from './sim/pit-driver';
@@ -145,7 +146,7 @@ export class Kairos {
       if(v.needsRecovery()||o.stuck>8){const n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='circuit'),p=pointAt(CIRCUIT,n.progress-8,i%2?3:-3);if(all.every(other=>other===v||distance(other.state.position,p)>9)){this.world.requestAround(p);v.reset(p,p.yaw);this.race.resetLap(v.id);o.stuck=0;o.pitDriver.reset();}}
     }
     }
-    let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.race.state.session.difficulty,this.wetness,0,CIRCUIT,dt):this.input.poll(dt,this.player.state.speed,this.player.definition.wheelbase,this.wetness);this.lastInput=input;
+    let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.race.state.session.difficulty,this.wetness,0,CIRCUIT,dt):this.input.poll(dt,this.player.state.speed,this.player.definition.wheelbase,this.wetness,steeringContactGrip(this.player.state.wheels));this.lastInput=input;
     const countdown=this.race.state.phase==='countdown';if(countdown&&(this.autoTestDriver||input.throttle<.05))input={...neutralInput(),brake:1};
     if(this.serviceTimer>0){this.serviceTimer-=dt;input={...neutralInput(),brake:1};if(this.serviceTimer<=0){this.player.restore();this.toast('Service complete. Check traffic before rejoining.');}}
     this.player.preStep(input,settings,this.wetness,dt);

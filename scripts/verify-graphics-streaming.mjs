@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
-const output='output/graphics-streaming';await fs.mkdir(output,{recursive:true});
+const output=process.argv.find(a=>a.startsWith('--output='))?.slice(9)??'output/graphics-streaming';await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[],external=[];
 page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(String(e)));page.on('request',r=>{if(!r.url().startsWith('http://127.0.0.1:5187')&&!r.url().startsWith('data:')&&!r.url().startsWith('blob:'))external.push(r.url());});
 const capture=async name=>{await page.evaluate(async()=>{const g=window.kairos;await g.advanceTime(0);await g.renderer.scene.whenReadyAsync();await g.advanceTime(0);});await page.screenshot({path:`${output}/${name}.png`});};
@@ -15,7 +15,7 @@ try{
     const g=window.kairos,worker=g.world.worker,original=worker.build.bind(worker);window.releaseCellBuild=null;window.restoreBuild=()=>worker.build=original;
     const gate=new Promise(resolve=>window.releaseCellBuild=resolve);worker.build=async(...args)=>{await gate;return original(...args);};
     g.world.clear();g.teleport(-1340,-980,'city3');const clock=g.clock,position={...g.player.node.position};const stepped=g.step();await g.advanceTime(0);return {stepped,clock,now:g.clock,position,loading:g.loading};
-  });assert.equal(hold.stepped,false);assert.equal(hold.clock,hold.now);assert.equal(hold.loading,true);assert.equal(await page.locator('#world-loading').isVisible(),true);await page.screenshot({path:`output/graphics-streaming/loading-pause.png`});checks.push('missing collisions freeze simulation and show overlay');
+  });assert.equal(hold.stepped,false);assert.equal(hold.clock,hold.now);assert.equal(hold.loading,true);assert.equal(await page.locator('#world-loading').isVisible(),true);await page.screenshot({path:`${output}/loading-pause.png`});checks.push('missing collisions freeze simulation and show overlay');
   await page.evaluate(async()=>{window.restoreBuild();window.releaseCellBuild();await window.advanceTime(1000);});assert.equal(await page.locator('#world-loading').isVisible(),false);checks.push('deferred worker resumes controlled time safely');
   await page.evaluate(()=>{const g=window.kairos;g.world.clear();g.world.worker.build=async()=>{throw new Error('Injected recoverable world-generation failure');};g.teleport(400,1300);});
   const failure=await page.evaluate(async()=>{try{await window.advanceTime(1000);return 'unexpected success';}catch(error){window.kairos.step();return String(error);}});assert.match(failure,/Injected/);assert.equal(await page.locator('#world-retry').isVisible(),true);assert.equal(await page.evaluate(()=>document.activeElement.id),'world-retry');

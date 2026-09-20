@@ -33,6 +33,8 @@ The physical suite runs at 120Hz with rendering suspended. Each scenario uses a 
 
 ## Measured development-host results
 
+Latest September20 ABS pass: all repeated physical checks pass, with unchanged acceleration and Velara30m/s stops51.20m dry/62.28m wet/68.24m worn. See [surface/braking evidence](surface-handling.md); the older measurements below remain as dated baselines.
+
 The table below is the original baseline, not the latest tuning. The September20 keyboard/suspension correction re-passes the full suite with measured0–100km/h times8.817/5.192/5.192/6.050/4.658/3.817s for Aeris/Velara/Crest/Nova/GTX/Apex. Default-car30m/s braking is49.56m dry,57.70m wet,62.89m worn. See `keyboard-handling.md` and the current `output/handling/report.json`; the original measurements remain for comparison.
 
 These initial measurements are from Havok on this build, not manufacturer claims or target-laptop performance.

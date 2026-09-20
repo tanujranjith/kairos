@@ -1,6 +1,7 @@
 import {afterEach,describe,expect,it,vi} from 'vitest';
 import {keyboardSteeringScale,steeringLock} from '../src/core/steering';
-import {tractionTorque} from '../src/sim/tire';
+import {tractionTorque,brakingTorque,brakingCapacity} from '../src/sim/tire';
+import {steeringContactGrip} from '../src/sim/contacts';
 import {Input} from '../src/core/input';
 import {DEFAULT_SETTINGS} from '../src/content/vehicles';
 import {compressionSpeed} from '../src/sim/suspension';
@@ -39,6 +40,33 @@ describe('keyboard road-speed steering',()=>{
     input.clear();expect(input.poll(1/120,17.8816).steer).toBe(0);
     pads=[{connected:true,index:0,id:'pad',axes:[1],buttons:[]}];
     for(let n=0;n<120;n++)frame=input.poll(1/120,17.8816);expect(frame.steer).toBeGreaterThan(.8);
+  });
+  it('uses actual weak-surface contacts for digital steering, without reducing parking lock',()=>{
+    expect(steeringContactGrip([{contact:true,surface:'Asphalt'},{contact:true,surface:'Grass'}])).toBe(.46);
+    expect(steeringContactGrip([{contact:false,surface:'Grass'},{contact:true,surface:'Asphalt'}])).toBe(1);
+    expect(steeringContactGrip([])).toBe(1);
+    for(const grip of [.46,.6,.85,1]){expect(keyboardSteeringScale(0,2.65,0,grip)).toBe(1);const angle=keyboardSteeringScale(17.8816,2.65,0,grip)*steeringLock(17.8816);expect(Math.tan(angle)*17.8816**2/2.65).toBeCloseTo(8*grip,6);}
+  });
+  it('reaches digital intent promptly and recenters without changing its steady-state limit',()=>{
+    vi.stubGlobal('window',new EventTarget());vi.stubGlobal('navigator',{getGamepads:()=>[]});
+    const input=new Input(()=>DEFAULT_SETTINGS),speed=17.8816,target=DEFAULT_SETTINGS.steerSensitivity*keyboardSteeringScale(speed);
+    input.keys.add('ArrowRight');let frame=input.poll(1/120,speed);
+    for(let n=1;n<24;n++)frame=input.poll(1/120,speed);
+    expect(frame.steer/target).toBeGreaterThan(.75);expect(frame.steer/target).toBeLessThan(.76);
+    input.keys.clear();for(let n=0;n<24;n++)frame=input.poll(1/120,speed);
+    expect(frame.steer/target).toBeLessThan(.07);
+  });
+});
+describe('predictive anti-lock braking',()=>{
+  const torque=(load=3500,mu=1,angle=0,omega=82,direction=1)=>brakingTorque(2000,omega*direction,31.3*direction,angle,load,mu,.34,1.8,1/120);
+  it('bounds pedal torque by load, friction and cornering demand before locking',()=>{
+    expect(torque(1500)).toBeLessThan(torque());expect(torque(3500,.46)).toBeLessThan(torque());expect(torque(3500,1,.2)).toBeLessThan(torque());expect(torque(3500,1,0,0)).toBe(0);
+    expect(torque(3500,1,0,82,-1)).toBe(torque());
+  });
+  it('does not invent braking torque, and preserves low-speed holding',()=>{
+    expect(brakingTorque(0,90,31,0,3500,1,.34,1.8,1/120)).toBe(0);expect(brakingTorque(20,100,31,0,3500,1,.34,1.8,1/120)).toBe(20);
+    expect(brakingTorque(1000,0,0,0,3500,1,.34,1.8,1/120)).toBe(1000);
+    expect(brakingCapacity(0,3500,.46,.34)).toBeLessThan(brakingCapacity(0,3500,1,.34));expect(brakingCapacity(0,0,1,.34)).toBe(0);
   });
 });
 describe('combined-slip traction control',()=>{

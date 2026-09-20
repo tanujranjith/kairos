@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Shoulder and braking continuation — September20
+
+Visible road shoulders now carry matching layered collision surfaces. Predictive ABS and paired split-friction pressure control address the reproduced70mph spin; digital steering responds faster and adapts to actual contact materials. Tire friction and engine specifications are unchanged. All48six-car braking cases,36surface turns,144keyboard maneuvers and16real-road transition/shoulder runs pass. The broad physical handling suite repeats within its original tolerances. See [scope and reproduction](surface-handling.md).
+
+Final165tests and strict Node24 production build pass. Both complete eight-car GT/Formula weekends remain clean across every stage, including physical AI pit service and correct next-stage grids. An isolated streaming/failure/retry rerun passes after an initial concurrent startup timeout; repeated region resources remain stable and race/home returns to129meshes/71materials/43textures. Layer/cadence checks and528Low rendering samples pass their bounds. Production Chrome/Edge, forcedWebGL2/actualWebGPU, cold throttled cache and external-host blocking pass normal driving, handling and clean eight-car launch/home flows. Preview5192 serves CRpE5o7b. Art/cabin/background quality, intermittent cold showroom shader warmup, hardware/endurance and the other full-objective limitations remain unfinished.
+
 ## Latest car-surface checkpoint — September20
 
 160 tests and the strict Node24 build pass. All six cars use nonuniform authored body curves; enclosed-car continuous normals remove uneven side reflections, with fitted arch trim and revised Velara/GTX bonnet/waist surfaces. Formula sidepods have actual open intake mouths and recessed inward-facing throats. Imported and generated paint use the same layered finish. All twelve compressed GLBs are rebuilt. No physical vehicle, keyboard, AI or race-rule code changed; the earlier40mph traction correction remains intact.

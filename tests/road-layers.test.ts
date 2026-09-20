@@ -32,6 +32,16 @@ describe('explicit road layers and actual contact materials',()=>{
     expect(contactForTriangle(b.meshes.find(m=>m.material==='terrain'),0)).toEqual({surface:'Grass',layer:'terrain'});
     expect(contactForTriangle(undefined,-1)).toEqual({surface:'Concrete',layer:'structure'});
   });
+  it('makes the rendered verge a physical surface with per-road and bridge-layer tags',()=>{
+    for(const [id,s]of [['northbridge',650],['pass',3150],['lakeshore',1700],['south',300],['circuit',350]] as const){
+      const road=ROADS.find(r=>r.id===id)!,p=pointAt(road,s),cell=buildCellBlueprint(Math.floor(p.x/256),Math.floor(p.z/256),'Low');
+      const verge=cell.meshes.find(m=>m.name.startsWith('verge-'))!;expect(verge.collision).toBe(true);
+      const ranges=verge.contactRanges!;let previous=0;
+      for(const range of ranges){expect(range.start).toBe(previous);expect(contactForTriangle(verge,range.start)).toEqual(range);previous=range.end;}
+      expect(previous).toBe(verge.data.indices.length/3);const range=ranges.find(r=>r.roadId===id&&r.layer===p.layer)!;
+      expect(range.surface).toBe(id==='northbridge'||id==='pass'?'Concrete':'Gravel');
+    }
+  });
   it('clips ground polygons away from lower-road tires while retaining ground under the upper deck',()=>{
     const road=ROADS.find(r=>r.id==='ring')!,p=pointAt(road,5321,2),size=.25,bounds=[p.x-size,p.z-size,p.x+size,p.z+size] as const,quad=[{x:bounds[0],z:bounds[1]},{x:bounds[2],z:bounds[1]},{x:bounds[2],z:bounds[3]},{x:bounds[0],z:bounds[3]}];expect(terrainOutsideRoads([quad],bounds)).toEqual([]);
     const under=pointAt(upper.road,upper.progress-90),b=[under.x-size,under.z-size,under.x+size,under.z+size] as const,q=[{x:b[0],z:b[1]},{x:b[2],z:b[1]},{x:b[2],z:b[3]},{x:b[0],z:b[3]}];expect(terrainOutsideRoads([q],b)).toEqual([q]);

@@ -22,3 +22,16 @@ export function tractionTorque(requested:number,omega:number,longitudinal:number
   const budget=Math.max(0,contactTorque+(targetOmega-omega*direction)*inertia/dt);
   return direction*Math.min(Math.abs(requested),budget);
 }
+
+/** Predictive ABS meters pedal torque before the wheel locks. The tire model
+ * stays unchanged; reserve lateral capacity as the contact's slip angle grows. */
+export function brakingCapacity(angle:number,load:number,mu:number,radius:number){
+  return Math.abs(tireForces(-.12/(1+12*Math.abs(angle)),angle,load,mu).longitudinal)*radius;
+}
+export function brakingTorque(requested:number,omega:number,longitudinal:number,angle:number,load:number,mu:number,radius:number,inertia:number,dt:number){
+  if(requested<=0||Math.abs(longitudinal)<2)return Math.max(0,requested);
+  const direction=Math.sign(longitudinal),targetSlip=.12/(1+12*Math.abs(angle));
+  const targetOmega=Math.max(0,Math.abs(longitudinal)-targetSlip*Math.max(3,Math.abs(longitudinal)))/radius;
+  const contactTorque=brakingCapacity(angle,load,mu,radius);
+  return Math.min(requested,Math.max(0,contactTorque+(omega*direction-targetOmega)*inertia/dt));
+}

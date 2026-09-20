@@ -5,7 +5,7 @@ import havokUrl from '@babylonjs/havok/lib/esm/HavokPhysics.wasm?url';
 import type { VehicleDefinition, VehicleState, InputFrame, Settings, Customization, V3 } from '../core/types';
 import { clamp, approach } from '../core/math';
 import { nearestRoadAt, terrainHeight, inLake } from '../content/world';
-import { tireForces, tractionTorque } from './tire';
+import { tireForces, tractionTorque,brakingTorque,brakingCapacity } from './tire';
 import { steeringLock } from '../core/steering';
 import { compressionSpeed } from './suspension';
 import { contactForTriangle,SURFACE_GRIP } from './contacts';
@@ -104,8 +104,16 @@ export class Vehicle {
       }
       wheel.omega+=driveTorque*dt/inertia;
       const brakeDistribution=front?this.setup.brakeBias:1-this.setup.brakeBias;
-      let brakeTorque=input.brake*d.mass*9.81*.16*brakeDistribution+(input.handbrake&&!front?2200:0);
-      if(settings.abs&&input.brake>0&&longitudinal>3&&wheel.omega*d.wheelRadius<longitudinal*.82){brakeTorque*=.12;s.absActive=true;}
+      let brakeTorque=input.brake*d.mass*9.81*.16*brakeDistribution;
+      if(settings.abs&&input.brake>0){
+        // On split-friction ground ESC limits the high-grip side's pedal torque
+        // to the paired surface's budget. It never raises grip on the weak side.
+        const pairedSurface=settings.esc&&partner.contact&&partner.surface&&partner.surface!=='Air'?Math.min(surfaceMu,SURFACE_GRIP[partner.surface]):surfaceMu;
+        let controlled=brakingTorque(brakeTorque,wheel.omega,longitudinal,angle,load,mu,d.wheelRadius,inertia,dt);
+        if(pairedSurface<surfaceMu&&Math.abs(longitudinal)>2)controlled=Math.min(controlled,brakingCapacity(angle,Math.min(load,partner.load),mu*pairedSurface/surfaceMu,d.wheelRadius));
+        if(controlled<brakeTorque-.5)s.absActive=true;brakeTorque=controlled;
+      }
+      brakeTorque+=input.handbrake&&!front?2200:0;
       wheel.omega=Math.sign(wheel.omega)*Math.max(0,Math.abs(wheel.omega)-brakeTorque*dt/inertia);
       const slip=(wheel.omega*d.wheelRadius-longitudinal)/Math.max(3,Math.abs(longitudinal));
       // Implicit wheel/contact solve. Explicit tire torque at 120 Hz exaggerates slip
