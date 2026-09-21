@@ -5,7 +5,7 @@ import { formatTime, clamp } from '../core/math';
 import { handlingMap } from './handling-map';
 import { RACE_RULES } from '../content/race-course';
 
-export interface ViewModel {screen:Screen;save:SaveGame;player:VehicleState;race:RaceState;raceOrder:{name:string;id:string;lap:number;best:number;penalty:number;finished:boolean;finishTime:number}[];raceStage:number;raceConfig:RaceSessionConfig;mode:string;renderer:string;fps:number;cells:number;drawCalls:number;triangles:number;wetness:number;clock:number;route:V3[];destination:string|null;mapSelection:string|null;activity:{name:string;time:number;score:number}|null;message:string;storageError:string;pausedFromDrive:boolean;trafficCount:number;physicsMs:number;}
+export interface ViewModel {screen:Screen;save:SaveGame;player:VehicleState;race:RaceState;raceOrder:{name:string;id:string;lap:number;best:number;penalty:number;finished:boolean;finishTime:number;retired:boolean;retirementReason:string}[];raceStage:number;raceConfig:RaceSessionConfig;mode:string;renderer:string;fps:number;cells:number;drawCalls:number;triangles:number;wetness:number;clock:number;route:V3[];destination:string|null;mapSelection:string|null;activity:{name:string;time:number;score:number}|null;message:string;storageError:string;pausedFromDrive:boolean;trafficCount:number;physicsMs:number;}
 export type UIAction=(action:string,value?:string)=>void;
 const paths:Record<string,string>={drive:'M3 17h18M5 17l1-8h12l1 8M7 9l2-4h6l2 4M7 17v3m10-3v3M7 13h2m6 0h2',flag:'M5 22V3m0 0c5-4 9 4 15 0v10c-6 4-10-4-15 0',garage:'M3 21V9l9-6 9 6v12M7 21V11h10v10M7 15h10m-10 3h10',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16m6-14v16',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2',arrow:'M5 12h14m-6-6 6 6-6 6',back:'M19 12H5m6-6-6 6 6 6',pin:'M12 22s8-8 8-13a8 8 0 0 0-16 0c0 5 8 13 8 13zM12 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6',sun:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2',wrench:'M14 5a6 6 0 0 0 5 9L9 23l-4-4 9-10a6 6 0 0 1 0-4',sound:'M3 9h4l5-5v16l-5-5H3zM16 7a7 7 0 0 1 0 10m3-13a11 11 0 0 1 0 16'};
 export const icon=(name:string)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]??paths.drive}"/></svg>`;
@@ -54,7 +54,7 @@ export class Interface {
     const leaderLaps=Math.max(0,...m.raceOrder.map(r=>r.lap));
     const rows=m.raceOrder.map((r,i)=>{
       const lapsDown=leaderLaps-r.lap;
-      const classification=timing?String(Math.max(0,r.lap-1)):!r.finished?`DNF · ${Math.max(0,r.lap-1)} laps`:lapsDown>0?`+${lapsDown} lap${lapsDown===1?'':'s'}`:formatTime(r.finishTime);
+      const classification=timing?String(Math.max(0,r.lap-1)):r.retired?`DNF · ${esc(r.retirementReason||'RETIRED')}`:!r.finished?`DNF · ${Math.max(0,r.lap-1)} laps`:lapsDown>0?`+${lapsDown} lap${lapsDown===1?'':'s'}`:formatTime(r.finishTime);
       return `<div data-racer-id="${r.id}" class="result-row ${r.id==='player'?'player-row':''}"><b>${String(i+1).padStart(2,'0')}</b><span>${r.name}</span><span>${formatTime(r.best)}</span><span>${r.penalty?`+${r.penalty}s`:'—'}</span><span>${classification}</span></div>`;
     }).join('');
     const browse='<div class="results-browse"><button data-results-scroll="-1" aria-label="Previous drivers" aria-controls="results-table">↑</button><span>DRIVERS</span><button data-results-scroll="1" aria-label="Next drivers" aria-controls="results-table">↓</button></div>';

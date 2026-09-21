@@ -63,4 +63,9 @@ describe('predictive road-coordinate racing lane reservation',()=>{
       expect(drive(self,[alongside]).steer*side).toBeLessThan(-.025);
     }
   });
+  it('creeps the head of a stopped queue around a stationary race car',()=>{
+    const self=car('self',120,0,0,500),stopped=car('stopped',123,0,0,500),trailing=car('trailing',113,0,0,500);
+    const input=drive(self,[stopped,trailing]);
+    expect(input.throttle).toBeGreaterThan(.2);expect(input.brake).toBe(0);expect(Math.abs(input.steer)).toBeGreaterThan(.01);
+  });
 });

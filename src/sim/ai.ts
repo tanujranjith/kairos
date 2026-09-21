@@ -15,7 +15,7 @@ export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,w
   const s=vehicle.state,near=nearestRoad(s.position.x,s.position.z,r=>r.id===road.id),speed=Math.abs(s.speed),lookAhead=clamp(9+speed*.60,9,48);
   // Retain the grid lane until launch traffic has spread out; converging all cars
   // on the centerline in the first seconds caused avoidable contact.
-  let offset=s.distance<80?clamp(near.lateral,-3,3):0,bypass=false;
+  let offset=s.distance<80?clamp(near.lateral,-3,3):0,bypass=false,bypassVehicle:Vehicle|null=null;
   const laneLimit=Math.max(0,road.width/2-vehicle.definition.width/2-RACE_AI.trackingMargin);
   const previous=reservedLanes.get(vehicle),anchor=clamp(previous?.road===road?previous.offset:near.lateral,-laneLimit,laneLimit);
   let leftLimit=-laneLimit,rightLimit=laneLimit,reserved=false;
@@ -37,14 +37,15 @@ export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,w
       const side=otherNear.lateral-near.lateral;
       if(Math.abs(side)<vehicle.definition.width+other.definition.width+4){
         reserved=true;const separation=(vehicle.definition.width+other.definition.width)/2+RACE_AI.lateralClearance;
-        if(side<0)leftLimit=Math.max(leftLimit,Math.min(laneLimit,Math.max(anchor,otherNear.lateral+separation)));
+        if(side<=0)leftLimit=Math.max(leftLimit,Math.min(laneLimit,Math.max(anchor,otherNear.lateral+separation)));
         else rightLimit=Math.min(rightLimit,Math.max(-laneLimit,Math.min(anchor,otherNear.lateral-separation)));
       }
     }
-    if(s.distance>150&&forward>3&&forward<40&&Math.abs(lateral)<2.5){
+    const onRoad=near.distance<road.width/2+1&&otherNear.distance<road.width/2+1,pathForward=onRoad?along:forward,pathLateral=onRoad?otherNear.lateral-near.lateral:lateral;
+    if(s.distance>150&&pathForward>1.5&&pathForward<45&&Math.abs(pathLateral)<2.8){
       if(Math.abs(other.state.speed)<2){
-        const candidate=lateral<=0?3:-3,clear=others.every(v=>{if(v===vehicle||v===other)return true;const dx=v.state.position.x-s.position.x,dz=v.state.position.z-s.position.z,f=dx*Math.sin(s.yaw)+dz*Math.cos(s.yaw),side=dx*Math.cos(s.yaw)-dz*Math.sin(s.yaw);return f< -10||f>45||Math.abs(side-(candidate-near.lateral))>(vehicle.definition.width+v.definition.width)/2+.5;});
-        if(clear){offset=candidate;bypass=true;}
+        const candidate=pathLateral<=0?Math.min(3,laneLimit):-Math.min(3,laneLimit),clear=others.every(v=>{if(v===vehicle||v===other)return true;const n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id===road.id);let f=n.progress-near.progress;if(road.loop)f=(f+road.length*1.5)%road.length-road.length*.5;const side=n.lateral-near.lateral;return f< -3||f>45||Math.abs(side-(candidate-near.lateral))>(vehicle.definition.width+v.definition.width)/2+.5;});
+        if(clear){offset=candidate;bypass=true;bypassVehicle=other;}
       }else if(Math.abs(near.point.curvature)<.0015)offset=(index%2===0?1:-1)*2.8;
     }
   }
@@ -87,6 +88,10 @@ export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,w
     if(near.distance<road.width/2+1&&otherNear.distance<road.width/2+1){if(along<=0||along>=220)continue;fwd=along;side=otherNear.lateral-near.lateral;}
     if(fwd>0&&fwd<220&&Math.abs(side)<(vehicle.definition.width+other.definition.width)/2+.4&&Math.abs(s.position.y-other.state.position.y)<2.5){
       const leadSpeed=Math.max(0,other.state.velocity.x*Math.sin(s.yaw)+other.state.velocity.z*Math.cos(s.yaw));
+      // A queued car needs a little longitudinal motion before steering can
+      // produce lateral clearance. Creep around the selected stationary hazard
+      // instead of allowing the generic following rule to command zero speed.
+      if(other===bypassVehicle){targetSpeed=Math.min(targetSpeed,3);continue;}
       const gap=Math.max(0,fwd-(vehicle.definition.length+other.definition.length)/2-4-speed*.35);
       // Match the lead car before reaching its bumper, including a slow car
       // on a pit approach. The old 10m proximity check was too late at race pace.

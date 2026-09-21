@@ -9,7 +9,7 @@ import {projectPath,samplePath} from './lane-graph';
 
 type PitPhase='circuit'|'requested'|'approach'|'service'|'exit'|'yield'|'rejoin';
 export function serviceReason(s:VehicleState,d:VehicleDefinition,r:RacerProgress|undefined,race:RaceState,rate:number=PIT_POLICY.initialFuelPerMetre):'fuel'|'tires'|''{
-  if(!r||r.finished||race.phase==='countdown'||race.phase==='finished'||race.phase==='idle')return '';
+  if(!r||r.finished||r.retired||race.phase==='countdown'||race.phase==='finished'||race.phase==='idle')return '';
   const remaining=race.phase==='racing'?Math.max(0,(race.session.laps-Math.max(1,r.lap))*CIRCUIT.length+CIRCUIT.length-r.progress):Infinity;
   const nextVisit=(CIRCUIT.length+PIT.length)*rate+PIT_POLICY.fuelReserve;
   if(s.fuel<Math.min(nextVisit,remaining*rate+PIT_POLICY.fuelReserve))return 'fuel';
