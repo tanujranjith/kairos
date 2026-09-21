@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Browser visibility pause — September 21 (verified checkpoint)
+
+Losing document visibility while driving now enters the ordinary pause state immediately, clears held controls, resets the fixed-step accumulator and records an explicit background-interruption reason. The pause view explains what happened; resume clears that reason and continues from the unchanged simulation timestamp and pose. Manual pause and controller disconnection retain distinct messages.
+
+The focused installed-Edge/WebGL2 path dispatches a real `visibilitychange` against a controlled hidden document state after accelerating with a held keyboard throttle. Clock and position remain exact across the hidden/frozen interval, the key set is empty, and the resumed car does not keep accelerating. Both pause and resumed captures were opened; page, failed-request and external-request arrays are empty. The complete suite passes 249 tests / 39 files, strict TypeScript and production build pass, and both cold 25Mbps/40ms production paths pass. See [implementation and evidence](visibility-pause.md).
+
 ## Navigation rerouting and discovery — September 21 (verified checkpoint)
 
 HUD guidance now reports remaining directed road-route length instead of straight-line distance. Returning from the map paints the active route immediately, and route/destination changes bypass the minimap's ordinary five-tick refresh so recalculation and arrival cannot show stale guidance. Development state exposes route distance in metres.

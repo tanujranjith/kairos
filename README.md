@@ -68,6 +68,8 @@ Settings contain key remapping, assists, units, weather, time, graphics, traffic
 
 If the browser loses its graphics context or GPU device while driving, Kairos pauses the simulation and keeps the vehicle/session state unchanged. WebGL2 rebuilds the local environment maps and reflection probes in place, then waits for the player to resume. A WebGPU device that cannot be reacquired within 20 seconds offers an explicit **Restart with WebGL2** action after persisting the save. The fallback reload is intentional because current Edge/Windows did not provide a replacement device after an explicit device destruction; it is not represented as seamless WebGPU recovery.
 
+Switching to another tab or minimizing the browser pauses driving immediately, clears held controls and discards accumulated frame time. The pause screen explains the background interruption; resuming starts from the same simulation timestamp and pose instead of replaying missed physics steps. Controller disconnection uses the same safe pause path with its own explanation. See [background pause behavior](docs/visibility-pause.md).
+
 In menus, controller D-pad / left stick up-down moves focus, left-right changes selects/sliders or cycles paint colors, A confirms and B/Menu returns. Keyboard Tab/Shift+Tab moves focus, Enter/Space activates, and Escape returns. Focus survives settings changes; held buttons must be released after connecting or entering a menu. If browser autoplay is blocked, click or press a key once to enable audio; driving does not wait for sound permission. Native save-file dialogs still require the operating system's controls.
 
 ## Validation and development
@@ -111,6 +113,7 @@ node scripts/verify-worker-recovery.mjs
 node scripts/inspect-handling.mjs
 node scripts/verify-controller-navigation.mjs
 node scripts/verify-camera-collision.mjs
+node scripts/verify-visibility-pause.mjs
 node scripts/verify-navigation-reroute.mjs
 node scripts/verify-player-service.mjs
 node scripts/verify-platform-interactions.mjs --output=output/platform-interactions
@@ -135,7 +138,7 @@ The verification scripts use the dev server on port 5187. `verify-delivery.mjs` 
 
 `node scripts/verify-delivery.mjs --25mbps` adds browser-emulated 25Mbps download / 5Mbps upload with 40ms latency and a cold browser cache. Its separate `output/delivery-25mbps/` results are development-host network emulation, not an actual-laptop or Internet deployment benchmark.
 
-See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md), [chase-camera collision](docs/camera-collision.md), [Free Drive activities](docs/free-drive-activities.md), [map filters](docs/map-filters.md), [navigation and rerouting](docs/navigation-rerouting.md), [player service](docs/player-service.md), [rural landscape](docs/rural-landscape.md), [rural infrastructure](docs/rural-infrastructure.md), [agricultural fields](docs/agricultural-fields.md), [industrial compounds](docs/industrial-setting.md), [Westbrook urban blocks](docs/urban-setting.md), [roadside guidance](docs/roadside-guidance.md), [road/contact layers](docs/road-layers.md), [streaming](docs/streaming.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. A real-time 30-minute repeated eight-car race/session run and selected maximum-speed Free Drive routes now pass on the development PC. Further car/world art polish, broader wet/night traffic endurance, the full interaction/fault matrix, and target-laptop performance still need work.
+See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md), [background pause behavior](docs/visibility-pause.md), [chase-camera collision](docs/camera-collision.md), [Free Drive activities](docs/free-drive-activities.md), [map filters](docs/map-filters.md), [navigation and rerouting](docs/navigation-rerouting.md), [player service](docs/player-service.md), [rural landscape](docs/rural-landscape.md), [rural infrastructure](docs/rural-infrastructure.md), [agricultural fields](docs/agricultural-fields.md), [industrial compounds](docs/industrial-setting.md), [Westbrook urban blocks](docs/urban-setting.md), [roadside guidance](docs/roadside-guidance.md), [road/contact layers](docs/road-layers.md), [streaming](docs/streaming.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. A real-time 30-minute repeated eight-car race/session run and selected maximum-speed Free Drive routes now pass on the development PC. Further car/world art polish, broader wet/night traffic endurance, the full interaction/fault matrix, and target-laptop performance still need work.
 
 ## Static hosting
 

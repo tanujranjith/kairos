@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Browser visibility pause — September 21
+
+- `scripts/verify-visibility-pause.mjs` accelerates the Velara with a held keyboard throttle, then exercises the installed Edge/WebGL2 build through a real `visibilitychange` event with a controlled hidden document state. The final transition occurs at **0.608333s**, clears every held key, exposes the background reason and retains the exact `{x:-380.541, y:11.544, z:-17.253}` pose.
+- A further 600ms wall-clock wait leaves both simulation clock and position bit-for-bit unchanged. Explicit resume advances to **0.675000s** without continued acceleration; manual Escape pause reports its separate `Drive paused.` reason. Opened 1280×720 pause/resume captures agree with text state. Page errors, failed requests and external requests are empty.
+- Complete suite: **249 tests / 39 files**. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-j6fe0Xaa.js`, worker `cell-worker-D1LLTGra.js`). Cold 25Mbps/40ms production reaches the menu in **5.359s forced WebGL2 / 4.820s automatic**, transfers **10,520,925 bytes**, enters Free Drive/Northstar and records no page, failed or external requests.
+- The required generic input client was attempted and remained live without output/artifacts for over a minute, so it was terminated and not counted. The visibility state is controlled because Playwright's programmatic second page did not change the foreground tab in this environment. These are local development-host checks, not target-laptop or hosted HTTPS acceptance.
+
 ## Navigation rerouting and discovery — September 21
 
 - `scripts/verify-navigation-reroute.mjs` selects Ridgeway Overlook through rendered map controls. The initial lane-graph route is 2.803km. After a controlled off-route move to Foundry Avenue, the normal three-second update creates a new 4.330km path from the current road; its first node is within 60m of the car and its length correctly exceeds the 2.861km direct distance.
