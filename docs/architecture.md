@@ -60,6 +60,8 @@ Repeated scenery uses thin instances. Each cell owns unique instance-buffer geom
 
 Rural utility/fence definitions also resolve from road progress in the worker. Each pole, twenty-metre wire segment, fence rail or farm has one cell owner. Utility and fence primitives merge into one non-colliding bark-material detail mesh per occupied cell; farms reuse the existing wall/roof/glass architecture and structure collision batches. This avoids per-prop resources and thin Havok shapes while preserving normal cell cancellation/disposal. See [rural infrastructure](rural-infrastructure.md).
 
+Industrial compounds use the same data-to-cell boundary. Four road-relative footprints suppress overlapping procedural buildings before appending original yard/plant geometry to the existing structure buffers. Their terrain-conforming concrete grids are collision-bearing and carry `Concrete` surface identity, while containers, tanks, gantries and process structures inherit normal cell cancellation and disposal. No independent material, texture or light is allocated. See [industrial compounds](industrial-setting.md).
+
 Rural guidance is another pure road-progress layer. Delineator stations reject water, structural spans and junction sightlines before the worker appends white/dark geometry to the existing marking buffer and two amber faces to the existing yellow-paint buffer. Sparse Ridgeway chevrons derive side and arrow direction from signed spline curvature, using the same two batches. Neither feature has a collider or independent runtime resource, and actual position rather than source-segment ownership selects the streamed cell. See [roadside guidance](roadside-guidance.md).
 
 ## Race timing

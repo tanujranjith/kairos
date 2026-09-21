@@ -2,6 +2,16 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Industrial compounds — September 21
+
+- `tests/industrial-setting.test.ts` covers four finite, uniquely owned road-relative sites, all three compound types, >65m road-center setbacks, junction clearance, reserved footprints and bounded merged geometry. The complete suite passes **228 tests / 35 files**.
+- `scripts/verify-industrial-setting.mjs` passes all four compounds in installed Edge under forced WebGL2 and actual WebGPU. Redwood Freight, Foundry Tanks, Harbor Logistics and Aurelia Works each load their expected structure geometry and retain four `Concrete` wheel contacts with zero damage. Normal keyboard driving reaches **19.313m/s** with no browser warning/error, failed request or external request. The final post-fix WebGL2 views plus WebGPU plant/drive views were opened.
+- Physical review rejected the first flat pads after Aurelia fell through to `Grass`. Terrain-conforming eight-metre grids fixed the contact surface. Visual review then rejected a 0.035m lift because independently triangulated grass showed through; the final 0.09m lift has clean edges in the retained `industrial-setting-final2` captures.
+- The loader-aware supplied-client run reaches **10.933m/s**, four mixed Lakeshore contacts, zero damage, 12 physical + 12 distant traffic actors and no failed cells. Its state and screenshot were opened.
+- Three repeated region loops settle exactly at city **492/74/44**, forest **368/75/45** and lake **318/74/44** meshes/materials/textures. Three race/home cycles return to **138/73/43**, zero world cells and no retained signs/stands. Injected delay, failure/retry and race reservation pass.
+- Low remains within budget: showroom **187/176,416**, Lakeshore **240/292,546**, forest **163/470,494**, mountain **142/238,483**, city **209/457,819**, wet night **210/457,964**, GT **298/487,166**, pit **121/308,204**, circuit **146/238,909** and Formula **281/484,764** (draw calls / active triangles).
+- Strict TypeScript, all nineteen KTX2 assets and production build pass (`index-VNXAHtRM.js`, `cell-worker-BdGEysgq.js`). Cold25Mbps/40ms local production reaches menu in **6.220s forced WebGL2 / 6.135s automatic WebGPU**, transfers **12,976,018 bytes**, enters gameplay and records no page, failed or external requests. Both production captures were opened. These remain development-host measurements, not target-laptop FPS or authorized HTTPS evidence.
+
 ## Agricultural fields and farm detail — September 21
 
 - Five authored 78–96m × 112–132m farm-field masks use the existing terrain vertex channels and native ground shader. They add no texture, mesh, draw call, light, collider or contact change. Two grain silos, reinforcing bands, conical caps and eight bales per farm merge into existing streamed material batches.

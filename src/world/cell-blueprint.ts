@@ -18,6 +18,7 @@ import {buildStreetscape} from './streetscape';
 import {ruralDressing} from './rural-dressing';
 import {buildRuralInfrastructure} from './rural-infrastructure';
 import {roadsideGuidance} from './roadside-guidance';
+import {buildIndustrialSetting,industrialReserved} from './industrial-setting';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk';
@@ -128,7 +129,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     if((city||industrial)&&near.distance<95&&i%2===0){
       const h=industrial?8+random()*9:7+random()*30,w=12+random()*13,l=12+random()*16;
       // Set buildings back by their full footprint, not just their centre point.
-      if(near.distance<near.road.width/2+Math.hypot(w,l)/2+3)continue;
+      if(near.distance<near.road.width/2+Math.hypot(w,l)/2+3||industrialReserved(x,z,Math.hypot(w,l)/2+3))continue;
       const style:BuildingStyle=industrial?'factory':z< -1280?'house':(['brick','limestone','office'] as const)[i%3];
       buildArchitecture({wall:buildings,roof:roofs,glass:windows},{x,y,z,width:w,depth:l,height:h,yaw:near.point.yaw,style,seed:hash(cx+i,cz)});
     }
@@ -154,6 +155,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   if(cx===3&&cz===-6)signs.push({id:'aster-control',name:'ASTER   /   RACE CONTROL',position:{x:768,y:34.12,z:-1443.94},yaw:0,width:14.5,height:.38,mounted:true});
   buildStreetscape(cx,cz,{wall:buildings,roof:roofs,glass:windows},instances);
   buildRuralInfrastructure(cx,cz,{wall:buildings,roof:roofs,glass:windows},rural);
+  buildIndustrialSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows});
   add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('rural-infrastructure',rural,'trunk');
   return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
 }

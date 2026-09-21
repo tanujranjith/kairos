@@ -1,0 +1,11 @@
+# Industrial compounds
+
+The Foundry now has four authored road-relative destinations instead of one uninterrupted field of repeated factory blocks. `src/content/industrial-setting.ts` places two container logistics yards, a four-vessel tank farm and the Aurelia Works process plant along Foundry Avenue. Each compound is resolved from the existing road spline, kept outside junction sightlines and assigned to exactly one 256m streamed cell.
+
+`src/world/industrial-setting.ts` builds original low-cost geometry into the existing structure batches. Container yards use coloured ribbed stacks and steel gantries. The tank farm uses faceted capped vessels, reinforcing bands and a shared manifold. Aurelia Works combines an existing detailed factory shell with two banded stacks and a pipe gantry. Random district buildings are omitted where they would overlap these authored footprints.
+
+Each yard sits on an eight-metre terrain-conforming concrete grid. The pad is part of the normal collision-bearing structure mesh and identifies every wheel contact as `Concrete`. The first flat-pad implementation failed the Aurelia contact test because the sloping terrain remained the effective surface. A terrain-conforming replacement fixed the physical mismatch. The first 0.035m visual separation then exposed grass-colored triangle bleed from independently triangulated terrain, so the final pad is raised by 0.09m. The retained post-fix screenshots show clean edges and the browser checks report four concrete contacts at every site.
+
+The pass allocates no new runtime texture, material, light or external asset. Geometry remains merged into existing wall, roof and glass buffers, and normal cell cancellation/disposal owns it. Installed Edge verifies all four sites in forced WebGL2 and actual WebGPU, normal keyboard driving, repeated streaming and race/home cleanup. The complete suite passes 228 tests across 35 files. See [validation evidence](benchmarks.md) for measured costs and delivery results.
+
+This is original stylized industrial composition, not a photoreal port simulation. Containers do not move, pipes are not simulated, compounds have no workers or forklifts, and the broad city architecture remains procedural. Actual performance on the target 8GB integrated-GPU laptop and authorized HTTPS deployment are still unverified.

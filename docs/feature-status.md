@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Industrial compounds and physical yards — September 21 (verified checkpoint)
+
+Foundry Avenue now has two container logistics yards, a four-vessel tank farm and the Aurelia Works process plant. Original stacked/ribbed containers, gantries, tanks, manifolds, factory shell, banded stacks and pipework replace large empty lawns and suppress overlapping random buildings. Every site derives from road progress, stays outside junction sightlines and belongs to one streamed cell.
+
+Terrain-conforming concrete pads use the normal collision-bearing structure batch and return four `Concrete` wheel contacts at every compound in both native renderer paths. Screenshot review rejected the first shallow pads because grass triangles bled through; the final 0.09m separation is visually clean. Four-site browser checks, normal keyboard driving, supplied input, repeated streaming/race cleanup, the 228-test suite, strict build, Low render audit and exact production smoke pass. This materially improves district identity but remains stylized procedural scenery without moving freight, workers, detailed fencing, target-laptop certification or hosted HTTPS acceptance.
+
 ## Agricultural fields and farm focal points — September 21 (verified checkpoint)
 
 The five authored rural farms now sit inside cultivated green/gold field masks with planted-row variation instead of uninterrupted meadow. The masks are carried by the existing streamed terrain vertices and native ground shader, so they add no texture, mesh, draw call, light, collision shape or physical surface. Each farm also gains two original faceted grain silos with capped roofs and reinforcing rings plus stacked bales merged into existing wall/roof/rural batches.

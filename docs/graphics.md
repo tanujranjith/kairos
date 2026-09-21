@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Authored industrial compounds — September 21
+
+Foundry Avenue now uses four road-relative industrial footprints: two container yards, a tank farm and a process plant. Ribbed container stacks, gantries, capped/banded vessels, a manifold, factory architecture, striped stacks and a pipe gantry merge into the existing wall, roof and glass buffers. Random building scatter is excluded from these footprints, replacing the previous overlap-prone lawns with readable destinations without adding a material, texture, light or external asset.
+
+Eight-metre grid pads follow terrain rather than floating as flat slabs. They participate in the ordinary structure collision mesh and classify all wheel contacts as concrete. The final 0.09m offset prevents the separately triangulated grass surface from bleeding through the pad. Both renderer paths, normal input, streaming/resource loops and the Low render audit pass. This remains stylized low-poly industrial art rather than a populated or photoreal district; see [implementation and measured checks](industrial-setting.md).
+
 ## Rural utility and field-edge composition — September 21
 
 Lakeshore, Orchard Way, lower Ridgeway and Pinecrest now use four authored utility corridors, four field-boundary corridors and five farm sites. Road progress generates timber poles, crossarms, small insulators and short three-wire spans that follow curves rather than cutting across the valley. Two-rail fences include periodic gate gaps. Detailed house modules and larger shed forms establish distant farm clusters, breaking up the previous uninterrupted lawns while preserving the road, mountain and lake silhouettes.

@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Industrial compounds and physical yards — September 21 (verified checkpoint)
+
+- Added four road-authored Foundry Avenue destinations: two container yards, a four-vessel tank farm and Aurelia Works. Original containers, gantries, tanks, manifold, factory, striped stacks and pipework merge into existing structure batches; random buildings are excluded from authored footprints.
+- Replaced the first physically incorrect flat slabs with terrain-conforming eight-metre concrete grids. All four sites now return four `Concrete` contacts in forced WebGL2 and actual WebGPU. Screenshot review rejected 0.035m pads with grass-triangle bleed; the final 0.09m lift is clean.
+- Both native renderers pass all four compound views and keyboard driving at 19.313m/s, four contacts and zero damage. The supplied input reaches 10.933m/s with four contacts, zero damage, 12+12 traffic and no failed cell. Final compound, input and production screenshots were opened; browser/network errors are empty.
+- Three city–forest–lake loops and three race/home cycles repeat exact resource counts. Low remains below 300 draws/~500k triangles in every sampled scene. The complete suite passes 228 tests / 35 files; strict TypeScript, KTX2 integrity and production build pass (`index-VNXAHtRM.js`). Cold25Mbps/40ms reaches menu in 6.220/6.135s with 12,976,018 transferred bytes and no failed/external requests.
+- NEXT: preserve industrial, rural, model, handling and streaming evidence. Continue the remaining world/model realism and broad traffic/race interaction coverage. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Agricultural fields and farm depth — September 21 (verified checkpoint)
 
 - Added five smooth, road-authored cultivated field masks around the existing farms. Green/gold planted-row shading rides the existing terrain vertex channels and native GLSL/WGSL ground material, adding no mesh, texture, draw call, light, collision/contact change or runtime request.
