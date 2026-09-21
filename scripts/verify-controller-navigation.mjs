@@ -199,8 +199,12 @@ try {
 
   await page.evaluate(() => {
     liveMenu.seek('[data-action="screen"][data-value="map"]'); liveMenu.tap(0);
+    liveMenu.seek('[data-action="map-filter"][data-value="scenic"]'); liveMenu.tap(0);
     liveMenu.seek('[data-action="map-select"][data-value="vista"]'); liveMenu.tap(0);
   });
+  assert.equal(await page.evaluate(() => window.kairos.mapFilter), 'scenic');
+  assert.equal(await page.locator('[data-action="map-filter"][data-value="scenic"]').getAttribute('aria-pressed'), 'true');
+  checks.push('actual controller activates a map event filter and survives the filtered rerender');
   assert.equal(await page.evaluate(() => window.kairos.mapSelection), 'vista');
   assert.equal(await page.evaluate(() => document.activeElement.dataset.value), 'vista');
   await capture('map-marker');

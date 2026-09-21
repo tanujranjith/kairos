@@ -2,6 +2,14 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## World-map event filters — September 21
+
+- Pure membership is exactly **17 All / 9 Activities / 3 Scenic / 3 Services / 1 Motorsport**. `scripts/verify-map-filters.mjs` checks every rendered marker, active/ARIA state, keyboard activation and text-state output.
+- A Cross Valley Sprint route remains selected, drawn and visible while Services is active, survives entry to Free Drive and return to the map, then disappears correctly after route cleanup while selection moves to a visible service. Filtering does not mutate destination or route progress.
+- Opened final 1280×720 All, Activities and Services/active-route captures after adjusting title/filter spacing. The integrated controller suite passes **23 browser checks**, including controller filter activation across a rerender and subsequent scenic-marker routing.
+- Complete suite: **247 tests / 38 files**. Strict TypeScript, nineteen KTX2 files and production build pass (`index-Dwdi1_TO.js`, `cell-worker-D1LLTGra.js`). The supplied input client reaches **10.933m/s**, four contacts, zero damage, 12 physical + 12 distant traffic actors and no stream error.
+- Exact rebuilt production WebGL2 reaches the menu in **6.183s** under cold-cache 25Mbps/40ms emulation, transfers **10,520,327 bytes**, and completes Free Drive plus Northstar. Page errors, failed requests and external requests are empty. This is localhost/SwiftShader evidence, not target-laptop or HTTPS certification.
+
 ## Free Drive activities — September 21
 
 - The authored set is exactly **4 speed traps / 3 point-to-points / 2 drift zones / 3 scenic destinations**. Focused pure tests cover fastest-speed records, target comparison and map labels.

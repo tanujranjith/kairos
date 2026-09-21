@@ -1,7 +1,7 @@
 import {describe,expect,it} from 'vitest';
 import {LANDMARKS} from '../src/content/world';
 import {defaultSave} from '../src/content/vehicles';
-import {activityRecordText,evaluateSpeedTrap} from '../src/sim/activities';
+import {activityRecordText,evaluateSpeedTrap,landmarkMatchesMapFilter,MAP_FILTERS} from '../src/sim/activities';
 
 describe('Free Drive activities',()=>{
   it('ships the required activity set',()=>{
@@ -9,6 +9,11 @@ describe('Free Drive activities',()=>{
     expect(LANDMARKS.filter(l=>l.type==='trial')).toHaveLength(3);
     expect(LANDMARKS.filter(l=>l.type==='drift')).toHaveLength(2);
     expect(LANDMARKS.filter(l=>l.type==='scenic')).toHaveLength(3);
+  });
+  it('partitions map events without hiding any item from All',()=>{
+    const counts=Object.fromEntries(MAP_FILTERS.map(filter=>[filter,LANDMARKS.filter(l=>landmarkMatchesMapFilter(l,filter)).length]));
+    expect(counts).toEqual({all:17,activities:9,scenic:3,services:3,motorsport:1});
+    expect(LANDMARKS.filter(l=>landmarkMatchesMapFilter(l,'activities')).every(l=>['speed','trial','drift'].includes(l.type))).toBe(true);
   });
   it('keeps a fastest speed record and reports target completion',()=>{
     expect(evaluateSpeedTrap(undefined,30,110)).toEqual({speedKph:108,bestKph:108,personalBest:true,targetReached:false});

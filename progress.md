@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## World-map event filters — September 21 (verified checkpoint)
+
+- Closed the plan's missing event-filter requirement with All, Activities, Scenic, Services and Motorsport views. Exact category membership is data-derived: 17/9/3/3/1 markers. Filter buttons expose `aria-pressed`, work with mouse, keyboard and controller, and appear in `render_game_to_text`.
+- An active destination remains visible outside its category with route/detail intact. After that route clears, reopening the map replaces a now-hidden selection with a visible item. Filtering never cancels navigation or changes activity access.
+- The dedicated browser verifier passes every marker id, keyboard activation, active-route exception, drive/map transition and completed-route cleanup. Final 1280×720 All/Activities/Services captures were opened after correcting first-pass title spacing. The integrated controller browser suite passes 23 checks including filtered rerender and scenic navigation.
+- Full suite passes 247 tests / 38 files. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-Dwdi1_TO.js`, worker `cell-worker-D1LLTGra.js`). The supplied skill client reaches 10.933m/s with four contacts, zero damage, 12+12 traffic and no stream error; screenshot/state opened.
+- Exact rebuilt production WebGL2 reaches menu in 6.183s under 25Mbps/40ms emulation, transfers 10,520,327 bytes and completes Free Drive/Northstar with no page, failed or external request. Actual target-laptop and authorized HTTPS acceptance remain open.
+
 ## Free Drive activity completion — September 21 (verified checkpoint)
 
 - Closed the selected-speed-trap path that previously replaced its measured result with a generic discovery toast. A trap now arms while stationary, records only a moving crossing, retains the fastest km/h result, reports personal-best/target status, and resets its runtime debounce when a new drive begins without erasing persistent records.

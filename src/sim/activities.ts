@@ -1,6 +1,17 @@
 import type {Landmark,SaveGame} from '../core/types';
 import {formatTime} from '../core/math';
 
+export type MapFilter='all'|'activities'|'scenic'|'services'|'motorsport';
+export const MAP_FILTERS:MapFilter[]=['all','activities','scenic','services','motorsport'];
+
+export function landmarkMatchesMapFilter(landmark:Landmark,filter:MapFilter){
+  if(filter==='all')return true;
+  if(filter==='activities')return ['speed','trial','drift'].includes(landmark.type);
+  if(filter==='services')return ['garage','service'].includes(landmark.type);
+  if(filter==='motorsport')return landmark.type==='circuit';
+  return landmark.type==='scenic';
+}
+
 export interface SpeedTrapResult {
   speedKph:number;
   bestKph:number;

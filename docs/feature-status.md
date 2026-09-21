@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## World-map event filters — September 21 (verified checkpoint)
+
+The map now provides All, Activities, Scenic, Services and Motorsport views with exact data-derived membership. Native filter buttons support mouse, keyboard and existing controller navigation. Active destinations remain visible outside their category without losing route state; completed routes cannot leave an invisible selection behind. The active filter is included in development text state.
+
+Pure membership checks, dedicated rendered-UI verification, 23 integrated controller checks, supplied keyboard driving, 247-test full suite, strict TypeScript, texture integrity, production build and exact production WebGL2 smoke pass. Final filter screenshots were opened at 1280×720. This closes the explicit event-filter implementation gap, not target-laptop or hosted HTTPS acceptance. See [implementation and evidence](map-filters.md).
+
 ## Free Drive activities — September 21 (verified checkpoint)
 
 The complete planned activity set is live: four speed traps, three point-to-point trials, two drift zones and three scenic destinations. Speed traps now arm while stationary, measure a moving crossing, preserve the fastest result, report target/personal-best status and reset their runtime debounce between drives. Map details expose persistent personal bests and discovery state; speed/drift HUDs use activity-appropriate status rather than a generic timer.
