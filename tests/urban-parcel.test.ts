@@ -1,7 +1,7 @@
 import {describe,expect,it} from 'vitest';
 import {terrainHeight} from '../src/content/world';
 import {MeshDataBuilder} from '../src/world/mesh-data';
-import {buildUrbanForecourt,buildUrbanParcel} from '../src/world/urban-parcel';
+import {buildUrbanForecourt,buildUrbanParcel,type ParkedCarPlacement} from '../src/world/urban-parcel';
 import {buildCellBlueprint} from '../src/world/cell-blueprint';
 
 describe('procedural urban parcels',()=>{
@@ -18,9 +18,11 @@ describe('procedural urban parcels',()=>{
     expect(parcelVertices).toBeGreaterThan(20);expect(forecourtVertices).toBeGreaterThan(8);expect(bayVertices).toBeGreaterThan(8);
   });
   it('adds marked parking only where the road setback leaves physical room',()=>{
-    const concrete=new MeshDataBuilder(),paint=new MeshDataBuilder(),spec={x:-1180,z:-1040,width:20,depth:18,yaw:.35,roadWidth:10,lateral:34};
-    expect(buildUrbanForecourt(concrete,paint,spec)).toBe(true);const pad=concrete.finish(),lines=paint.finish();expect(pad.indices.length/3).toBeGreaterThan(4);expect(pad.indices.length/3).toBeLessThan(40);expect(lines.indices.length/3).toBeGreaterThanOrEqual(8);
+    const concrete=new MeshDataBuilder(),paint=new MeshDataBuilder(),parked:ParkedCarPlacement[]=[],spec={x:-1180,z:-1040,width:20,depth:18,yaw:.35,roadWidth:10,lateral:34,seed:-112};
+    expect(buildUrbanForecourt(concrete,paint,spec,parked)).toBe(true);const pad=concrete.finish(),lines=paint.finish();expect(pad.indices.length/3).toBeGreaterThan(4);expect(pad.indices.length/3).toBeLessThan(40);expect(lines.indices.length/3).toBeGreaterThanOrEqual(8);expect(parked).toHaveLength(1);
     for(let index=0;index<pad.positions.length;index+=3)expect(pad.positions[index+1]).toBeCloseTo(terrainHeight(pad.positions[index],pad.positions[index+2])+.075,4);
+    const placement=parked[0],c=Math.cos(spec.yaw),s=Math.sin(spec.yaw),dx=placement.position.x-spec.x,dz=placement.position.z-spec.z,across=dx*c-dz*s,forward=dx*s+dz*c;expect(across).toBeLessThan(-11.9);expect(across).toBeGreaterThan(-18.7);expect(Math.abs(forward)).toBeLessThan(11);expect(placement.yaw).toBeCloseTo(spec.yaw-Math.PI/2);
     expect(buildUrbanForecourt(new MeshDataBuilder(),new MeshDataBuilder(),{...spec,lateral:19})).toBe(false);
+    const shallow:ParkedCarPlacement[]=[];expect(buildUrbanForecourt(new MeshDataBuilder(),new MeshDataBuilder(),{...spec,lateral:25},shallow)).toBe(true);expect(shallow).toHaveLength(0);
   });
 });

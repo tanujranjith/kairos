@@ -20,21 +20,21 @@ import {buildRuralInfrastructure} from './rural-infrastructure';
 import {roadsideGuidance} from './roadside-guidance';
 import {buildIndustrialSetting,industrialReserved} from './industrial-setting';
 import {buildUrbanSetting,urbanReserved} from './urban-setting';
-import {buildUrbanForecourt,buildUrbanParcel} from './urban-parcel';
+import {buildUrbanForecourt,buildUrbanParcel,type ParkedCarPlacement} from './urban-parcel';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
 export interface CellInstance {kind:'pine'|'oak'|'trunk'|'oakTrunk'|'rock'|'grass';position:V3;scale:V3;yaw:number}
 export interface CellSign {id:string;name:string;position:V3;yaw:number;width?:number;height?:number;mounted?:boolean}
-export interface CellBlueprint {manifest:WorldCellManifest;meshes:CellMesh[];instances:CellInstance[];signs:CellSign[];bytes:number}
+export interface CellBlueprint {manifest:WorldCellManifest;meshes:CellMesh[];instances:CellInstance[];signs:CellSign[];parkedCars:ParkedCarPlacement[];bytes:number}
 const roadCells=new Map<string,{road:typeof ROADS[number];index:number}[]>();
 for(const road of ROADS)for(let index=0;index<road.points.length-1;index++){const p=road.points[index],q=road.points[index+1],key=cellKey(Math.floor((p.x+q.x)/2/CELL_SIZE),Math.floor((p.z+q.z)/2/CELL_SIZE)),list=roadCells.get(key)??[];list.push({road,index});roadCells.set(key,list);}
 const atJunction=(x:number,z:number,roadId?:string)=>JUNCTIONS.some(j=>(!roadId||j.roads.includes(roadId))&&Math.hypot(x-j.x,z-j.z)<(roadId?(j.control==='turnaround'?16:j.radius+5):junctionRadius(j)+8));
 
 /** No Babylon/DOM references: deterministic data can be generated in a module worker. */
 export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlueprint{
-  const manifest=cellManifest(cx,cz),key=manifest.id,[x0,z0]=manifest.bounds,meshes:CellMesh[]=[],instances:CellInstance[]=[],signs:CellSign[]=[];
+  const manifest=cellManifest(cx,cz),key=manifest.id,[x0,z0]=manifest.bounds,meshes:CellMesh[]=[],instances:CellInstance[]=[],signs:CellSign[]=[],parkedCars:ParkedCarPlacement[]=[];
   const add=(name:string,g:MeshDataBuilder,material:CellMaterial,collision=false,contactSurface?:ContactSurface,contactRanges?:ContactRange[])=>{if(!g.positions.length)return;const data=g.finish();if(material==='terrain'){applyGroundChannels(data);smoothGroundNormals(data);}meshes.push({name:`${name}-${key}`,material,collision,data,contactSurface:contactSurface??(collision?{surface:'Concrete',layer:'structure'}:undefined),contactRanges});};
   const terrain=buildTerrainMesh(cx,cz);
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
@@ -135,7 +135,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       const style:BuildingStyle=industrial?'factory':z< -1280?'house':(['brick','limestone','office'] as const)[i%3];
       const specification={x,y,z,width:w,depth:l,height:h,yaw:near.point.yaw,style,seed:hash(cx+i,cz)};
       if(city&&style==='office'&&Math.abs(specification.seed)%3===0)buildBandArchitecture({wall:buildings,roof:roofs,glass:windows},specification);else buildArchitecture({wall:buildings,roof:roofs,glass:windows},specification);
-      if(city){buildUrbanParcel(buildings,specification);if(Math.abs(specification.seed)%3!==1)buildUrbanForecourt(buildings,white,{...specification,roadWidth:near.road.width,lateral:near.lateral});}
+      if(city){buildUrbanParcel(buildings,specification);if(Math.abs(specification.seed)%3!==1)buildUrbanForecourt(buildings,white,{...specification,roadWidth:near.road.width,lateral:near.lateral},parkedCars);}
     }
     else if(!circuit&&!industrial){
       // Preserve RNG consumption and every urban building/plant placement.
@@ -164,6 +164,6 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   // Parking bays are appended during procedural parcel generation, so the
   // shared white-marking batch must be finalized after that loop.
   add('paint',white,'marking');add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('urban-inlays',urbanPaint,'marking');add('rural-infrastructure',rural,'trunk');
-  return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
+  return {manifest,meshes,instances,signs,parkedCars,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
 }
 export function blueprintTransfers(blueprint:CellBlueprint):ArrayBuffer[]{return blueprint.meshes.flatMap(m=>[m.data.positions.buffer,m.data.indices.buffer,m.data.uvs.buffer,m.data.normals.buffer,...(m.data.colors?[m.data.colors.buffer]:[])] as ArrayBuffer[]);}

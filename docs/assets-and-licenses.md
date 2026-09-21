@@ -5,6 +5,7 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 | Content | Source / terms |
 |---|---|
 | Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
+| Parked Westbrook cars | Reused instances of the original local `velara-lod1.glb`; no separate mesh, texture, brand, downloaded asset or license added. Placement/collision ownership is original Kairos code in `urban-parcel.ts`, `cell-blueprint.ts`, `car-assets.ts` and `world.ts`. |
 | Directional sky, packed periodic cloud atlas, layered clouds, sun/moon/stars | Original source in `src/render/sky-field.ts` and `sky-material.ts`. Native GLSL/WGSL, no downloaded sky image, external runtime request or new dependency. |
 | Authored rural grove corridors, deterministic copses, understory and weathered boulder mesh/material | Original source in `src/content/rural-landscape.ts`, `src/world/rural-dressing.ts`, `src/render/boulders.ts` and `src/render/surface-textures.ts`; no downloaded model, texture, paid asset or external runtime request. |
 | Shared clipped-ground vertices, streamed-cell halo and boundary-preserving terrain triangulation | Original geometry tooling in `src/world/terrain-mesh.ts`; reuses authored local road/junction/course definitions, with no new asset or external dependency. |

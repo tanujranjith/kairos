@@ -1,4 +1,4 @@
-import { LoadAssetContainerAsync, type AssetContainer, Scene, TransformNode, Mesh, PBRMaterial, Color3, Quaternion } from '@babylonjs/core';
+import { LoadAssetContainerAsync, type AssetContainer, Scene, TransformNode, Mesh, InstancedMesh, PBRMaterial, Color3, Quaternion } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
 import type { VehicleDefinition, Customization } from '../core/types';
 import type { CarVisual } from './car';
@@ -6,6 +6,7 @@ import { carInstruments } from './car-instruments';
 import { finishCarTrim,finishCarPaint } from './car-materials';
 import {updateSteeringVisual} from './car-steering';
 const libraries=new WeakMap<Scene,Map<string,AssetContainer>>();
+let staticInstance=0;
 export async function loadCarAssets(scene:Scene,ids:string[]){
   const library=libraries.get(scene)??new Map<string,AssetContainer>();libraries.set(scene,library);
   await Promise.all(ids.flatMap(id=>[0,1].map(async lod=>{try{const container=await LoadAssetContainerAsync(`/models/${id}-lod${lod}.glb`,scene);library.set(`${id}:${lod}`,container);}catch(error){console.warn(`Kairos: using original procedural fallback for ${id} LOD${lod}`,error);}})));
@@ -30,4 +31,19 @@ export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Custo
   const instruments=display?carInstruments(scene,d,display):undefined;
   const displayMesh=parts.find(p=>p.material===display);
   return {root,groundOffset:.32+d.wheelRadius,wheels,paint,glass,lights,tail,parts,update(s){wheels.forEach((w,i)=>{w.position.y=-(.32+d.travel*.5-s.wheels[i].compression);w.rotation.set(s.wheels[i].angle,i<2?-s.steer:0,0);w.rotationQuaternion=null;const b=brakes[i];if(b){b.position.copyFrom(w.position);b.rotationQuaternion=null;b.rotation.set(0,i<2?-s.steer:0,0);}});if(steering)updateSteeringVisual(d,s.steer,steering.rotationQuaternion!);tail.emissiveColor.r=s.absActive?.95:.5;if(root.isEnabled()&&displayMesh?.isVisible)instruments?.update(s);},dispose(){root.dispose();instruments?.dispose();materials.forEach(m=>m.dispose());}};
+}
+
+/** Reuse the authored LOD1 container for static scenery. Babylon creates
+ * hardware instances where the GLB hierarchy permits it, while every parked
+ * car keeps the exact same geometry and materials as the driveable model. */
+export function instantiateStaticCarAsset(scene:Scene,d:VehicleDefinition){
+  const container=libraries.get(scene)?.get(`${d.id}:1`);if(!container)return null;
+  const id=staticInstance++,root=new TransformNode(`parked-${d.id}-${id}`,scene),entry=container.instantiateModelsToScene(name=>`parked-${id}-${name}`,false,{doNotInstantiate:false});
+  root.metadata={kairosCar:true,parkedCar:true};entry.rootNodes.forEach(node=>node.parent=root);
+  for(const part of root.getChildMeshes()){
+    part.isPickable=false;if(part instanceof InstancedMesh)part.sourceMesh.receiveShadows=true;else part.receiveShadows=true;
+    const material=part.material;if(material instanceof PBRMaterial)material.maxSimultaneousLights=6;
+    const name=material?.name??'';part.metadata={...part.metadata,worldCaster:!/(glass|headlight|lamp-lens|taillight|instruments)/.test(name),parkedCar:true};
+  }
+  return {root,groundOffset:.32+d.wheelRadius,dispose:()=>root.dispose()};
 }

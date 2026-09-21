@@ -19,8 +19,11 @@ import {StreetLighting} from './street-lighting';
 import {GroundMaterial} from './ground-material';
 import {createBoulders} from './boulders';
 import {configureArchitecturalGlass} from './architectural-glass';
+import {instantiateStaticCarAsset} from './car-assets';
+import {VEHICLES} from '../content/vehicles';
 
-interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mesh[];detailMeshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];signals:SignalMesh[];collision:boolean;detail:boolean;leases:Map<Mesh,{release:()=>void}>}
+interface ParkedCar {root:TransformNode;collisionMesh:Mesh;collider?:{body:PhysicsBody;shape:PhysicsShape};dispose:()=>void}
+interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mesh[];detailMeshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];parkedCars:ParkedCar[];signals:SignalMesh[];collision:boolean;detail:boolean;leases:Map<Mesh,{release:()=>void}>}
 export class WorldRenderer {
   cells=new Map<string,Cell>();root:TransformNode;backdrop:Mesh;water:Mesh;
   private terrain:PBRMaterial;private road:PBRMaterial;private shoulder:PBRMaterial;private marking:PBRMaterial;private yellow:PBRMaterial;private curb:PBRMaterial;private wall:PBRMaterial;private roof:PBRMaterial;private glass:PBRMaterial;private foliage:PBRMaterial;private trunk:PBRMaterial;
@@ -96,7 +99,7 @@ export class WorldRenderer {
   }
   private fromData(part:CellMesh){const mesh=new Mesh(part.name,this.scene),data=new VertexData();data.positions=part.data.positions;data.indices=part.data.indices;data.normals=part.data.normals;data.uvs=part.data.uvs;if(part.data.colors)data.colors=part.data.colors;data.applyToMesh(mesh);mesh.material=this[part.material];mesh.receiveShadows=true;mesh.isPickable=false;mesh.metadata={worldCaster:part.name.startsWith('structures')||part.name.startsWith('roofs'),contactSurface:part.contactSurface,contactRanges:part.contactRanges};return mesh;}
   private installCell(blueprint:CellBlueprint,demand:CellDemand){
-    const {id:key,cx,cz,bounds}=blueprint.manifest,cell:Cell={key,cx,cz,meshes:[],collisionMeshes:[],detailMeshes:[],colliders:[],signals:[],collision:false,detail:false,leases:new Map()};
+    const {id:key,cx,cz,bounds}=blueprint.manifest,cell:Cell={key,cx,cz,meshes:[],collisionMeshes:[],detailMeshes:[],colliders:[],parkedCars:[],signals:[],collision:false,detail:false,leases:new Map()};
     try{
       for(const part of blueprint.meshes)if(part.collision)this.register(cell,this.fromData(part),true);
       const attach=(mesh:Mesh|null,collision=false,handling=false)=>{if(mesh&&collision)mesh.metadata={...mesh.metadata,contactSurface:mesh.material===this.road||handling&&mesh.material===this.curb?{surface:'Asphalt',layer:handling?'handling':'surface'}:{surface:'Concrete',layer:'structure'}};this.register(cell,mesh,collision);};
@@ -106,20 +109,26 @@ export class WorldRenderer {
     }catch(error){this.disposeCell(cell);throw error;}
   }
   private setCellMode(cell:Cell,blueprint:CellBlueprint,demand:CellDemand){
-    if(demand.collision&&!cell.collision){for(const mesh of cell.collisionMeshes)cell.colliders.push(this.physics.addStaticMesh(mesh));cell.collision=true;}
-    else if(!demand.collision&&cell.collision){for(const c of cell.colliders){c.body.dispose();c.shape.dispose();}cell.colliders=[];cell.collision=false;}
+    if(demand.collision&&!cell.collision){for(const mesh of cell.collisionMeshes)cell.colliders.push(this.physics.addStaticMesh(mesh));for(const parked of cell.parkedCars)parked.collider=this.physics.addStaticMesh(parked.collisionMesh);cell.collision=true;}
+    else if(!demand.collision&&cell.collision){for(const c of cell.colliders){c.body.dispose();c.shape.dispose();}cell.colliders=[];for(const parked of cell.parkedCars){parked.collider?.body.dispose();parked.collider?.shape.dispose();parked.collider=undefined;}cell.collision=false;}
     if(demand.detail&&!cell.detail){
       for(const part of blueprint.meshes)if(!part.collision)this.register(cell,this.fromData(part),false,true);
       for(const kind of ['pine','oak','trunk','oakTrunk','rock','grass'] as const){const entries=blueprint.instances.filter(i=>i.kind===kind);if(!entries.length)continue;const source=kind==='pine'?this.treeMesh:kind==='oak'?this.oakMesh:kind==='trunk'?this.trunkMesh:kind==='oakTrunk'?this.oakTrunkMesh:kind==='grass'?this.grassMesh:this.boulders,mesh=source.clone(kind+'-'+cell.key,this.root)!;mesh.makeGeometryUnique();const buffer=new Float32Array(entries.length*16);entries.forEach((entry,i)=>Matrix.Compose(new Vector3(entry.scale.x,entry.scale.y,entry.scale.z),Quaternion.RotationYawPitchRoll(entry.yaw,0,0),new Vector3(entry.position.x,entry.position.y,entry.position.z)).copyToArray(buffer,i*16));mesh.thinInstanceSetBuffer('matrix',buffer,16,true);mesh.thinInstanceRefreshBoundingInfo(true);mesh.isPickable=false;mesh.receiveShadows=true;mesh.metadata={worldCaster:kind!=='trunk'&&kind!=='oakTrunk'&&kind!=='grass'};this.register(cell,mesh,false,true);}
       for(const entry of blueprint.signs){const {x,y,z}=entry.position;if(!entry.mounted){const pole=MeshBuilder.CreateCylinder('signpost-'+entry.id,{diameter:.12,height:3.4,tessellation:6},this.scene);pole.position.set(x,y+1.7,z);pole.material=this.roof;this.register(cell,pole,false,true);}
         const sign=MeshBuilder.CreatePlane('sign-'+entry.id,{width:entry.width??5.5,height:entry.height??1.45,sideOrientation:Mesh.DOUBLESIDE},this.scene);sign.position.set(x,y+(entry.mounted?0:3.05),z);sign.rotation.y=entry.yaw;const material=new StandardMaterial('signmat-'+entry.id,this.scene),texture=new DynamicTexture('signtext-'+entry.id,{width:entry.mounted?1024:512,height:128},this.scene,false);texture.drawText(entry.name.toUpperCase(),null,77,`bold ${entry.mounted?36:30}px sans-serif`,'#e4ede0',entry.mounted?'#142931':'#28443e',true);material.diffuseTexture=texture;material.emissiveColor.set(.12,.12,.12);sign.material=material;sign.metadata={ownedMaterial:true};this.register(cell,sign,false,true);}
-    }else if(!demand.detail&&cell.detail){for(const mesh of [...cell.detailMeshes])this.disposeMesh(cell,mesh);cell.detailMeshes=[];}
+      const parkedDefinition=VEHICLES[1];
+      for(const placement of blueprint.parkedCars){const visual=instantiateStaticCarAsset(this.scene,parkedDefinition);if(!visual)continue;visual.root.parent=this.root;visual.root.position.set(placement.position.x,placement.position.y+visual.groundOffset,placement.position.z);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(placement.yaw,0,0);
+        const collisionMesh=MeshBuilder.CreateBox(`parked-collider-${cell.key}`,{width:parkedDefinition.width,height:1.05,depth:parkedDefinition.length},this.scene);collisionMesh.parent=this.root;collisionMesh.position.set(placement.position.x,placement.position.y+.57,placement.position.z);collisionMesh.rotation.y=placement.yaw;collisionMesh.visibility=0;collisionMesh.isPickable=false;collisionMesh.metadata={contactSurface:{surface:'Concrete',layer:'structure'},parkedCar:true};
+        const parked:ParkedCar={root:visual.root,collisionMesh,dispose:visual.dispose};if(cell.collision)parked.collider=this.physics.addStaticMesh(collisionMesh);cell.parkedCars.push(parked);
+      }
+    }else if(!demand.detail&&cell.detail){for(const mesh of [...cell.detailMeshes])this.disposeMesh(cell,mesh);cell.detailMeshes=[];this.disposeParkedCars(cell);}
     cell.detail=demand.detail;for(const mesh of cell.meshes)mesh.isVisible=demand.detail;
     // Signal aspects, not the general visibility switch, decide which lens is lit.
     for(const signal of cell.signals)signal.mesh.isVisible=false;
   }
   private disposeMesh(cell:Cell,mesh:Mesh){if(mesh.metadata?.ownedMaterial)mesh.material?.dispose(false,true);cell.leases.get(mesh)?.release();cell.leases.delete(mesh);mesh.dispose();const index=cell.meshes.indexOf(mesh);if(index>=0)cell.meshes.splice(index,1);}
-  private disposeCell(cell:Cell){for(const c of cell.colliders){c.body.dispose();c.shape.dispose();}cell.colliders=[];for(const mesh of [...cell.meshes])this.disposeMesh(cell,mesh);if(this.cells.get(cell.key)===cell)this.cells.delete(cell.key);}
+  private disposeParkedCars(cell:Cell){for(const parked of cell.parkedCars){parked.collider?.body.dispose();parked.collider?.shape.dispose();parked.collisionMesh.dispose();parked.dispose();}cell.parkedCars=[];}
+  private disposeCell(cell:Cell){for(const c of cell.colliders){c.body.dispose();c.shape.dispose();}cell.colliders=[];this.disposeParkedCars(cell);for(const mesh of [...cell.meshes])this.disposeMesh(cell,mesh);if(this.cells.get(cell.key)===cell)this.cells.delete(cell.key);}
   clear(){this.streetLighting.disable();this.warm.clear();this.demand.clear();this.streamer.clear();this.worker.close();}
   snapshot(){return {...this.streamer.snapshot(),profile:this.profile,collisionCells:[...this.cells.values()].filter(c=>c.collision).length,detailCells:[...this.cells.values()].filter(c=>c.detail).length,blueprintBytes:[...this.streamer.records.values()].reduce((sum,r)=>sum+(r.blueprint?.bytes??0),0),materials:this.materialPool.snapshot()};}
 }

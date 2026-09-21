@@ -4,7 +4,7 @@ Westbrook's procedural buildings now receive a narrow terrain-following concrete
 
 Two thirds of deterministic building seeds also request a street-facing parking forecourt. `buildUrbanForecourt` measures the actual building setback and road width, refuses sites with less than three metres of safe space, and caps the paved depth at seven metres before the outer sidewalk. Its darker terrain-following surface shares the physical structure batch; restrained white bay separators join the cell's ordinary road-marking batch. The first separate-inlay version raised the repeated city resource count to 510 meshes and was rejected; shared finalization reduces it to 498, only two above the parcel-only checkpoint.
 
-This remains a grounding treatment for background buildings, not a city-wide pavement layer or finished streetscape. Westbrook still needs broader sidewalk continuity, parked vehicles, people and additional street furniture.
+This remains a grounding treatment for background buildings, not a city-wide pavement layer or finished streetscape. A later [model-reuse pass](parked-model-reuse.md) fills a sparse subset of these bays with the same authored Velara LOD used elsewhere; Westbrook still needs broader sidewalk continuity, people and additional street life.
 
 ## Verification — September 21, 2026
 

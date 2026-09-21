@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Reused authored cars in city forecourts — September 21
+
+Sparse Westbrook parking now instantiates the existing Velara LOD1 container instead of introducing a separate low-quality background car. The accepted renderer captures show the same detailed body, glazing, wheels and lamps used elsewhere in Kairos; 17 parked cars share 21 geometries and 10 materials. A first bespoke procedural sedan passed geometry checks but looked blocky in the opened images and was removed.
+
+Each car stays inside a sufficiently deep terrain-following forecourt, faces the street and owns a streamed static collision box. Low city remains within budget at 254 draws / 461,557 triangles and repeated region/race transitions show no growth. This fills selected lots consistently but does not finish the wider city-population and broad-lawn art gap. See [implementation and measured evidence](parked-model-reuse.md).
+
 ## Renderer-safe façades and texture mipmaps — September 21
 
 Concrete plazas and masonry no longer break into large triangular tonal fields on Chromium WebGPU. Controlled variants isolated the defect to ETC1S albedo mip levels: the exact procedural PNG and the same KTX2 without mipmapping were both clean. All albedo assets now use UASTC+Zstd with sRGB transfer and mipmaps, bringing the complete nineteen-texture set to 1,276,205 bytes. Native WebGL2/WebGPU decoding, mipmaps and the local PNG failure path pass.

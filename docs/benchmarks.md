@@ -2,6 +2,14 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Reused parked-car models — September 21
+
+- The rejected custom background sedan was removed after both renderer captures showed a blocky silhouette. The accepted path instantiates the exact Velara LOD1 container. Forced WebGL2 and actual WebGPU each report **17 cars / 374 parts / 21 geometries / 10 materials**; a downward physics ray hits the static car box above terrain.
+- Opened close images show the detailed authored car grounded inside its marked forecourt. The supplied input reaches **10.933 m/s**, four contacts and zero damage with no failed cell.
+- Low cost is showroom **187/176,416**, Lakeshore **240/292,546**, city **254/461,557**, wet night **255/461,702**, GT **298/487,166**, pit **121/308,204**, circuit **146/238,909** and Formula **281/484,764** (draws/triangles).
+- Three city/forest/lake loops repeat at **889/84/44**, **368/85/45** and **318/84/44** resources. Three race/home cycles return to **138/83/43**, zero cells and no retained parked instances; ten source materials remain as a stable reuse cache.
+- The complete suite passes **236 tests / 37 files**. Strict TypeScript, nineteen KTX2 files and production build pass (`index-DInVtHrs.js`, `cell-worker-CaOsV1iO.js`). Cold25Mbps/40ms production reaches menu in **6.327s WebGL2 / 5.688s automatic**, transfers **12,794,923 bytes** and records no page, failed or external request.
+
 ## Renderer-safe façade materials — September 21
 
 - Controlled WebGPU variants rejected reflections, clear coat, matte glass, wall normal mapping, shadow receipt and larger shadow bias. Removing only concrete albedo or disabling only its mipmapping removed the large wall/plaza triangles; supplying the exact procedural PNG with trilinear filtering remained clean. Close glazing was clean while the split returned with camera distance, isolating wall-shell depth precision as the second issue.

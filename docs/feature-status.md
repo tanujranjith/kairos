@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Reused parked-car models — September 21 (verified checkpoint)
+
+Eligible procedural Westbrook forecourts now instantiate the existing Velara LOD1 model, preserving the same body, glass, wheel and lamp quality instead of adding a cheaper scenery-only car. A rejected bespoke low-poly trial was removed after screenshot review. The final deterministic placements remain inside paved bays, face the street, carry simple streamed collision boxes and release with their cell.
+
+Both renderer paths show 17 parked cars sharing 21 geometries and 10 materials. Close captures, collision rays, supplied keyboard input, repeated region/race cleanup, the complete 236-test suite, strict TypeScript, KTX2 integrity and production delivery pass. Low city remains inside budget at 254 draws / 461,557 triangles. This improves consistency and foreground population but is not a complete pedestrian/street-life pass, photoreal city, target-laptop certification or hosted HTTPS acceptance. See [implementation and evidence](parked-model-reuse.md).
+
 ## Renderer-safe façade materials — September 21 (verified checkpoint)
 
 The reproduced WebGPU triangles across concrete/masonry were traced to ETC1S albedo mip levels, not normals, shadows, reflections or source geometry. All nineteen original surface/cloud outputs now use UASTC+Zstd while preserving sRGB albedo, linear normal/cloud data, mipmaps, versioning and the exact procedural fallback. Detailed office windows use wider stable modules, restrained dielectric glass and a raster-only depth bias against the low-cost solid shell.

@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Reused parked-car scenery — September 21 (verified checkpoint)
+
+- User explicitly approved reusing the same existing car model for background population. Removed the uncommitted bespoke parked-sedan trial after opened WebGL2/WebGPU captures still looked blocky and poorly integrated.
+- Eligible deep Westbrook forecourts now emit sparse deterministic placements. Live rendering instantiates the existing Velara LOD1 asset without cloned materials; 17 city cars share 21 geometries and 10 materials. Each owns a streamed static box and releases with its cell.
+- Opened final close captures on both native renderer paths: detailed authored model, correct bay grounding and matching composition. Collision ray passes. The broader aerial confirms this improves selected lots but does not solve broad lawns or missing pedestrians/street life.
+- Supplied keyboard input reaches 10.933m/s with four contacts, zero damage and no loading failure. Low city/wet-night remain under budget at 254/461,557 and 255/461,702. Three region loops and three race/home cycles retain exact endpoint resource counts with no instance/collider growth.
+- Complete suite passes 236 tests / 37 files; strict TypeScript, nineteen KTX2 files and production build pass (`index-DInVtHrs.js`, worker `cell-worker-CaOsV1iO.js`). Cold25Mbps/40ms production passes at 6.327s WebGL2 / 5.688s automatic, 12,794,923 bytes, no page/failed/external requests.
+- NEXT: preserve this model-reuse rule and use remaining background budget on non-car city composition, broader sidewalks/edge planting and distinct focal assets. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Renderer-safe façade materials and albedo mipmaps — September 21 (verified checkpoint)
 
 - Isolated the WebGPU city triangles into two faults. Large concrete/plaza fields came from ETC1S albedo mip levels: removing only albedo, disabling only mipmapping and replacing it with the exact procedural PNG proved source pixels, UVs, normals, shadows and geometry were sound. Close panes were clean while distance views split against the solid wall shell, proving depth precision rather than reflections.
