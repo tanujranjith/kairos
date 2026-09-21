@@ -2,6 +2,17 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Westbrook authored blocks — September 21
+
+- `tests/urban-setting.test.ts` covers four unique authored sites, four block types, single-cell ownership, every road-corner clearance, junction exclusion, terrain-conforming pad vertices, planted courtyards, inlay geometry and bounded finite buffers. The rejected first campus clipped Foundry Avenue; the final northwest site clears every tested road corner by more than 13m beyond its road edge.
+- Raw authored geometry was reduced from a rejected **83,982** triangles to **37,590** by retaining one detailed hero building and using lower-cost band-window secondary wings. The final per-site ranges are 6,446–12,650 triangles before displaced procedural buildings are subtracted.
+- `scripts/verify-urban-setting.mjs` passes Cedar Square, Market Court, Harbor Exchange and Westbrook Campus in installed Edge under forced WebGL2 and actual WebGPU. Every open plaza spot retains four `Concrete` contacts and zero damage. Normal keyboard driving reaches **19.325m/s** on both renderers with no browser warning/error, failed request or external request. All final WebGL2 overviews and selected WebGPU views were opened.
+- Screenshot review rejected the first WebGPU continuous-band glazing because exact wall coplanarity produced black depth streaks. The new bands now sit a few centimeters proud and render cleanly. A broader glass-material experiment made WebGL2 façades blotchy and was reverted rather than counted as an improvement.
+- The upstream supplied client remained live without output or artifacts for more than two minutes and was terminated. The loader-aware copy completes the same supplied action file at **10.933m/s**, four mixed Lakeshore contacts, zero damage, 12 physical + 12 distant traffic actors and no failed cell; its screenshot/state were opened.
+- Three repeated region loops settle exactly at city **496/74/44**, forest **368/75/45** and lake **318/74/44** meshes/materials/textures. Three race/home cycles return to **138/73/43**, zero cells and no retained signs/stands. Injected delay, failure/retry and race reservation pass.
+- Low remains inside the specified submission ceiling: showroom **187/176,416**, Lakeshore **240/292,546**, city **211/491,399**, wet night **212/491,566**, GT **298/487,166**, pit **121/308,204**, circuit **146/238,909** and Formula **281/484,764** (draw calls / active triangles). City has only about 8,600 triangles of measured headroom; future additions need displacement or density reduction.
+- The complete suite passes **230 tests / 36 files**. Strict TypeScript, all nineteen KTX2 assets and production build pass (`index-DosxbfyN.js`, `cell-worker-B2RcrTO3.js`). Cold25Mbps/40ms local production reaches menu in **6.578s forced WebGL2 / 5.686s automatic WebGPU**, transfers **12,977,534 bytes**, enters Free Drive/Northstar and records no page, failed or external requests. Both production captures were opened. These remain development-host measurements, not target-laptop FPS or authorized HTTPS evidence.
+
 ## Industrial compounds — September 21
 
 - `tests/industrial-setting.test.ts` covers four finite, uniquely owned road-relative sites, all three compound types, >65m road-center setbacks, junction clearance, reserved footprints and bounded merged geometry. The complete suite passes **228 tests / 35 files**.

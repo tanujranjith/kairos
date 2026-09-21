@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Westbrook authored blocks — September 21 (verified checkpoint)
+
+Cedar Square, Market Court, Harbor Exchange and Westbrook Campus replace four empty/repetitive city parcels with distinct multi-building compositions. Each has one detailed hero building, lower-cost band-window wings, a terrain-following concrete public realm, planted courtyards, trees, rooftop equipment and inlay/parking detail. Procedural scatter yields inside their fixed footprints, so the blocks remain coherent and every object retains one streamed-cell owner.
+
+The first campus footprint failed Foundry Avenue clearance and was moved; an 83,982-triangle first composition was reduced to 37,590 authored triangles; WebGPU screenshot review rejected coplanar band glazing and the final panes are clean on both native paths. All four physical checks return four `Concrete` contacts and zero damage. Low city traffic remains inside budget at 211 draws / 491,399 triangles, but headroom is now modest. Both renderers, normal keyboard input, supplied input, repeated streaming/race cleanup, the 230-test suite, strict build and exact production smoke pass. This is stronger stylized city composition, not pedestrians, populated interiors, photoreal architecture, target-laptop certification or hosted HTTPS acceptance.
+
 ## Industrial compounds and physical yards — September 21 (verified checkpoint)
 
 Foundry Avenue now has two container logistics yards, a four-vessel tank farm and the Aurelia Works process plant. Original stacked/ribbed containers, gantries, tanks, manifolds, factory shell, banded stacks and pipework replace large empty lawns and suppress overlapping random buildings. Every site derives from road progress, stays outside junction sightlines and belongs to one streamed cell.

@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Westbrook block composition — September 21
+
+Four authored Westbrook parcels now combine differentiated building massing with paved courtyards, planted beds, trees, rooftop equipment and restrained surface inlays. Cedar Square, Market Court, Harbor Exchange and Westbrook Campus each retain one full modular hero building; secondary wings use original continuous window bands and sparse mullions to avoid repeating thousands of individual panes. Random building/tree scatter is excluded from each footprint.
+
+The initial 83,982-triangle composition was rejected before integration. The final authored set is 37,590 triangles and displaces procedural buildings, keeping the live Low city sample at 211 draws / 491,399 triangles. Terrain-following plaza grids are physical concrete. New continuous glazing is offset from the opaque shell after the first WebGPU image exposed depth streaks. A global glass-material experiment was reverted when WebGL2 worsened. Existing individual-window reflections remain stylized. See [implementation and measured checks](urban-setting.md).
+
 ## Authored industrial compounds — September 21
 
 Foundry Avenue now uses four road-relative industrial footprints: two container yards, a tank farm and a process plant. Ribbed container stacks, gantries, capped/banded vessels, a manifold, factory architecture, striped stacks and a pipe gantry merge into the existing wall, roof and glass buffers. Random building scatter is excluded from these footprints, replacing the previous overlap-prone lawns with readable destinations without adding a material, texture, light or external asset.

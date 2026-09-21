@@ -62,6 +62,8 @@ Rural utility/fence definitions also resolve from road progress in the worker. E
 
 Industrial compounds use the same data-to-cell boundary. Four road-relative footprints suppress overlapping procedural buildings before appending original yard/plant geometry to the existing structure buffers. Their terrain-conforming concrete grids are collision-bearing and carry `Concrete` surface identity, while containers, tanks, gantries and process structures inherit normal cell cancellation and disposal. No independent material, texture or light is allocated. See [industrial compounds](industrial-setting.md).
 
+Westbrook's four authored blocks also reserve deterministic footprints before procedural scatter. One detailed modular building plus lightweight band-window wings, plaza geometry and planters append to existing wall/roof/glass buffers. Surface inlays use one additional marking mesh only in each occupied cell. Eight-metre plaza grids follow the terrain, participate in the structure collider and retain `Concrete` contact identity. See [Westbrook urban blocks](urban-setting.md).
+
 Rural guidance is another pure road-progress layer. Delineator stations reject water, structural spans and junction sightlines before the worker appends white/dark geometry to the existing marking buffer and two amber faces to the existing yellow-paint buffer. Sparse Ridgeway chevrons derive side and arrow direction from signed spline curvature, using the same two batches. Neither feature has a collider or independent runtime resource, and actual position rather than source-segment ownership selects the streamed cell. See [roadside guidance](roadside-guidance.md).
 
 ## Race timing

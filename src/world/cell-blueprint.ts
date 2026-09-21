@@ -19,6 +19,7 @@ import {ruralDressing} from './rural-dressing';
 import {buildRuralInfrastructure} from './rural-infrastructure';
 import {roadsideGuidance} from './roadside-guidance';
 import {buildIndustrialSetting,industrialReserved} from './industrial-setting';
+import {buildUrbanSetting,urbanReserved} from './urban-setting';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk';
@@ -36,7 +37,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   const add=(name:string,g:MeshDataBuilder,material:CellMaterial,collision=false,contactSurface?:ContactSurface,contactRanges?:ContactRange[])=>{if(!g.positions.length)return;const data=g.finish();if(material==='terrain'){applyGroundChannels(data);smoothGroundNormals(data);}meshes.push({name:`${name}-${key}`,material,collision,data,contactSurface:contactSurface??(collision?{surface:'Concrete',layer:'structure'}:undefined),contactRanges});};
   const terrain=buildTerrainMesh(cx,cz);
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
-  const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder(),rural=new MeshDataBuilder();
+  const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder(),urbanPaint=new MeshDataBuilder(),rural=new MeshDataBuilder();
   const roadContacts:ContactRange[]=[],vergeContacts:ContactRange[]=[];
   // Paint comes from the same authored finish/grid positions as session spawns.
   const finish=pointAt(CIRCUIT,0);
@@ -125,11 +126,11 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   add('verge',verge,'shoulder',true,{surface:'Gravel',layer:'surface'},vergeContacts);add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('paint',white,'marking');add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
   const random=rng(hash(cx,cz)),urban=x0<-650&&z0<-300,count=quality==='Low'&&urban?32:{Low:44,Medium:60,High:80,Ultra:105}[quality];
   for(let i=0;i<count;i++){
-    const x=x0+random()*CELL_SIZE,z=z0+random()*CELL_SIZE,near=nearestRoad(x,z,undefined,1);if(inHandlingCourse(x,z,12)||inLake(x,z)||atJunction(x,z)||near.distance<near.road.width*.5+5)continue;const y=terrainHeight(x,z),city=x<-650&&z<-650,industrial=x<-850&&z<-300&&z>-780,circuit=x>300&&z<-450;
+    const x=x0+random()*CELL_SIZE,z=z0+random()*CELL_SIZE,near=nearestRoad(x,z,undefined,1);if(inHandlingCourse(x,z,12)||inLake(x,z)||atJunction(x,z)||near.distance<near.road.width*.5+5||urbanReserved(x,z,4))continue;const y=terrainHeight(x,z),city=x<-650&&z<-650,industrial=x<-850&&z<-300&&z>-780,circuit=x>300&&z<-450;
     if((city||industrial)&&near.distance<95&&i%2===0){
       const h=industrial?8+random()*9:7+random()*30,w=12+random()*13,l=12+random()*16;
       // Set buildings back by their full footprint, not just their centre point.
-      if(near.distance<near.road.width/2+Math.hypot(w,l)/2+3||industrialReserved(x,z,Math.hypot(w,l)/2+3))continue;
+      if(near.distance<near.road.width/2+Math.hypot(w,l)/2+3||industrialReserved(x,z,Math.hypot(w,l)/2+3)||urbanReserved(x,z,Math.hypot(w,l)/2+3))continue;
       const style:BuildingStyle=industrial?'factory':z< -1280?'house':(['brick','limestone','office'] as const)[i%3];
       buildArchitecture({wall:buildings,roof:roofs,glass:windows},{x,y,z,width:w,depth:l,height:h,yaw:near.point.yaw,style,seed:hash(cx+i,cz)});
     }
@@ -156,7 +157,8 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   buildStreetscape(cx,cz,{wall:buildings,roof:roofs,glass:windows},instances);
   buildRuralInfrastructure(cx,cz,{wall:buildings,roof:roofs,glass:windows},rural);
   buildIndustrialSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows});
-  add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('rural-infrastructure',rural,'trunk');
+  buildUrbanSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows},urbanPaint,instances);
+  add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('urban-inlays',urbanPaint,'marking');add('rural-infrastructure',rural,'trunk');
   return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
 }
 export function blueprintTransfers(blueprint:CellBlueprint):ArrayBuffer[]{return blueprint.meshes.flatMap(m=>[m.data.positions.buffer,m.data.indices.buffer,m.data.uvs.buffer,m.data.normals.buffer,...(m.data.colors?[m.data.colors.buffer]:[])] as ArrayBuffer[]);}

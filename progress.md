@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Westbrook authored blocks — September 21 (verified checkpoint)
+
+- Added Cedar Square, Market Court, Harbor Exchange and Westbrook Campus with distinct massing, terrain-following concrete plazas, planted courtyards, rooftop details and inlay/parking articulation. Procedural buildings/trees yield inside their fixed one-cell-owned footprints.
+- The first campus site failed Foundry Avenue clearance and moved northwest. Rejected an 83,982-triangle first composition; one hero building plus band-window secondary wings reduced authored geometry to 37,590. Rejected first WebGPU glazing with depth streaks; offset the new bands. Reverted a global material experiment that worsened WebGL2 instead of claiming it as a fix.
+- Forced WebGL2 and actual WebGPU pass all four sites at four `Concrete` contacts, zero damage, and 19.325m/s normal keyboard driving. The official supplied client hung without artifacts for >2 minutes; the loader-aware copy reaches 10.933m/s, four mixed contacts, zero damage, 12+12 traffic and no failed cell. Final block/input/production captures were opened; browser/network errors are empty.
+- Three city–forest–lake loops settle exactly at 496/74/44, 368/75/45 and 318/74/44 resources. Three race/home cycles restore 138/73/43 and zero cells. Low city/wet-night peaks are 211/491,399 and 212/491,566, leaving modest triangle headroom; all other sampled scenes remain under budget.
+- Complete suite passes 230 tests / 36 files; strict TypeScript, nineteen KTX2 files and production build pass (`index-DosxbfyN.js`). Cold25Mbps/40ms exact production reaches menu in 6.578/5.686s, transfers 12,977,534 bytes and has no failed/external requests.
+- NEXT: preserve this city/industrial/rural/model/handling evidence. Further city additions must displace existing geometry or reduce density. Continue broader traffic/race interaction coverage and targeted visual realism. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Industrial compounds and physical yards — September 21 (verified checkpoint)
 
 - Added four road-authored Foundry Avenue destinations: two container yards, a four-vessel tank farm and Aurelia Works. Original containers, gantries, tanks, manifold, factory, striped stacks and pipework merge into existing structure batches; random buildings are excluded from authored footprints.
