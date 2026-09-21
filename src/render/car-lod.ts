@@ -9,7 +9,12 @@ export function createLodCar(scene:Scene,d:VehicleDefinition,setup?:Customizatio
   root.metadata={kairosCar:true};let level:0|1=1,disposed=false;
   // NPC rigs have no player cockpit: omit tiny dashboard screens from submission
   // and texture uploads. Exterior geometry, tire animation and physics are intact.
-  rigs.forEach((rig,i)=>{rig.root.parent=root;rig.root.setEnabled(i===level);for(const p of rig.parts)if(p.material?.name.includes(`${d.id}-instruments`))p.isVisible=false;});
+  rigs.forEach((rig,i)=>{rig.root.parent=root;rig.root.setEnabled(i===level);for(const p of rig.parts)if(p.material?.name.includes(`${d.id}-instruments`))p.isVisible=false;
+    // NPCs never use a cockpit camera. Keep their authored steering controls in
+    // both GLBs, but cull the complete pivot so an invisible cabin cannot add
+    // one-to-three submissions per traffic/race car on Low.
+    rig.root.getChildTransformNodes().find(node=>node.name.endsWith('steering-pivot'))?.setEnabled(false);
+  });
   return {
     root,groundOffset:rigs[0].groundOffset,parts:rigs.flatMap(r=>r.parts),get lod(){return level;},
     get wheels(){return rigs[level].wheels;},get paint(){return rigs[level].paint;},get glass(){return rigs[level].glass;},get lights(){return rigs[level].lights;},get tail(){return rigs[level].tail;},

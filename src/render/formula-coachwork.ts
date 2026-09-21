@@ -13,6 +13,7 @@ const lerp=(a:number,b:number,t:number)=>a+(b-a)*t;
 export function formulaCoachwork(scene:Scene,d:VehicleDefinition,m:Materials,lite=false,livery=0){
   const parts:Mesh[]=[],L=d.length/2;
   const add=(mesh:Mesh,material:Material)=>{mesh.material=material;parts.push(mesh);return mesh;};
+  const steeringPart=(part:Mesh)=>{part.metadata={...part.metadata,kairosAnimated:'steering'};return part;};
   const mesh=(name:string,positions:number[],indices:number[],material:Material)=>{
     const normals:number[]=[],data=new VertexData();VertexData.ComputeNormals(positions,indices,normals);data.positions=positions;data.indices=indices;data.normals=normals;
     data.uvs=positions.flatMap((_,i)=>i%3===0?[positions[i],positions[i+2]]:[]);const result=new Mesh(name,scene);data.applyToMesh(result);return add(result,material);
@@ -122,9 +123,9 @@ export function formulaCoachwork(scene:Scene,d:VehicleDefinition,m:Materials,lit
   const cameraPod=MeshBuilder.CreateCapsule('formula-camera-pod',{height:.16,radius:.035,tessellation:lite?6:10,subdivisions:1,capSubdivisions:2},scene);cameraPod.rotation.x=Math.PI/2;cameraPod.position.set(0,.327,-.90);add(cameraPod,m.paint);
   tube('formula-antenna',[[0,.35,-.83],[0,.56,-.80]],.006,m.dark);
   tube('steering-column',[[0,-.20,.43],[0,-.015,.23]],.018,m.dark);
-  tube('formula-steering-yoke',[[-.13,.025,.23],[-.17,-.035,.22],[-.12,-.085,.21],[.12,-.085,.21],[.17,-.035,.22],[.13,.025,.23]],.022,m.dark);
-  box('steering-centre',.17,.065,.04,0,-.025,.225,m.dark);box('steering-screen',.085,.043,.009,0,-.004,.199,m.instruments);
-  for(const side of [-1,1])box('steering-button',.016,.016,.008,side*.12,-.017,.188,m.accent);
+  steeringPart(tube('formula-steering-yoke',[[-.13,.025,.23],[-.17,-.035,.22],[-.12,-.085,.21],[.12,-.085,.21],[.17,-.035,.22],[.13,.025,.23]],.022,m.dark));
+  steeringPart(box('steering-centre',.17,.065,.04,0,-.025,.225,m.dark));steeringPart(box('steering-screen',.085,.043,.009,0,-.004,.199,m.instruments));
+  for(const side of [-1,1])steeringPart(box('steering-button',.016,.016,.008,side*.12,-.017,.188,m.accent));
   box('rain-light',.095,.075,.028,0,-.28,-L+.16,m.tail);
   tube('exhaust-outlet',[[0,-.12,-2.13],[0,-.13,-2.37]],.033,m.chrome);
   box('exhaust-bore',.049,.049,.01,0,-.13,-2.409,m.dark);

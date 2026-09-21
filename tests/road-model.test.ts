@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {NullEngine,Scene,PBRMaterial} from '@babylonjs/core';
+import {NullEngine,Scene,PBRMaterial,Quaternion} from '@babylonjs/core';
 import {VEHICLES} from '../src/content/vehicles';
 import {roadDesign} from '../src/render/road-design';
 import {roadCoachwork} from '../src/render/coachwork';
@@ -9,6 +9,7 @@ import {createCar} from '../src/render/car';
 import {cameraMounts} from '../src/render/camera-mounts';
 import {fasciaDepth} from '../src/render/fascia';
 import type {VehicleState} from '../src/core/types';
+import {updateSteeringVisual} from '../src/render/car-steering';
 
 describe('distinct original vehicle models',()=>{
   it('replaces flat caps with finite outward sculpted bumpers and real recessed openings',()=>{
@@ -33,6 +34,10 @@ describe('distinct original vehicle models',()=>{
     for(const s of styles)expect(s.stations.every((r,i)=>i===0||r[0]>s.stations[i-1][0])).toBe(true);
     expect(new Set(VEHICLES.map(d=>JSON.stringify(wheelStyle(d.id)))).size).toBe(6);
   });
+  it('maps physical rack angle to bounded reversible road and Formula control rotation',()=>{
+    for(const d of VEHICLES){const left=Quaternion.Identity(),right=Quaternion.Identity(),neutral=Quaternion.Identity(),a=updateSteeringVisual(d,-.5,left),b=updateSteeringVisual(d,.5,right);
+      expect(a).toBeCloseTo(-b,8);expect(Math.abs(b)).toBeLessThanOrEqual(d.class==='FORMULA'?.95:2.55);expect(left.w).toBeCloseTo(right.w,8);expect(left.x).toBeCloseTo(-right.x,8);expect(left.y).toBeCloseTo(-right.y,8);expect(left.z).toBeCloseTo(-right.z,8);expect(updateSteeringVisual(d,0,neutral)).toBe(0);expect(neutral).toEqual(Quaternion.Identity());}
+  });
   it('leaves a genuinely open passenger cell and conforms road liveries to both panel detail levels',()=>{
     const engine=new NullEngine(),scene=new Scene(engine),m=Object.fromEntries(['paint','glass','dark','chrome','light','tail','accent','instruments'].map(k=>[k,new PBRMaterial(k,scene)])) as Record<'paint'|'glass'|'dark'|'chrome'|'light'|'tail'|'accent'|'instruments',PBRMaterial>;
     try{for(const d of VEHICLES.filter(d=>d.class!=='FORMULA'))for(const lite of [false,true]){
@@ -47,6 +52,7 @@ describe('distinct original vehicle models',()=>{
       expect(car.parts.filter(p=>p.name==='headlamp-projector-bezel')).toHaveLength(2);
       expect(car.parts.filter(p=>p.name==='headlamp-clear-lens')).toHaveLength(2);
       expect(car.parts.filter(p=>p.name==='rear-lamp-separator')).toHaveLength(lite?0:6);
+      expect(car.parts.filter(p=>p.metadata?.kairosAnimated==='steering')).toHaveLength(lite?5:9);
       const steering=car.parts.find(p=>p.name==='steering-wheel')!;steering.computeWorldMatrix(true);expect(steering.getBoundingInfo().boundingBox.maximumWorld.y).toBeLessThan(car.roofHeight-.03);
       const boss=car.parts.find(p=>p.name==='steering-boss')!,display=car.parts.find(p=>p.name==='driver-instruments')!,eye=cameraMounts(d).cockpit;boss.computeWorldMatrix(true);display.computeWorldMatrix(true);
       expect((boss.getBoundingInfo().boundingBox.maximumWorld.y-eye.y)/(boss.position.z-eye.z)).toBeLessThan((display.getBoundingInfo().boundingBox.minimumWorld.y-eye.y)/(display.position.z-eye.z));
@@ -72,8 +78,9 @@ describe('distinct original vehicle models',()=>{
   it('keeps calipers fixed in wheel roll while following steering and suspension',()=>{
     const engine=new NullEngine(),scene=new Scene(engine);
     const state:VehicleState={id:'test',position:{x:0,y:0,z:0},velocity:{x:0,y:0,z:0},yaw:0,speed:12,rpm:3000,gear:2,steer:.23,fuel:50,wheels:Array.from({length:4},(_,i)=>({load:2000,compression:.03+i*.01,slip:0,angle:7+i,omega:10,temperature:30,wear:1,contact:true})),grounded:true,surface:'Asphalt',damage:0,absActive:false,tcActive:false,distance:5};
-    try{for(const d of VEHICLES){const car=createCar(scene,d);car.update(state);const brakes=car.root.getChildTransformNodes().filter(n=>/^brake-\d$/.test(n.name));expect(brakes.length).toBe(4);
+    try{for(const d of VEHICLES){const car=createCar(scene,d);car.update(state);const brakes=car.root.getChildTransformNodes().filter(n=>/^brake-\d$/.test(n.name)),steering=car.root.getChildTransformNodes().find(n=>n.name==='steering-pivot');expect(brakes.length).toBe(4);expect(steering).toBeDefined();expect(Math.abs(steering!.rotationQuaternion!.w)).toBeLessThan(.999);
       for(let i=0;i<4;i++){const b=brakes.find(n=>n.name===`brake-${i}`)!,w=car.wheels[i];expect(b.position.equals(w.position)).toBe(true);expect(b.rotation.x).toBe(0);expect(b.rotation.y).toBe(w.rotation.y);expect(w.rotation.x).toBe(state.wheels[i].angle);}
+      car.update({...state,steer:0});expect(steering!.rotationQuaternion!.x).toBeCloseTo(0,8);expect(steering!.rotationQuaternion!.y).toBeCloseTo(0,8);expect(steering!.rotationQuaternion!.z).toBeCloseTo(0,8);expect(steering!.rotationQuaternion!.w).toBeCloseTo(1,8);
       car.dispose();
     }}finally{scene.dispose();engine.dispose();}
   });

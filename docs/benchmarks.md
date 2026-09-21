@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Animated steering and rebuilt fleet assets — September 21
+
+- Pure and runtime checks cover bounded/reversible road and Formula steering ratios, exact tagged control groups, named pivots, neutral return, six imported and six fallback cars, three liveries, five cameras, live instruments, wheel motion and fixed calipers. The focused result is **12 / 12**; the complete suite is **220 tests / 32 files in 22.27s**. Strict TypeScript passes.
+- The regenerated GLB manifest is version 2 and lists wheel pivots, camera mounts and the animated steering pivot. Its twelve files total **2,713,972 bytes**. LOD0/LOD1 byte pairs are Aeris 328,916/124,352; Velara 341,760/130,900; Crest 335,652/125,160; Nova 350,048/133,988; GTX 326,108/135,276; Apex 263,864/117,948.
+- `output/steering-models` and `output/steering-models-fallback` verify actual keyboard steering on imported and blocked-GLB fallback paths. `output/steering-cabin` provides close Velara/GTX dashboard and Apex exterior review. All reviewed vehicles retain four contacts and zero damage. These captures verify presentation/integration, not reference-level automotive realism.
+- The first eight-car GT audit measured **313 draw calls / 488,800 triangles** and was rejected. Disabling only the fully invisible NPC cabin pivot produces the retained `output/render-cost/report.json`: showroom 187/174,608; lakeshore traffic 238/285,429; city traffic 210/457,779; wet night 211/457,924; GT grid **298/483,838**; pit paddock 121/306,828; back straight 146/237,533; Formula grid **281/484,764**. Values are maximum draw calls / mean visible triangles where the harness samples multiple frames.
+- The unmodified supplied client passes under `output/steering-supplied-client-final`: **7.081m/s**, four mixed edge contacts, zero damage, eleven physical plus thirteen distant traffic actors and no loading/streaming error. A first fixed-five-second cold click timed out behind loading and is retained but not counted.
+- Production emits `index-Czejh5jn.js` (342.73KB) and the existing 7.53MB Babylon vendor chunk warning. Cold 25Mbps/40ms exact-bundle smoke reaches the menu in **6.220s forced WebGL2 / 5.727s automatic**, transfers **12,929,284 bytes**, enters Free Drive and Northstar, and records no page, failed or external requests. The four captures were opened. These are local development-host delivery numbers, not HTTPS or target-laptop certification.
+
 ## High-speed Free Drive and abrupt-route streaming — September 21
 
 - `scripts/verify-freedrive-stress.mjs` uses installed Edge, forced WebGL2, Low 1280×720, the default Velara S, 12 physical + 12 distant traffic actors and normal 120Hz vehicle/traffic/streaming systems. A diagnostic initial velocity creates a worst-case load without changing grip, force, damage, collision or production AI parameters.

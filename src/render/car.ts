@@ -1,4 +1,4 @@
-import { Scene, TransformNode, Mesh, PBRMaterial, Color3, Material } from '@babylonjs/core';
+import { Scene, TransformNode, Mesh, PBRMaterial, Color3, Material, Quaternion, Vector3 } from '@babylonjs/core';
 import type { VehicleDefinition, VehicleState, Customization, Quality } from '../core/types';
 import { instantiateCarAsset } from './car-assets';
 import { roadCoachwork } from './coachwork';
@@ -6,6 +6,7 @@ import { formulaCoachwork } from './formula-coachwork';
 import { carInstruments } from './car-instruments';
 import { wheelModel } from './wheel-model';
 import { finishCarTrim,finishCarPaint } from './car-materials';
+import {updateSteeringVisual} from './car-steering';
 
 export interface CarVisual {root:TransformNode;groundOffset:number;wheels:TransformNode[];paint:PBRMaterial;glass:PBRMaterial;lights:PBRMaterial;tail:PBRMaterial;parts:Mesh[];readonly lod?:0|1;selectDetail?:(distance:number,quality:Quality)=>void;update:(s:VehicleState)=>void;dispose:()=>void}
 export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,lite=false):CarVisual {
@@ -33,7 +34,13 @@ export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,l
     // the attribute with neutral white on their untinted batch neighbours.
     if(list.some(p=>p.isVerticesDataPresent('color')))for(const p of list)if(!p.isVerticesDataPresent('color'))p.setVerticesData('color',new Float32Array(p.getTotalVertices()*4).fill(1));
     const m=list.length>1?Mesh.MergeMeshes(list,true,true,undefined,false,false)!:list[0];m.material=mat;m.parent=parent;m.isPickable=false;result.push(m);}return result;}
-  const parts=merge(staticParts,root);
+  const steeringParts=staticParts.filter(part=>part.metadata?.kairosAnimated==='steering'),fixedParts=staticParts.filter(part=>part.metadata?.kairosAnimated!=='steering');
+  const parts=merge(fixedParts,root),steeringPivot=new TransformNode('steering-pivot',scene),steeringOrigin=d.class==='FORMULA'?new Vector3(0,-.025,.225):new Vector3(-.34,d.class==='GT'?.14:.20,.43);
+  steeringPivot.parent=root;steeringPivot.position.copyFrom(steeringOrigin);steeringPivot.rotationQuaternion=Quaternion.Identity();
+  // Mesh.MergeMeshes bakes each source transform into root-space vertices. A
+  // compensating local translation keeps that geometry fixed at the pivot's
+  // neutral pose while allowing the whole control assembly to rotate as one.
+  for(const part of merge(steeringParts,steeringPivot)){part.position.subtractInPlace(steeringOrigin);parts.push(part);}
   const display=parts.find(p=>p.material===instruments.material);
   const wheels:TransformNode[]=[],brakes:TransformNode[]=[];
   for(let i=0;i<4;i++){
@@ -42,7 +49,7 @@ export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,l
     if(model.caliper){const mount=new TransformNode(`brake-${i}`,scene);mount.parent=root;mount.position.copyFrom(node.position);parts.push(...merge([model.caliper],mount));brakes[i]=mount;}
   }
   return {root,groundOffset:.32+d.wheelRadius,wheels,paint,glass,lights:light,tail,parts,
-    update(s){wheels.forEach((w,i)=>{w.position.y=-(.32+d.travel*.5-s.wheels[i].compression);w.rotation.set(s.wheels[i].angle,i<2?s.steer:0,0);if(brakes[i]){brakes[i].position.copyFrom(w.position);brakes[i].rotation.set(0,i<2?s.steer:0,0);}});tail.emissiveColor.r=s.absActive?.95:.5;if(root.isEnabled()&&display?.isVisible)instruments.update(s);},
+    update(s){wheels.forEach((w,i)=>{w.position.y=-(.32+d.travel*.5-s.wheels[i].compression);w.rotation.set(s.wheels[i].angle,i<2?s.steer:0,0);if(brakes[i]){brakes[i].position.copyFrom(w.position);brakes[i].rotation.set(0,i<2?s.steer:0,0);}});updateSteeringVisual(d,s.steer,steeringPivot.rotationQuaternion!);tail.emissiveColor.r=s.absActive?.95:.5;if(root.isEnabled()&&display?.isVisible)instruments.update(s);},
     dispose(){root.dispose();instruments?.dispose();mats.forEach(m=>m.dispose());}
   };
 }

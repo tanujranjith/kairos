@@ -1,5 +1,13 @@
 # Feature status — working build, not acceptance certification
 
+## Animated steering controls and rebuilt fleet assets — September 21 (verified checkpoint)
+
+All six original vehicle models now export an animation-ready steering assembly. The enclosed cars add a clearer wheel rim, centre badge, top marker and paddles; Apex's yoke, display and buttons rotate together. Both generated fallback models and all twelve GLBs expose a named steering pivot, and the runtime derives its bounded visual rotation from the same physical steer state used by the front wheels. It does not alter tire grip, suspension, assists, input smoothing or AI.
+
+Installed Edge verifies the exported and fallback fleets across all six vehicles, three liveries and five player cameras, including live instruments, steering motion, fixed calipers, four contacts and zero-damage keyboard driving. The player retains the animated assembly at all times. NPC cabins have no view camera, so their invisible steering pivot is culled to recover a measured Low-grid draw regression; the controls remain authored in both LOD files.
+
+The final Low audit records 298 draw calls / 483,838 triangles for the eight-car GT grid and 281 / 484,764 for Formula. The supplied input client, 220-test suite, strict TypeScript, production build and exact-bundle cold delivery smoke pass. This is a meaningful cabin/model refinement, not a claim of photoreal vehicles or target-laptop performance; richer exterior surfacing, material variation and broader world art remain active work.
+
 ## High-speed Free Drive and abrupt-route streaming — September 21 (verified checkpoint)
 
 Installed Edge/WebGL2 now has a dedicated Low-720p Free Drive stress path using the default Velara S, 24 traffic actors, normal 120Hz physics and the exploration streamer. Crossway and a remote Ring segment start at 74/70m/s, remain grounded on four contacts with zero damage/resets, retain all traffic actors and safely gate collision loading. The abrupt route change cancels and disposes stale cells without a failure; returning home restores the exact 132/73/43 mesh/material/texture baseline. The final complete suite passes 219 tests/32 files, strict build gates pass, and the exact production bundle passes both requested cold 25Mbps/40ms renderer paths through Free Drive and Northstar without failed/external requests.

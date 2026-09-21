@@ -13,6 +13,7 @@ describe('Apex original model',()=>{
         const car=formulaCoachwork(scene,d,materials,lite);let triangles=0;
         for(const part of car.parts){const p=part.getVerticesData('position')!,n=part.getVerticesData('normal')!;expect(p.every(Number.isFinite)).toBe(true);expect(n.every(Number.isFinite)).toBe(true);expect(n.length).toBe(p.length);triangles+=part.getTotalIndices()/3;}
         for(const name of ['cockpit-rim','cockpit-bathtub','halo','cockpit-headrest-pad','formula-camera-pod','formula-antenna','undercut-sidepod','carbon-wishbone','front-mainplane','front-upper-flap','rear-adjustable-flap','diffuser-strake','formula-steering-yoke'])expect(car.parts.some(p=>p.name===name),name).toBe(true);
+        expect(car.parts.filter(part=>part.metadata?.kairosAnimated==='steering').map(part=>part.name).sort()).toEqual(['formula-steering-yoke','steering-button','steering-button','steering-centre','steering-screen'].sort());
         for(const name of ['tapered-nose','front-mainplane','rear-mainplane']){
           const part=car.parts.find(p=>p.name===name)!,p=part.getVerticesData('position')!,n=part.getVerticesData('normal')!;let index=-1,max=-Infinity;
           for(let i=0;i<p.length;i+=3)if(Math.abs(p[i])<.001&&p[i+1]>max){max=p[i+1];index=i;}

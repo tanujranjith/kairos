@@ -14,6 +14,7 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
   const parts:Mesh[]=[],W=d.width/2,L=d.length/2,roof=d.height-(.32+d.wheelRadius),gt=d.class==='GT',design=roadDesign(d);
   const [cabinRear,backRoof,frontRoof,frontBase]=design.cabin;
   const add=(mesh:Mesh,material:Material)=>{mesh.material=material;parts.push(mesh);return mesh;};
+  const steeringPart=(mesh:Mesh)=>{mesh.metadata={...mesh.metadata,kairosAnimated:'steering'};return mesh;};
   const box=(name:string,w:number,h:number,l:number,x:number,y:number,z:number,material:Material)=>{const mesh=MeshBuilder.CreateBox(name,{width:w,height:h,depth:l},scene);mesh.position.set(x,y,z);return add(mesh,material);};
   const tube=(name:string,points:Point[],radius:number,material:Material)=>add(MeshBuilder.CreateTube(name,{path:points.map(p=>Vector3.FromArray(p)),radius,tessellation:lite?4:8},scene),material);
   const sheet=(name:string,rows:Point[][],material:Material,surfaceNormals?:number[])=>{
@@ -141,9 +142,14 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
   box('instrument-binnacle',.28,.12,.08,-.34,.29-dashDrop,.50,m.dark);box('driver-instruments',.225,.098,.008,-.34,.291-dashDrop,.455,m.instruments??m.dark);
   if(!lite){box('centre-display',.135,.086,.015,.06,.275-dashDrop,.495,m.dark);for(const side of [-1,1])for(let i=0;i<3;i++)box('dash-vent',.032,.032,.012,side*.54+i*.046,.27-dashDrop,.485,m.dark);}
   const steeringY=gt?.14:.20,steeringRadius=gt?.13:.15;
-  const steering=MeshBuilder.CreateTorus('steering-wheel',{diameter:steeringRadius*2,thickness:.027,tessellation:16},scene);steering.rotation.x=Math.PI/2.5;steering.position.set(-.34,steeringY,.43);add(steering,m.dark);
-  const boss=MeshBuilder.CreateCylinder('steering-boss',{diameter:.075,height:.04,tessellation:12},scene);boss.rotation.x=Math.PI/2;boss.position.set(-.34,steeringY,.414);add(boss,m.dark);
-  for(const a of [Math.PI,Math.PI*.43,Math.PI*1.57])tube('steering-spoke',[[-.34,steeringY,.43],[-.34+Math.sin(a)*steeringRadius*.88,steeringY+Math.cos(a)*steeringRadius*.84,.43-Math.cos(a)*steeringRadius*.27]],.009,m.dark);
+  const steering=MeshBuilder.CreateTorus('steering-wheel',{diameter:steeringRadius*2,thickness:.027,tessellation:lite?10:20},scene);steering.rotation.x=Math.PI/2.5;steering.position.set(-.34,steeringY,.43);steeringPart(add(steering,m.dark));
+  const boss=MeshBuilder.CreateCylinder('steering-boss',{diameter:.075,height:.04,tessellation:12},scene);boss.rotation.x=Math.PI/2;boss.position.set(-.34,steeringY,.414);steeringPart(add(boss,m.dark));
+  for(const a of [Math.PI,Math.PI*.43,Math.PI*1.57])steeringPart(tube('steering-spoke',[[-.34,steeringY,.43],[-.34+Math.sin(a)*steeringRadius*.88,steeringY+Math.cos(a)*steeringRadius*.84,.43-Math.cos(a)*steeringRadius*.27]],.009,m.dark));
+  if(!lite){
+    steeringPart(box('steering-centre-badge',.038,.038,.012,-.34,steeringY,.388,m.accent??m.chrome));
+    const marker=steeringPart(box('steering-top-marker',.044,.014,.018,-.34,steeringY+steeringRadius*.84,.43-steeringRadius*.27,m.accent??m.chrome));marker.rotation.x=Math.PI/2.5;
+    for(const side of [-1,1]){const paddle=steeringPart(box('steering-paddle',.025,.095,.012,-.34+side*steeringRadius*.72,steeringY-.003,.463,m.chrome));paddle.rotation.x=Math.PI/2.5;}
+  }
   if(livery>0)for(const x of livery===1?[-.19,.19]:[0]){
     const w=livery===1?.10:.32,mat=m.accent??m.chrome;
     parts.push(panelStripe(scene,'bonnet-livery',body,mat,x,w,frontBase+.05,L-.02),panelStripe(scene,'deck-livery',body,mat,x,w,-L+.03,cabinRear-.04),panelStripe(scene,'roof-livery',roofPanel,mat,x,w,backRoof+.02,frontRoof-.02));

@@ -1,9 +1,10 @@
-import { LoadAssetContainerAsync, type AssetContainer, Scene, TransformNode, Mesh, PBRMaterial, Color3 } from '@babylonjs/core';
+import { LoadAssetContainerAsync, type AssetContainer, Scene, TransformNode, Mesh, PBRMaterial, Color3, Quaternion } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
 import type { VehicleDefinition, Customization } from '../core/types';
 import type { CarVisual } from './car';
 import { carInstruments } from './car-instruments';
 import { finishCarTrim,finishCarPaint } from './car-materials';
+import {updateSteeringVisual} from './car-steering';
 const libraries=new WeakMap<Scene,Map<string,AssetContainer>>();
 export async function loadCarAssets(scene:Scene,ids:string[]){
   const library=libraries.get(scene)??new Map<string,AssetContainer>();libraries.set(scene,library);
@@ -14,6 +15,7 @@ export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Custo
   const root=new TransformNode(`visual-${d.id}`,scene),entry=container.instantiateModelsToScene(name=>`${d.id}-instance-${name}`,true,{doNotInstantiate:true});root.metadata={kairosCar:true};entry.rootNodes.forEach(n=>n.parent=root);
   const parts=root.getChildMeshes().filter((m):m is Mesh=>m instanceof Mesh),nodes=root.getChildTransformNodes(),wheels=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`wheel-${i}`))!);
   const brakes=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`brake-${i}`)));
+  const steering=nodes.find(node=>node.name.endsWith('steering-pivot'));if(steering&&!steering.rotationQuaternion)steering.rotationQuaternion=Quaternion.Identity();
   const materials=[...new Set(parts.map(p=>p.material).filter((m):m is PBRMaterial=>m instanceof PBRMaterial))];
   const find=(name:string)=>materials.find(m=>m.name.includes(`${d.id}-${name}`))!;
   const trim=find('carbon');if(trim)finishCarTrim(trim);
@@ -27,5 +29,5 @@ export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Custo
   if(display?.emissiveTexture&&!container.textures.includes(display.emissiveTexture)){const unused=display.emissiveTexture;display.emissiveTexture=null;unused.dispose();}
   const instruments=display?carInstruments(scene,d,display):undefined;
   const displayMesh=parts.find(p=>p.material===display);
-  return {root,groundOffset:.32+d.wheelRadius,wheels,paint,glass,lights,tail,parts,update(s){wheels.forEach((w,i)=>{w.position.y=-(.32+d.travel*.5-s.wheels[i].compression);w.rotation.set(s.wheels[i].angle,i<2?-s.steer:0,0);w.rotationQuaternion=null;const b=brakes[i];if(b){b.position.copyFrom(w.position);b.rotationQuaternion=null;b.rotation.set(0,i<2?-s.steer:0,0);}});tail.emissiveColor.r=s.absActive?.95:.5;if(root.isEnabled()&&displayMesh?.isVisible)instruments?.update(s);},dispose(){root.dispose();instruments?.dispose();materials.forEach(m=>m.dispose());}};
+  return {root,groundOffset:.32+d.wheelRadius,wheels,paint,glass,lights,tail,parts,update(s){wheels.forEach((w,i)=>{w.position.y=-(.32+d.travel*.5-s.wheels[i].compression);w.rotation.set(s.wheels[i].angle,i<2?-s.steer:0,0);w.rotationQuaternion=null;const b=brakes[i];if(b){b.position.copyFrom(w.position);b.rotationQuaternion=null;b.rotation.set(0,i<2?-s.steer:0,0);}});if(steering)updateSteeringVisual(d,s.steer,steering.rotationQuaternion!);tail.emissiveColor.r=s.absActive?.95:.5;if(root.isEnabled()&&displayMesh?.isVisible)instruments?.update(s);},dispose(){root.dispose();instruments?.dispose();materials.forEach(m=>m.dispose());}};
 }

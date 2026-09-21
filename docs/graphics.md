@@ -1,5 +1,13 @@
 # Original graphics upgrade — first substantial art pass
 
+## Animated steering assemblies — September 21
+
+Every original car now has a steering control grouped beneath a named `steering-pivot` in both generated fallback geometry and exported GLBs. The five enclosed cars use a denser wheel rim plus a centre badge, top marker and paddles at full detail. Apex groups its yoke, centre, instrument screen and buttons. Road controls rotate around the authored raked column axis; Formula rotates directly around its short column. The visual ratio is deliberately bounded and always derived from `VehicleState.steer`, so it cannot change the physical rack angle or add grip.
+
+The player control animates in showroom and every driving camera, including cockpit. Traffic and race opponents retain the same authored controls in both LOD assets, but their complete steering pivot is disabled at runtime because NPCs never use a cockpit camera. That measured cull corrected an eight-car Low regression from 313 to 298 GT draw calls while retaining the exterior, wheels, brakes and all physics. Formula finishes at 281 draw calls. Both remain just below the existing geometry ceiling, so future model additions still need cost review.
+
+All twelve GLBs were regenerated and the manifest now records the animation-ready pivot alongside wheel pivots and camera mounts. Imported and deliberately blocked-GLB fallback fleets were checked across all six cars, three liveries and five cameras. Close cabin/exterior captures confirm the controls are placed and moving, but the current procedural materials and body forms remain stylized rather than photoreal.
+
 ## Versioned KTX2 surface delivery — September 21
 
 The nine original periodic surface pairs and packed cloud-density atlas now ship as nineteen mipmapped KTX2 files. Perceptual albedo uses ETC1S; linear normals and cloud density use UASTC+Zstd. The deterministic field generators remain the single source for both the offline encoder and lazy error fallback, so recovery does not substitute a different-looking material. The generated manifest records dimensions, encoding, byte count and SHA-256 for every file; a content-derived version is added to runtime URLs and checked at build time.
