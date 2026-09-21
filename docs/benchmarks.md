@@ -2,6 +2,14 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Local release-candidate interaction/fault audit — September 21
+
+- `verify-interactions.mjs` passes the rendered six-profile garage, customization, settings, map routing, acceleration, frozen pause clock, five cameras, reset, reverse, night, save reload and traffic-free Northstar entry/reset flow. `verify-platform-interactions.mjs` passes real 1280×720 fullscreen, bounded dual-rumble dispatch/rejection, controller-loss pause/input release and keyboard resume.
+- `verify-storage.mjs` passes export/import, corrupt-profile preservation, failed-write warning and playable unavailable-IndexedDB fallback. `verify-audio.mjs` passes blocked-autoplay entry/unlock and finite dry, tunnel, cockpit, rain, transmission, road, wind, slip, pause, shift, mute and engine-only output. `verify-adaptive-quality.mjs` passes automatic High selection, manual Medium override, a 70% dynamic floor, 75% recovery and deferred High application without changing player simulation.
+- Forced WebGL2 loss rebuilds in place in **1.971s**, preserves player state, resumes grounded with four contacts and records only Babylon's expected loss/restoration notices. Forced WebGPU destruction holds state for the bounded **20.008s** attempt, offers the explicit saved-profile WebGL2 restart and resumes grounded with four contacts. The latest recovery UI and resumed captures were opened.
+- Installed Chrome and Edge each pass actual WebGPU and forced WebGL2. All four controlled drives reach **11.325672m/s**, retain four wheel contacts and record empty page-error/external-request arrays. The latest browser captures were opened.
+- The exact production bundle remains `index-j6fe0Xaa.js` with worker `cell-worker-D1LLTGra.js`; 249 tests / 39 files and strict build pass. Cold 25Mbps/40ms delivery remains **5.359s forced WebGL2 / 4.820s automatic**, **10,520,925 bytes**, with clean Free Drive/Northstar entry and no page, failed or external requests. This is local release-candidate evidence, not actual 8 GB laptop, physical-controller, Internet/HTTPS or reference-art certification.
+
 ## Browser visibility pause — September 21
 
 - `scripts/verify-visibility-pause.mjs` accelerates the Velara with a held keyboard throttle, then exercises the installed Edge/WebGL2 build through a real `visibilitychange` event with a controlled hidden document state. The final transition occurs at **0.608333s**, clears every held key, exposes the background reason and retains the exact `{x:-380.541, y:11.544, z:-17.253}` pose.

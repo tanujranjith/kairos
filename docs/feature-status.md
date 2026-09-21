@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Local release-candidate audit — September 21 (verified checkpoint)
+
+The current source is locally release-candidate ready: garage/customization/settings/map, Free Drive, all five cameras, handling course, pause/resume, persistence, save transfer/failures, audio unlock/mixing, real fullscreen, controller loss/vibration policy, automatic quality/dynamic resolution, graphics loss recovery and the Chrome/Edge × WebGPU/WebGL2 matrix all pass their dedicated browser checks. The latest captures were opened across these flows. The complete suite remains 249 tests / 39 files, and the exact production bundle passes cold 25Mbps/40ms delivery with no page, failed or external requests.
+
+This closes the broad local interaction/fault audit, not the full external acceptance target. The actual secondary 8 GB integrated-graphics laptop has not been made available, no HTTPS project has been authorized, no physical gamepad motor was available, and the original procedural art remains visibly stylized rather than mockup-level photorealism. See [release readiness and handoff](release-readiness.md).
+
 ## Browser visibility pause — September 21 (verified checkpoint)
 
 Losing document visibility while driving now enters the ordinary pause state immediately, clears held controls, resets the fixed-step accumulator and records an explicit background-interruption reason. The pause view explains what happened; resume clears that reason and continues from the unchanged simulation timestamp and pose. Manual pause and controller disconnection retain distinct messages.
