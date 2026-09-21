@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Westbrook shelter population — September 21 (verified checkpoint)
+
+- Continued the user's still-open ambience/background request rather than repeating already-passed platform faults. The ten existing city shelters now each own one seated and one standing original figure:20 people total, two faceted poses, deterministic varied colours and actual-position stream ownership.
+- Figures merge into one non-colliding mesh per occupied detail cell and share one new material. There is no downloaded model/texture, animation, AI, collider or per-person draw. This is a visible human-scale layer, not a pedestrian simulation or close-up character claim.
+- ForcedWebGL2 and actualWebGPU close/gameplay images opened and match. Both pass day/dusk/night/rain lighting, normal keyboard driving at21.52m/s/four contacts/zero damage, and three exact city/lake cycles at966/85/44 and319/85/44. The first WebGPU rerun failure was a verifier time-of-day mistake after adding a daytime close-up; corrected final run passes.
+- Low city is264/495715 and wet-night265/495882 draws/triangles; Commons192/454925, both grids291/496870. All measured scenes remain under target, though city/grid headroom is narrow. Complete239tests/37files and strict production build pass (`index-v-yrwCqj.js`, worker `cell-worker-dLWhIiLk.js`). Refreshed preview5192 serves it; cold25Mbps/40ms production reaches menu in5.626s/4.932s,10,518,921bytes, no page/failed/external request.
+- Required upstream input timed out behind the valid loading overlay and remained live; loader-aware copy also remained live without artifacts. Both were terminated and not counted; the dedicated verifier supplies input/state/images/error checks. NEXT: preserve the people/model/handling/pit work and tight Low budgets. Continue broader sidewalk/land-use realism or the remaining traffic/interaction acceptance matrix. Actual8GB laptop and authorizedHTTPS remain external acceptance work. Keep five user files untouched.
+
 ## Forward pit-overshoot recovery — September 21 (verified checkpoint)
 
 - Previous turn only confirmed the already-implemented shared-model policy, so it made no new progress. Continued the full objective with the explicit remaining AI pit overshoot gap.

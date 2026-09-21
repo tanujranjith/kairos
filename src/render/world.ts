@@ -26,7 +26,7 @@ interface ParkedCar {root:TransformNode;collisionMesh:Mesh;collider?:{body:Physi
 interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mesh[];detailMeshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];parkedCars:ParkedCar[];signals:SignalMesh[];collision:boolean;detail:boolean;leases:Map<Mesh,{release:()=>void}>}
 export class WorldRenderer {
   cells=new Map<string,Cell>();root:TransformNode;backdrop:Mesh;water:Mesh;
-  private terrain:PBRMaterial;private road:PBRMaterial;private shoulder:PBRMaterial;private marking:PBRMaterial;private yellow:PBRMaterial;private curb:PBRMaterial;private wall:PBRMaterial;private roof:PBRMaterial;private glass:PBRMaterial;private foliage:PBRMaterial;private trunk:PBRMaterial;
+  private terrain:PBRMaterial;private road:PBRMaterial;private shoulder:PBRMaterial;private marking:PBRMaterial;private yellow:PBRMaterial;private curb:PBRMaterial;private wall:PBRMaterial;private roof:PBRMaterial;private glass:PBRMaterial;private foliage:PBRMaterial;private trunk:PBRMaterial;private figure:PBRMaterial;
   private treeMesh:Mesh;private oakMesh:Mesh;private trunkMesh:Mesh;private oakTrunkMesh:Mesh;private grassMesh:Mesh;private boulders:Mesh;
   private woodland:ReturnType<typeof createCircuitWoodland>;
   streetLighting:StreetLighting;
@@ -40,7 +40,7 @@ export class WorldRenderer {
     this.streamer=new CellStreamer({load:(d,signal)=>this.worker.build(d.cx,d.cz,this.quality,signal),install:(b,d)=>this.installCell(b,d),mode:(cell,b,d)=>this.setCellMode(cell,b,d),dispose:cell=>this.disposeCell(cell)});
     this.trafficScenery=new TrafficScenery(scene);
     const mat=(name:string,hex:string)=>{const m=new PBRMaterial(name,scene);m.albedoColor=Color3.FromHexString(hex);m.roughness=.97;m.metallic=0;m.maxSimultaneousLights=6;return m;};
-    this.terrain=mat('meadow','#777c48');this.shoulder=mat('gravel','#9f967a');this.marking=mat('road-paint','#e8e4d1');this.yellow=mat('centerline','#d6b96d');this.curb=mat('red-curbs','#a94435');this.wall=mat('stone-buildings','#c2ba9f');this.roof=mat('roof-metal','#555b59');this.glass=mat('architectural-glass','#344c54');this.foliage=mat('pine-needles','#344b2f');this.trunk=mat('tree-bark','#594939');
+    this.terrain=mat('meadow','#777c48');this.shoulder=mat('gravel','#9f967a');this.marking=mat('road-paint','#e8e4d1');this.yellow=mat('centerline','#d6b96d');this.curb=mat('red-curbs','#a94435');this.wall=mat('stone-buildings','#c2ba9f');this.roof=mat('roof-metal','#555b59');this.glass=mat('architectural-glass','#344c54');this.foliage=mat('pine-needles','#344b2f');this.trunk=mat('tree-bark','#594939');this.figure=mat('street-life','#ffffff');this.figure.roughness=.88;
     // A millimetric physical separation alone loses depth precision at long range.
     // Raster bias keeps paint above the asphalt without moving contact geometry.
     for(const paint of [this.marking,this.yellow,this.curb]){paint.zOffset=-2;paint.zOffsetUnits=-2;}

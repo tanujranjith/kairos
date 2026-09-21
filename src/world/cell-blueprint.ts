@@ -23,7 +23,7 @@ import {buildUrbanSetting,urbanReserved} from './urban-setting';
 import {buildUrbanForecourt,buildUrbanParcel,type ParkedCarPlacement} from './urban-parcel';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
-export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk';
+export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk'|'figure';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
 export interface CellInstance {kind:'pine'|'oak'|'trunk'|'oakTrunk'|'rock'|'grass';position:V3;scale:V3;yaw:number}
 export interface CellSign {id:string;name:string;position:V3;yaw:number;width?:number;height?:number;mounted?:boolean}
@@ -38,7 +38,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   const add=(name:string,g:MeshDataBuilder,material:CellMaterial,collision=false,contactSurface?:ContactSurface,contactRanges?:ContactRange[])=>{if(!g.positions.length)return;const data=g.finish();if(material==='terrain'){applyGroundChannels(data);smoothGroundNormals(data);}meshes.push({name:`${name}-${key}`,material,collision,data,contactSurface:contactSurface??(collision?{surface:'Concrete',layer:'structure'}:undefined),contactRanges});};
   const terrain=buildTerrainMesh(cx,cz);
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
-  const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder(),urbanPaint=new MeshDataBuilder(),rural=new MeshDataBuilder();
+  const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder(),urbanPaint=new MeshDataBuilder(),rural=new MeshDataBuilder(),figures=new MeshDataBuilder();
   const roadContacts:ContactRange[]=[],vergeContacts:ContactRange[]=[];
   // Paint comes from the same authored finish/grid positions as session spawns.
   const finish=pointAt(CIRCUIT,0);
@@ -157,13 +157,13 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     for(const x of [536.6,543.4])roofs.box(x,17,-1415.5,.12,3.65,.12);
   }
   if(cx===3&&cz===-6)signs.push({id:'aster-control',name:'ASTER   /   RACE CONTROL',position:{x:768,y:34.12,z:-1443.94},yaw:0,width:14.5,height:.38,mounted:true});
-  buildStreetscape(cx,cz,{wall:buildings,roof:roofs,glass:windows},instances);
+  buildStreetscape(cx,cz,{wall:buildings,roof:roofs,glass:windows},instances,figures);
   buildRuralInfrastructure(cx,cz,{wall:buildings,roof:roofs,glass:windows},rural);
   buildIndustrialSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows});
   buildUrbanSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows},urbanPaint,instances);
   // Parking bays are appended during procedural parcel generation, so the
   // shared white-marking batch must be finalized after that loop.
-  add('paint',white,'marking');add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('urban-inlays',urbanPaint,'marking');add('rural-infrastructure',rural,'trunk');
+  add('paint',white,'marking');add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('urban-inlays',urbanPaint,'marking');add('rural-infrastructure',rural,'trunk');add('street-life',figures,'figure');
   return {manifest,meshes,instances,signs,parkedCars,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
 }
 export function blueprintTransfers(blueprint:CellBlueprint):ArrayBuffer[]{return blueprint.meshes.flatMap(m=>[m.data.positions.buffer,m.data.indices.buffer,m.data.uvs.buffer,m.data.normals.buffer,...(m.data.colors?[m.data.colors.buffer]:[])] as ArrayBuffer[]);}

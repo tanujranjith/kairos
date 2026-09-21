@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Westbrook shelter population — September 21 (verified checkpoint)
+
+The ten existing city transit shelters now each contain one seated and one standing original figure. Twenty deterministic placements use two faceted poses and varied vertex-coloured clothing, skin and hair. People merge into one non-colliding detail mesh per owner cell and share one material; there is no downloaded character asset, texture, AI, animation, collision body or per-person draw call.
+
+Forced WebGL2 and actual WebGPU close-ups and gameplay views were opened and match. Both paths retain day/dusk/night/rain lighting, normal keyboard driving at 21.52m/s with four contacts and zero damage, and exact three-cycle city/lake cleanup. Pure placement/geometry checks and all 239 tests pass; strict TypeScript, texture verification and production build pass. Low city is 264 draws / 495,715 triangles, wet night 265 / 495,882 and both eight-car grids 291 / 496,870. Cold25Mbps/40ms production reaches menu in 5.626s / 4.932s, transfers 10,518,921 bytes and has no page, failed or external request. This adds human scale at ten shelters but is not an animated pedestrian system, populated whole city, close-up character target, laptop certification or hosted HTTPS acceptance. See [implementation and evidence](street-life.md).
+
 ## Forward pit-overshoot recovery — September 21 (verified checkpoint)
 
 An AI car that passes the stopping tolerance of its assigned service box no longer aims backward through pit traffic. The controller records one missed stop, preserves the fuel/tire reason, follows the ordinary physical pit exit, yields at the live circuit merge, rejoins without a reset, and requests another attempt on the next lap. Development state exposes `missedStops` and `retryPending`; successful service clears the retry. No tire, power, grip, timing-gate or player-control value changed.

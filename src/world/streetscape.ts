@@ -1,11 +1,12 @@
-import {STREET_FIXTURES} from '../content/streetscape';
+import {STREET_FIXTURES,STREET_PEDESTRIANS} from '../content/streetscape';
 import type {ArchitectureBuffers} from './architecture';
 import type {CellInstance} from './cell-blueprint';
 import type {MeshDataBuilder} from './mesh-data';
+import {buildPedestrian} from './pedestrian';
 
 /** Existing wall/roof/glass batches own every fixture; no per-prop draw or
  * separate material. Raised beds use the existing original oak leaf atlas. */
-export function buildStreetscape(cx:number,cz:number,b:ArchitectureBuffers,instances:CellInstance[]){
+export function buildStreetscape(cx:number,cz:number,b:ArchitectureBuffers,instances:CellInstance[],figures?:MeshDataBuilder){
   const dark=[.18,.24,.26,1],stone=[.61,.64,.61,1],wood=[.46,.30,.16,1];
   for(const f of STREET_FIXTURES.filter(f=>f.cell===`${cx},${cz}`)){
     const box=(g:MeshDataBuilder,x:number,y:number,z:number,w:number,h:number,d:number,color:number[])=>{
@@ -51,4 +52,5 @@ export function buildStreetscape(cx:number,cz:number,b:ArchitectureBuffers,insta
       for(let n=0;n<5;n++)box(b.roof,f.side*.686,1.19+n*.105,1.15,.014,.022,.38,dark);
     }
   }
+  if(figures)for(const person of STREET_PEDESTRIANS.filter(person=>person.cell===`${cx},${cz}`))buildPedestrian(figures,person);
 }

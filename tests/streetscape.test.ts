@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {NullEngine,Scene} from '@babylonjs/core';
-import {STREET_FIXTURES,STREET_LAMPS,nearbyStreetLamps,lampPosition} from '../src/content/streetscape';
+import {STREET_FIXTURES,STREET_LAMPS,STREET_PEDESTRIANS,nearbyStreetLamps,lampPosition} from '../src/content/streetscape';
 import {nearestRoad,terrainHeight} from '../src/content/world';
 import {MeshDataBuilder} from '../src/world/mesh-data';
 import {buildStreetscape} from '../src/world/streetscape';
@@ -14,18 +14,25 @@ describe('city streetscape ownership and clearance',()=>{
     expect(new Set(STREET_FIXTURES.map(f=>f.id)).size).toBe(STREET_FIXTURES.length);
     expect(new Set(STREET_FIXTURES.map(f=>f.kind)).size).toBe(5);
     for(const f of STREET_FIXTURES){expect(f.cell).toBe(`${Math.floor(f.x/256)},${Math.floor(f.z/256)}`);expect(f.roadId.startsWith('city')).toBe(true);}
+    const shelters=STREET_FIXTURES.filter(f=>f.kind==='shelter');expect(STREET_PEDESTRIANS).toHaveLength(shelters.length*2);expect(new Set(STREET_PEDESTRIANS.map(person=>person.id)).size).toBe(STREET_PEDESTRIANS.length);
+    expect(STREET_PEDESTRIANS.filter(person=>person.pose==='standing')).toHaveLength(shelters.length);expect(STREET_PEDESTRIANS.filter(person=>person.pose==='seated')).toHaveLength(shelters.length);
+    for(const person of STREET_PEDESTRIANS){expect(person.cell).toBe(`${Math.floor(person.x/256)},${Math.floor(person.z/256)}`);expect(person.roadId.startsWith('city')).toBe(true);expect(nearestRoad(person.x,person.z,road=>road.id===person.roadId).distance).toBeLessThan(20);}
   });
   it('keeps solid vertices outside every driving surface, with overhead lamp arms above vehicles',()=>{
-    for(const cell of new Set(STREET_FIXTURES.map(f=>f.cell))){
-      const [cx,cz]=cell.split(',').map(Number),b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},plants:CellInstance[]=[];
-      buildStreetscape(cx,cz,b,plants);let triangles=0;
+    let figureTriangles=0;
+    for(const cell of new Set([...STREET_FIXTURES.map(f=>f.cell),...STREET_PEDESTRIANS.map(person=>person.cell)])){
+      const [cx,cz]=cell.split(',').map(Number),b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},plants:CellInstance[]=[],figures=new MeshDataBuilder();
+      buildStreetscape(cx,cz,b,plants,figures);let triangles=0;
       for(const g of Object.values(b)){const data=g.finish();triangles+=data.indices.length/3;expect([...data.positions,...data.normals,...data.colors??[]].every(Number.isFinite)).toBe(true);
         for(let i=0;i<data.positions.length;i+=3){const [x,y,z]=data.positions.slice(i,i+3);if(y>terrainHeight(x,z)+4)continue;const n=nearestRoad(x,z,undefined,1);expect(n.distance-n.road.width/2,`${cell} vertex ${x},${z}`).toBeGreaterThan(.90);}
       }
       expect(triangles).toBeLessThan(5000);
+      const people=figures.finish();figureTriangles+=people.indices.length/3;expect([...people.positions,...people.normals,...people.colors??[]].every(Number.isFinite)).toBe(true);expect(people.colors?.length??0).toBe(people.positions.length/3*4);
+      for(let i=0;i<people.positions.length;i+=3){const [x,,z]=people.positions.slice(i,i+3),n=nearestRoad(x,z,undefined,1);expect(n.distance-n.road.width/2,`${cell} pedestrian vertex ${x},${z}`).toBeGreaterThan(.90);}
       expect(plants.filter(p=>p.kind==='oakTrunk').length).toBe(STREET_FIXTURES.filter(f=>f.cell===cell&&f.kind==='planter').length);
       for(const p of plants){expect(['oak','oakTrunk','grass']).toContain(p.kind);expect(p.scale.x).toBeLessThan(.45);}
     }
+    expect(figureTriangles).toBeGreaterThan(2000);expect(figureTriangles).toBeLessThan(5000);
   });
   it('selects at most two loaded, height-compatible lamps and owns only two real lights',()=>{
     const engine=new NullEngine(),scene=new Scene(engine),lights=new StreetLighting(scene),f=STREET_LAMPS[0];

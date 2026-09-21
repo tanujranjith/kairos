@@ -155,6 +155,10 @@ Final181tests, both native-renderer eight-view checks, real-road/layer/cadence r
 
 `verify-streetscape.mjs` checks day/dusk/dry-night/wet-night captures, real rendered illumination, keyboard driving, repeated city/lake streaming, home return and bounded light/resource ownership. Its default forces WebGL2; `--renderer=auto` requires actual WebGPU, and both reject unexpected console/GPU warnings. Diagnostic framebuffer reads submit complete frames and account for the two renderers' pixel origins. `tests/streetscape.test.ts` covers placement, clearance, finite geometry, the pool limit and replacement fade. The Low development-host cost audit remains below 300 draws and 500,000 triangles in all 528 sampled frames; this is not target-laptop performance certification. This pass preserves car geometry, physics, input and AI. The broader environment still has sparse lawns, simplified buildings and an unfinished night sky; it does not meet the final mockup/art target yet.
 
+### Shelter street life — September 21
+
+Ten transit shelters now add one seated and one standing original figure each. Six-sided tapered limbs, two poses and deterministic clothing/skin/hair colours merge into one non-colliding vertex-coloured detail mesh per occupied cell. One shared rough PBR material serves every figure; there is no character texture, downloaded model, animation, AI or per-person draw call. Detail-cell disposal owns the complete lifecycle. See [scope and evidence](street-life.md).
+
 ### Molded cabins and curved glazing — September 20
 
 `road-cabin.ts` builds the five enclosed passenger cells from one shared loft: curved side glazing, crowned roof, bowed windscreens, bonded black borders, structural A/C pillars, roof/belt rails and weatherseals. The same boundaries place the interior headliner and pillar returns. Molded bucket backs/shells, cushions, closed headrests, door cards, dashboard, console, rear bulkhead and parcel shelf replace the earlier sphere-heavy/open interior. GTX has one seat, flat harness straps and a roll cage. Existing instrument displays, steering wheels and all physical/camera definitions remain intact.

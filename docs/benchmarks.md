@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Westbrook shelter population — September 21
+
+- Pure checks verify **20 unique pedestrians**: exactly one seated and one standing figure for each of ten shelters, correct actual-position cell ownership, road clearance, finite coloured geometry and a bounded 2,000–5,000-triangle total.
+- Installed Edge under forced WebGL2 and actual WebGPU loads eight merged street-life meshes / **3,648 triangles** in the selected city view. Opened close-up and gameplay images show the same figures on both renderers. Day/dusk/night/rain, two-light ownership and illumination readback remain correct; normal keyboard driving reaches **21.52m/s**, four contacts and zero damage with no page or external-request errors.
+- Three city/lake transitions repeat exactly at **966/85/44** and **319/85/44** meshes/materials/textures. The one added shared figure material and cell meshes dispose without accumulation.
+- Low cost is showroom **188/176,908**, Lakeshore **240/293,364**, city **264/495,715**, Commons **192/454,925**, wet night **265/495,882**, either eight-car grid **291/496,870**, pit **121/315,224** and circuit **146/245,929** (draws/triangles). All stay inside target, with narrow city/grid headroom.
+- The complete suite passes **239 tests / 37 files**. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-v-yrwCqj.js`, worker `cell-worker-dLWhIiLk.js`). The required upstream input client timed out behind the legitimate loading overlay and remained live; the loader-aware copy also remained live without artifacts, so both were terminated and neither is counted. The dedicated stateful verifier supplies real keyboard, screenshot, renderer, lighting, network and cleanup evidence.
+- The refreshed preview serves the final bundle. Cold-cache **25Mbps/40ms** production reaches menu in **5.626s forced WebGL2 / 4.932s automatic**, transfers **10,518,921 bytes**, enters Free Drive and Northstar and records no page, failed or external request. These are localhost/SwiftShader development-host results.
+
 ## Forward pit-overshoot recovery — September 21
 
 - The pure controller regression detects one car 12m beyond its assigned stop, records exactly one miss, commands finite forward throttle/steering, never completes service, rejoins, and recommits at the next entrance while the low-fuel condition remains.
