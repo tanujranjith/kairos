@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Chase-camera collision avoidance — September 21 (verified checkpoint)
+
+Chase and close-chase cameras now pull to their Havok-resolved safe point immediately when world geometry blocks the requested view, preventing the previous several-frame wall clip. Clearing the obstacle retains the spring-smoothed outward release. Camera mode, obstruction and requested/resolved/current distances are available in development text state; cockpit, hood and bumper mounts are unchanged.
+
+A focused rendered test inserts and removes a physical wall on both chase rays. Measured 6.555m/4.921m requested distances clamp to 2.750m/2.035m, match the resolved point immediately, release partially after 100ms, and settle fully after 1.2s. Four screenshots were opened and all network/error arrays are empty. The complete suite, strict build, KTX2 integrity and cold production delivery pass. See [implementation and evidence](camera-collision.md).
+
 ## Player service feedback — September 21 (verified checkpoint)
 
 Both authored Free Drive service stations and the assigned Aster pit box now expose their complete six-second operation in the HUD and development state. The service button becomes a disabled live countdown, then returns to its ordinary action after fuel, damage, tires and tire temperature are restored. Moving cars are refused before service begins.

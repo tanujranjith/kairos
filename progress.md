@@ -1,5 +1,12 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Chase-camera collision avoidance — September 21 (verified checkpoint)
+
+- Fixed a real obstruction-transition defect: chase cameras previously smoothed inward toward a safe ray hit, allowing several frames inside a newly encountered wall. They now snap inward to the safe point and retain smooth outward release. Development state exposes camera mode plus requested, resolved and current distance.
+- The dedicated browser verifier passes physical wall insertion/removal in both chase modes, all three mounted modes, exact first-frame safety and bounded release. Four blocked/released screenshots were opened; no page, network or external-host errors were recorded.
+- Full suite remains 247 tests / 38 files. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-BchIDcA1.js`, worker `cell-worker-D1LLTGra.js`). Cold25Mbps/40ms production passes in 5.352s WebGL2 / 4.868s automatic, 10,520,622 bytes, with no page/failed/external requests.
+- The generic skill client again remained live without artifacts for over a minute and was terminated. NEXT: preserve immediate-in/smooth-out camera behavior and all prior handling/model/world work. Actual 8GB laptop and authorized HTTPS acceptance remain external; broader visual realism remains the main local gap. Keep the five user files untouched.
+
 ## Player service feedback — September 21 (verified checkpoint)
 
 - Exposed `serviceRemaining` in the development snapshot and live view model. The rendered service action now becomes a disabled `SERVICING · n.n s` countdown and returns to `SERVICE / PIT` after restoration, preventing accidental timer restarts while the car is being worked on.

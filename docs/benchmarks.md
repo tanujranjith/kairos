@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Chase-camera collision avoidance — September 21
+
+- `scripts/verify-camera-collision.mjs` crosses each chase ray with a temporary collision-group-1 wall. Standard chase clamps 6.555m to 2.750m and close chase clamps 4.921m to 2.035m. The current camera matches the collision-resolved point within 4cm on the first rendered frame, then moves partway outward after 100ms and settles within 8cm of the requested distance after 1.2s. Cockpit, hood and bumper state stays unobstructed.
+- Opened blocked/released captures for both modes show the vehicle remains visible instead of the wall clipping across the view. The focused path records no page errors, failed requests or external requests.
+- The complete suite passes **247 tests / 38 files**. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-BchIDcA1.js`, worker `cell-worker-D1LLTGra.js`). Cold 25Mbps/40ms production reaches the menu in **5.352s forced WebGL2 / 4.868s automatic**, transfers **10,520,622 bytes**, enters Free Drive/Northstar and records no page, failed or external requests.
+- The required generic client was attempted after the change and again remained live without output or artifacts for over a minute; it was terminated and is not counted. The focused renderer/Havok/input-state path supplies the changed-behavior evidence. These are development-host checks, not target-laptop or hosted HTTPS acceptance.
+
 ## Player service feedback — September 21
 
 - `scripts/verify-player-service.mjs` completes the real six-second service action at Westbrook Service, Summit Service and the player's assigned Aster box 16. Each mid-service snapshot reports a bounded countdown and disabled HUD action; final fuel is within 0.01L of tank capacity after normal idle consumption, damage is zero, and all four tires exceed 99.9% wear remaining. A 4m/s station attempt is refused without starting the timer.
