@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Marked procedural parking forecourts — September 21 (verified follow-up)
+
+- Added capped street-facing parking surfaces to eligible procedural Westbrook buildings. The generator derives safe depth from actual road width/setback, refuses cramped sites, follows terrain and keeps physical `Concrete` identity. Bay separators share the normal white-marking batch.
+- Rejected a thin access-path trial because it was usually hidden and did not materially improve the opened images. The first forecourt build used separate urban-inlay meshes; lifecycle evidence exposed fourteen avoidable city resources, so marking finalization moved after parcel generation and consolidated the final result to 498/74/44, only two meshes above the parcel-only checkpoint.
+- Forced WebGL2 and actual WebGPU show visible, clean bays without grass bleed or z-fighting. Low city is 217/432,509 and wet night 218/432,654 draws/triangles. Normal driving reaches 19.325m/s; supplied input remains 10.933m/s, four contacts, zero damage, 12+12 traffic and no failed cell.
+- Three city/forest/lake loops repeat at 498/74/44, 368/75/45 and 318/74/44; three race/home cycles return to 138/73/43. Complete suite passes 235 tests / 37 files; strict TypeScript, nineteen KTX2 assets and production build pass (`index-tDFsprbG.js`, worker `cell-worker-BxudDnB6.js`).
+- Cold25Mbps/40ms exact production reaches menu in 6.292s WebGL2 / 5.677s automatic request, transfers 12,978,168 bytes and has no page, failed or external requests. Final renderer, input and production captures were opened.
+- NEXT: preserve this city headroom and continue a materially visible gap such as parked-city silhouettes, broader sidewalk composition, or another interaction/fault matrix. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Procedural urban parcel aprons — September 21 (verified checkpoint)
 
 - Added narrow rotated terrain-following concrete aprons to every procedural Westbrook building. They join the existing collision-bearing structure batch, so visible hardscape and `Concrete` contact are the same surface; no new material, texture, light, draw call or request is introduced.

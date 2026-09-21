@@ -20,7 +20,7 @@ import {buildRuralInfrastructure} from './rural-infrastructure';
 import {roadsideGuidance} from './roadside-guidance';
 import {buildIndustrialSetting,industrialReserved} from './industrial-setting';
 import {buildUrbanSetting,urbanReserved} from './urban-setting';
-import {buildUrbanParcel} from './urban-parcel';
+import {buildUrbanForecourt,buildUrbanParcel} from './urban-parcel';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk';
@@ -124,7 +124,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     yellow.tintSince(amberStart,[1,.63,.12,1]);
   }
   if(asphalt.indices.length/3>settingStart)roadContacts.push({start:settingStart,end:asphalt.indices.length/3,surface:'Asphalt',layer:'surface'});
-  add('verge',verge,'shoulder',true,{surface:'Gravel',layer:'surface'},vergeContacts);add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('paint',white,'marking');add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
+  add('verge',verge,'shoulder',true,{surface:'Gravel',layer:'surface'},vergeContacts);add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
   const random=rng(hash(cx,cz)),urban=x0<-650&&z0<-300,count=quality==='Low'&&urban?32:{Low:44,Medium:60,High:80,Ultra:105}[quality];
   for(let i=0;i<count;i++){
     const x=x0+random()*CELL_SIZE,z=z0+random()*CELL_SIZE,near=nearestRoad(x,z,undefined,1);if(inHandlingCourse(x,z,12)||inLake(x,z)||atJunction(x,z)||near.distance<near.road.width*.5+5||urbanReserved(x,z,4))continue;const y=terrainHeight(x,z),city=x<-650&&z<-650,industrial=x<-850&&z<-300&&z>-780,circuit=x>300&&z<-450;
@@ -135,7 +135,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       const style:BuildingStyle=industrial?'factory':z< -1280?'house':(['brick','limestone','office'] as const)[i%3];
       const specification={x,y,z,width:w,depth:l,height:h,yaw:near.point.yaw,style,seed:hash(cx+i,cz)};
       if(city&&style==='office'&&Math.abs(specification.seed)%3===0)buildBandArchitecture({wall:buildings,roof:roofs,glass:windows},specification);else buildArchitecture({wall:buildings,roof:roofs,glass:windows},specification);
-      if(city)buildUrbanParcel(buildings,specification);
+      if(city){buildUrbanParcel(buildings,specification);if(Math.abs(specification.seed)%3!==1)buildUrbanForecourt(buildings,white,{...specification,roadWidth:near.road.width,lateral:near.lateral});}
     }
     else if(!circuit&&!industrial){
       // Preserve RNG consumption and every urban building/plant placement.
@@ -161,7 +161,9 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   buildRuralInfrastructure(cx,cz,{wall:buildings,roof:roofs,glass:windows},rural);
   buildIndustrialSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows});
   buildUrbanSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows},urbanPaint,instances);
-  add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('urban-inlays',urbanPaint,'marking');add('rural-infrastructure',rural,'trunk');
+  // Parking bays are appended during procedural parcel generation, so the
+  // shared white-marking batch must be finalized after that loop.
+  add('paint',white,'marking');add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('urban-inlays',urbanPaint,'marking');add('rural-infrastructure',rural,'trunk');
   return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
 }
 export function blueprintTransfers(blueprint:CellBlueprint):ArrayBuffer[]{return blueprint.meshes.flatMap(m=>[m.data.positions.buffer,m.data.indices.buffer,m.data.uvs.buffer,m.data.normals.buffer,...(m.data.colors?[m.data.colors.buffer]:[])] as ArrayBuffer[]);}

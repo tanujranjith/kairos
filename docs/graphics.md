@@ -1,10 +1,10 @@
 # Original graphics upgrade — first substantial art pass
 
-## Procedural urban parcel grounding — September 21
+## Procedural urban parcel grounding and parking — September 21
 
-Procedural Westbrook buildings now sit on a narrow concrete apron that rotates with the footprint and follows the underlying terrain sample at every grid vertex. The visible pad is also part of the existing physical structure batch; it is not a decal or a nonphysical mask over grass. The two-metre edge is intentionally smaller than the authored block plazas and preserves road clearance.
+Procedural Westbrook buildings now sit on a narrow concrete apron that rotates with the footprint and follows the underlying terrain sample at every grid vertex. Eligible street-facing setbacks also use a darker parking forecourt capped at seven metres with restrained white bay separators. The generator measures road width and actual lateral setback, refusing placements that cannot remain clear of the outer sidewalk.
 
-The treatment reuses one existing material/mesh/draw path. Opened WebGL2 and WebGPU captures show clean building bases without grass bleed or depth fighting. It adds 2,544 triangles to the measured city scene while retaining the same draw count and the earlier architecture optimization headroom. Broad lawns, sidewalk continuity, parking articulation and populated street life remain unfinished. See [implementation and measured checks](urban-parcels.md).
+The paved surfaces share the physical structure batch and the separators finalize inside the normal white-marking batch. Opened WebGL2 and WebGPU captures show clean building bases and readable lots without grass bleed or depth fighting. The final city sample is 217 draws / 432,509 triangles, retaining the earlier architecture-optimization headroom. Broad lawns, sidewalk continuity, parked vehicles and populated street life remain unfinished. See [implementation and measured checks](urban-parcels.md).
 
 ## Single-surface repeated windows — September 21
 
