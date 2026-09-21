@@ -98,6 +98,7 @@ node scripts/verify-freedrive-stress.mjs
 node scripts/verify-worker-recovery.mjs
 node scripts/inspect-handling.mjs
 node scripts/verify-controller-navigation.mjs
+node scripts/verify-platform-interactions.mjs --output=output/platform-interactions
 node scripts/verify-audio.mjs
 node scripts/verify-interactions.mjs
 node scripts/verify-storage.mjs

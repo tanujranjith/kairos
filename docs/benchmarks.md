@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Fullscreen, vibration and controller-loss recovery — September 21
+
+- `scripts/verify-platform-interactions.mjs` uses installed Edge/WebGL2 and the real browser Fullscreen API. Pressing F enters and exits fullscreen, records the expected `HTML`/null transition pair, and retains a **1280×720** canvas and render target. The opened fullscreen capture shows the complete live showroom rather than a blank or stale frame.
+- The live damage-feedback path requests a **120ms dual-rumble** effect at 0.96/0.48 strength. An oversized direct request clamps both channels to 1.0, and a simulated actuator rejection is swallowed without an unhandled error. The standards-shaped actuator is synthetic: this verifies browser integration and bounds, not physical motor output, latency or compatibility.
+- A controller disconnect clears held keyboard/gamepad state, opens the pause screen, shows the recovery notice and leaves the simulation clock unchanged across a controlled second. The opened disconnect and resumed captures show that ordinary keyboard selection returns to the same grounded Free Drive state.
+- Focused pure coverage passes **27 tests / 2 files**; the final complete gate passes **225 tests / 34 files** plus strict TypeScript, KTX2 integrity and the unchanged `index-D_lk1BT9.js` production bundle. The browser run records no page errors, unexpected warnings or external requests. This checkpoint changes tests and verification only; game runtime behavior is unchanged.
+
 ## Rural roadside delineators — September 21
 
 - `tests/roadside-guidance.test.ts` audits the full 4×4km region for **510** deterministic, finite, uniquely owned posts on all five selected roads and **six** signed-curvature Ridgeway chevrons, with exact terrain support, spacing, outside-turn placement, shoulder setback and water/junction exclusion. Blueprint assertions cover both complete dark/amber batches and their non-colliding status. The final full suite passes **224 tests / 34 files in 19.89s**.

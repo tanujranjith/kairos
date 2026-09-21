@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Fullscreen and controller-failure interactions — September 21 (verified checkpoint)
+
+- Added focused pure coverage for bounded dual-rumble magnitudes and absent/rejecting actuators, plus `scripts/verify-platform-interactions.mjs` for an installed-Edge/WebGL2 stateful path through real browser fullscreen, live damage feedback, controller loss and keyboard resume.
+- Real F input enters/exits fullscreen and retains a 1280×720 canvas/render target. The synthetic standards-shaped actuator receives the expected 120ms 0.96/0.48 damage request, clamps oversized channels to 1.0 and safely rejects an unavailable request without an unhandled error.
+- Disconnect clears held input, pauses the drive, displays the recovery notice and freezes the simulation clock. Keyboard selection resumes the same drive. Opened the fullscreen, disconnect and resumed images; browser errors, unexpected warnings and external requests are empty.
+- Focused result: 27 tests / 2 files. The final complete gate passes 225 tests / 34 files, strict TypeScript, the nineteen-KTX2 integrity check and the unchanged `index-D_lk1BT9.js` production bundle. This checkpoint modifies tests, verification and documentation only; it does not claim physical gamepad-motor compatibility or alter runtime behavior.
+- NEXT: preserve this interaction evidence and continue a current objective gap. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Rural delineators and road-edge depth — September 21 (verified checkpoint)
 
 - Added 510 deterministic road-progress delineators to Lakeshore, Lake Crossing, Ridgeway, Pinecrest and Orchard Way. White posts have a dark band and two outward-facing amber lenses; forty-two-metre cadence adds scale and poor-weather edge guidance while excluding route ends, water, bridge/tunnel spans and junction sightlines. Ridgeway's two sharp curvature clusters add six outside-turn yellow-on-black chevron boards.

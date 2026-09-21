@@ -155,3 +155,18 @@ describe('driving Input controller transitions', () => {
     expect(actions).toEqual([]);
   });
 });
+
+describe('controller vibration',()=>{
+  afterEach(()=>vi.unstubAllGlobals());
+  it('uses bounded dual-rumble magnitudes and tolerates missing or rejecting actuators',async()=>{
+    vi.stubGlobal('window',new EventTarget());
+    const playEffect=vi.fn().mockResolvedValueOnce('complete').mockRejectedValueOnce(new Error('actuator unavailable'));
+    let pads:unknown[]=[{connected:true,index:0,id:'rumble-pad',axes:[],buttons:[],vibrationActuator:{playEffect}}];
+    vi.stubGlobal('navigator',{getGamepads:()=>pads});
+    const input=new Input(()=>defaultSave().settings);
+    input.rumble(2);await Promise.resolve();expect(playEffect).toHaveBeenLastCalledWith('dual-rumble',{duration:120,strongMagnitude:1,weakMagnitude:1});
+    input.rumble(-1);await Promise.resolve();expect(playEffect).toHaveBeenLastCalledWith('dual-rumble',{duration:120,strongMagnitude:0,weakMagnitude:0});
+    await Promise.resolve();pads=[{connected:true,index:0,id:'plain-pad',axes:[],buttons:[]}];expect(()=>input.rumble(.5)).not.toThrow();
+    pads=[];expect(()=>input.rumble(.5)).not.toThrow();
+  });
+});
