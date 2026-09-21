@@ -868,3 +868,11 @@ Final production cold-cache 25Mbps/40ms emulation functionally passes startup, F
 ## Outstanding hardware and deployment acceptance
 
 Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; separate AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); broader wet/night traffic endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. The development-host repeated-race and controlled-time high-speed results above do not establish these remaining items or a target-laptop budget pass.
+
+## September 21 — dense sixteen-car pit traffic
+
+`scripts/verify-dense-pits.mjs` creates a normal sixteen-car practice, waits through the normal start, then applies equal tire wear to all fifteen AI entrants. It does not move a vehicle, alter an input, disable collision, add grip/power or suppress the ordinary reset behavior; reset calls are counted so a hidden recovery fails the run.
+
+Installed Edge / forced WebGL2 / controlled-time GT and Formula runs both pass. At least thirteen AI cars are simultaneously committed to the pit approach, neighboring assigned boxes overlap service, and all fifteen cars complete exactly one six-second service before rejoining and finishing a later valid lap. Final evidence in `output/dense-pits-gt-final` and `output/dense-pits-formula-final` records **15/15 serviced, 15/15 rejoined, all 24 pit gates, zero missed boxes, recovery resets, warnings, penalties, damage or retirements**. Fuel is above 96L and minimum tire state is at least 0.99 after the later lap. Both service screenshots were opened.
+
+The first harness required four cars to be stationary in service simultaneously. The unchanged physical run reached two because the compact field naturally serialized much of the service window, while still putting all fifteen cars through on the same lap. That first result is retained in `output/dense-pits-gt/failure.json`; the final assertion separately requires a dense approach and overlapping independent boxes. This is one demanding equal-wear/start-order pattern, not every possible arrival permutation, wet race, box overshoot or target-laptop performance case.
