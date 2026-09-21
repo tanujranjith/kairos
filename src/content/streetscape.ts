@@ -20,7 +20,7 @@ function fixtures():StreetFixture[]{
     for(let station=0,s=26;s<road.length-22;s+=36,station++){
       const side=station%2===0?1:-1;put(s,side,'lamp');
       if(station%3===0){put(s+11,side,station%9===0?'shelter':'bench');put(s+15,side,'bin');}
-      if(station%2===0)put(s+23,side,'planter');
+      put(s+23,side,'planter');
     }
   }
   return result;

@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Westbrook boulevard planting — September 21
+
+- Fixture inventory is now **83 lamps / 19 benches / 30 bins / 86 planters / 10 shelters**. Every bed carries one reused oak/trunk and two grass-card tufts. Pure clearance and ownership checks pass.
+- Forced WebGL2 and actual WebGPU pass day, dusk, dry night and wet night with opened matching captures. Ordinary city driving reaches **21.521 m/s**; the supplied input remains **10.933 m/s**, four contacts, zero damage and no failed cell.
+- The rejected full-oak-shrub revision measured **252 draws / 509,677 triangles** in city traffic and **253 / 509,844** wet. Final cost is **263 / 487,063** city and **264 / 487,208** wet; GT remains **298 / 487,166** and all retained scenes stay inside the Low targets.
+- Three selected city/lake loops repeat at **956/84/44** and **319/84/44** resources with exactly two persistent light nodes and no assigned lake light. Both renderers report no page errors; WebGPU emits only Chromium's known ignored `powerPreference` notice.
+- The complete suite passes **236 tests / 37 files**. Strict TypeScript, nineteen KTX2 files and production build pass (`index-Zla7Si_9.js`, `cell-worker-4NqBEf0t.js`).
+- Cold25Mbps/40ms production reaches menu in **6.268s WebGL2 / 5.680s automatic**, transfers **12,794,956 bytes**, enters Free Drive/Northstar and records no page, failed or external request.
+
 ## Reused parked-car models — September 21
 
 - The rejected custom background sedan was removed after both renderer captures showed a blocky silhouette. The accepted path instantiates the exact Velara LOD1 container. Forced WebGL2 and actual WebGPU each report **17 cars / 374 parts / 21 geometries / 10 materials**; a downward physics ray hits the static car box above terrain.

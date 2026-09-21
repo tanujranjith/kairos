@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Westbrook boulevard tree line — September 21
+
+All 83 street-lamp stations now share their corridor cadence with 86 raised tree planters. Beds reuse the original oak canopy/trunk and grass-card models, so the view gains a stronger vertical rhythm without a new asset family. The first revision left full oak meshes in the tiny shrub positions and was rejected at 509,677 city triangles; low-cost grass tufts restore the final city to 487,063 triangles.
+
+Opened day, night and wet-night captures match on native WebGL2/WebGPU, while the two-light pool, road clearance and cell ownership remain unchanged. This improves boulevard depth but does not solve every broad lawn or add pedestrians. See [implementation and measured evidence](boulevard-planting.md).
+
 ## Reused authored cars in city forecourts — September 21
 
 Sparse Westbrook parking now instantiates the existing Velara LOD1 container instead of introducing a separate low-quality background car. The accepted renderer captures show the same detailed body, glazing, wheels and lamps used elsewhere in Kairos; 17 parked cars share 21 geometries and 10 materials. A first bespoke procedural sedan passed geometry checks but looked blocky in the opened images and was removed.

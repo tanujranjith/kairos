@@ -32,10 +32,15 @@ export function buildStreetscape(cx:number,cz:number,b:ArchitectureBuffers,insta
     }else if(f.kind==='planter'){
       box(b.wall,0,0,0,1.05,.44,2.75,stone);
       box(b.roof,0,.44,0,.88,.026,2.55,[.16,.13,.085,1]);
-      for(const z of [-.70,.70]){
+      for(const z of [-.72,.72]){
         const c=Math.cos(f.yaw),s=Math.sin(f.yaw);
-        instances.push({kind:'oak',position:{x:f.x+z*s,y:f.y+.62,z:f.z+z*c},scale:{x:.115,y:.12,z:.15},yaw:f.yaw+z});
+        instances.push({kind:'grass',position:{x:f.x+z*s,y:f.y+.46,z:f.z+z*c},scale:{x:.42,y:.32,z:.42},yaw:f.yaw+z});
       }
+      const treeScale=.235;
+      instances.push(
+        {kind:'oak',position:{x:f.x,y:f.y+.46+8*treeScale,z:f.z},scale:{x:treeScale,y:treeScale,z:treeScale},yaw:f.yaw+f.s*.01},
+        {kind:'oakTrunk',position:{x:f.x,y:f.y+.46+6*treeScale,z:f.z},scale:{x:treeScale,y:treeScale,z:treeScale},yaw:f.yaw+f.s*.01},
+      );
     }else{
       bench();
       for(const z of [-1.7,1.7])for(const x of [-.64,.64])box(b.roof,x,0,z,.055,2.45,.055,dark);

@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Westbrook boulevard planting — September 21 (verified checkpoint)
+
+- Extended the existing 36m fixture cadence from 43 to 86 raised planters, pairing all 83 lamp stations with one reused oak/trunk and low-cost grass-card underplanting. No new asset, material, texture, light or runtime request.
+- Rejected the first version after full oak meshes used as tiny shrubs raised city traffic to 509,677 triangles. Final city/wet-night cost is 263/487,063 and 264/487,208 draws/triangles; GT remains the 298-draw peak.
+- Opened final day and wet-night captures on forced WebGL2 and actual WebGPU. Both pass lighting, road clearance and repeated city/lake ownership. Ordinary city driving reaches 21.521m/s; supplied input reaches 10.933m/s, four contacts, zero damage, 12+12 traffic and no failed cell.
+- Complete suite remains 236 tests / 37 files. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-Zla7Si_9.js`, worker `cell-worker-4NqBEf0t.js`).
+- Cold25Mbps/40ms production passes at 6.268s forced WebGL2 / 5.680s automatic, 12,794,956 bytes, with no page/failed/external requests.
+- NEXT: broader non-road city focal composition and sidewalk continuity remain open; preserve the current 13k-triangle city headroom. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Reused parked-car scenery — September 21 (verified checkpoint)
 
 - User explicitly approved reusing the same existing car model for background population. Removed the uncommitted bespoke parked-sedan trial after opened WebGL2/WebGPU captures still looked blocky and poorly integrated.

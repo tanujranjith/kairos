@@ -48,6 +48,8 @@ The controlled `advanceTime` hook holds the normal simulation loop and submits e
 
 City fixture stations are shared pure content, used by both worker geometry and the main-thread light selector. Geometry is merged into existing cell batches and disposed with those cells. `StreetLighting` owns two scene-resident, unshadowed spotlights rather than allocating one per pole. Only loaded detail cells and nearby compatible elevations qualify; distance hysteresis and fading limit rank-switch flicker. World clear, daytime and garage visibility disable the pool. Real lights can affect roads, cars and vegetation through the six-light material budget. The persistent two-node pool is disposed with the scene, not repeatedly recreated while driving.
 
+Every lamp cadence now also schedules one raised tree planter. The solid bed remains in the existing wall/roof batches; oak, trunk and grass entries join the same per-cell thin-instance groups as other vegetation. The first small-shrub design reused full oak geometry and exceeded the Low triangle target despite its scale, so the final underplanting uses grass cards. This preserves one full tree per bed without creating per-planter scene resources. See [boulevard planting evidence](boulevard-planting.md).
+
 ## Physics
 
 The application manually advances Havok at 120 Hz. Babylon's automatic physics step is disabled. Real-time catch-up is bounded to eight steps; hidden tabs pause and inputs are cleared. Rendering interpolates the preceding and current physical poses. Controlled-time testing bypasses the real-time accumulator and prevents double stepping.

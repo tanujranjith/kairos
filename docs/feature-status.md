@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Westbrook boulevard planting — September 21 (verified checkpoint)
+
+The existing 36-metre street-furniture cadence now carries 86 raised tree planters across Westbrook's four city roads, pairing every lamp station with one correctly scaled reused oak/trunk and two inexpensive grass-card tufts. A first attempt kept full oak meshes as tiny shrubs and was rejected after exceeding the Low geometry target.
+
+Final day/dusk/night/wet-night captures match on WebGL2 and WebGPU; road clearance, two-light ownership, ordinary driving, supplied keyboard input and three repeated city/lake cycles pass. Low city is 263 draws / 487,063 triangles and wet night 264 / 487,208. The complete 236-test suite, strict TypeScript, production build and cold-cache local delivery smoke pass. This adds a visible boulevard rhythm but not pedestrians, a finished park network, target-laptop certification or hosted HTTPS acceptance. See [implementation and evidence](boulevard-planting.md).
+
 ## Reused parked-car models — September 21 (verified checkpoint)
 
 Eligible procedural Westbrook forecourts now instantiate the existing Velara LOD1 model, preserving the same body, glass, wheel and lamp quality instead of adding a cheaper scenery-only car. A rejected bespoke low-poly trial was removed after screenshot review. The final deterministic placements remain inside paved bays, face the street, carry simple streamed collision boxes and release with their cell.

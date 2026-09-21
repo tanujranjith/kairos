@@ -10,6 +10,7 @@ import type {CellInstance} from '../src/world/cell-blueprint';
 describe('city streetscape ownership and clearance',()=>{
   it('has stable unique authored road stations, all fixture types and owner cells',()=>{
     expect(STREET_LAMPS.length).toBeGreaterThan(70);expect(STREET_FIXTURES.length).toBeLessThan(450);
+    expect(STREET_FIXTURES.filter(f=>f.kind==='planter').length).toBeGreaterThan(70);
     expect(new Set(STREET_FIXTURES.map(f=>f.id)).size).toBe(STREET_FIXTURES.length);
     expect(new Set(STREET_FIXTURES.map(f=>f.kind)).size).toBe(5);
     for(const f of STREET_FIXTURES){expect(f.cell).toBe(`${Math.floor(f.x/256)},${Math.floor(f.z/256)}`);expect(f.roadId.startsWith('city')).toBe(true);}
@@ -21,8 +22,9 @@ describe('city streetscape ownership and clearance',()=>{
       for(const g of Object.values(b)){const data=g.finish();triangles+=data.indices.length/3;expect([...data.positions,...data.normals,...data.colors??[]].every(Number.isFinite)).toBe(true);
         for(let i=0;i<data.positions.length;i+=3){const [x,y,z]=data.positions.slice(i,i+3);if(y>terrainHeight(x,z)+4)continue;const n=nearestRoad(x,z,undefined,1);expect(n.distance-n.road.width/2,`${cell} vertex ${x},${z}`).toBeGreaterThan(.90);}
       }
-      expect(triangles).toBeLessThan(3500);
-      for(const p of plants){expect(p.kind).toBe('oak');expect(p.scale.x).toBeLessThan(.2);}
+      expect(triangles).toBeLessThan(5000);
+      expect(plants.filter(p=>p.kind==='oakTrunk').length).toBe(STREET_FIXTURES.filter(f=>f.cell===cell&&f.kind==='planter').length);
+      for(const p of plants){expect(['oak','oakTrunk','grass']).toContain(p.kind);expect(p.scale.x).toBeLessThan(.45);}
     }
   });
   it('selects at most two loaded, height-compatible lamps and owns only two real lights',()=>{
