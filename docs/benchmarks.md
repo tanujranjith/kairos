@@ -2,6 +2,14 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Single-surface architectural panes — September 21
+
+- Repeated upper-story panes in `buildArchitecture` now use one outward-facing quad rather than a six-faced shallow box. Focused coverage caps the representative office glass at fewer than 500 triangles and requires finite positions/normals plus both occupied/unoccupied UV slots. Frames, ground-floor openings and the shared material remain unchanged.
+- Forced WebGL2 and actual WebGPU pass all four Westbrook sites with every exterior elevation visible, four `Concrete` contacts per plaza and normal keyboard road driving at **19.325m/s**. The opened captures show no culling holes. Remaining pane-grid reflection variation is explicitly not counted as fixed.
+- Low city now measures **218 draws / 428,325 triangles** and wet night **219 / 428,492**. The city run submitted two reflection captures, versus one in the immediately preceding 210-draw sample; all draws remain below 300. The current city geometry is 36,182 triangles below the preceding checkpoint and 63,074 below the pre-pass 491,399 sample.
+- The supplied loader-aware input reaches **10.933m/s**, four mixed contacts, zero damage, 12+12 traffic and no failed cell. Three region loops remain exactly **496/74/44**, **368/75/45** and **318/74/44** resources; three race/home cycles return to **138/73/43** and zero cells.
+- The complete suite passes **231 tests / 36 files**. Strict TypeScript, nineteen KTX2 files and production build pass (`index-DUXjTamo.js`, `cell-worker-wmMV49N6.js`). Cold25Mbps/40ms production reaches menu in **6.312s forced WebGL2 / 6.186s automatic request**, transfers **12,977,785 bytes**, enters Free Drive/Northstar and records no page, failed or external requests. Both final drive captures were opened. These are development-host checks, not target-laptop FPS or authorized HTTPS evidence.
+
 ## Shared background-office family — September 21
 
 - `buildBandArchitecture` is now shared by authored secondary wings and a deterministic one-third of procedural office buildings. Focused tests assert finite buffers, mixed occupancy UVs and a 200–1,800 triangle range. The all-office and half-frequency visual trials were rejected as too repetitive before the final one-third mix.

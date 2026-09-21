@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Single-surface architectural panes — September 21 (verified checkpoint)
+
+- Replaced repeated upper-story six-faced window boxes with correctly wound exterior quads while retaining proud frames, deterministic tint/occupancy, four visible elevations and the shared glass material. The old hidden inner/edge faces are gone; physical geometry and gameplay are unchanged.
+- Forced WebGL2 and actual WebGPU images were opened at all four Westbrook sites plus normal driving. No culling holes or missing elevations; every plaza retains four `Concrete` contacts and driving reaches 19.325m/s. Remaining legacy reflection variation survives and is correctly recorded as material/art work, not a geometry fix.
+- Low city falls from 464,507 to 428,325 triangles; wet night falls to 428,492. Together with the shared-office checkpoint, current city geometry is 63,074 triangles below the pre-pass 491,399 sample. Draw maxima remain 218/219 because this audit captured two local-reflection faces instead of one, still below the 300 ceiling.
+- Loader-aware supplied input passes at 10.933m/s, four mixed contacts, zero damage, 12+12 traffic and no failed cell. Three region loops and three race/home cycles repeat exact resource counts.
+- Complete suite passes 231 tests / 36 files; strict TypeScript, nineteen KTX2 files and production build pass (`index-DUXjTamo.js`, worker `cell-worker-wmMV49N6.js`). Cold25Mbps/40ms exact production reaches menu in 6.312s WebGL2 / 6.186s automatic request, transfers 12,977,785 bytes and enters Free Drive/Northstar with no page, failed or external requests.
+- NEXT: spend the recovered headroom on visible, cost-controlled art rather than refilling it blindly. The next façade work must target the shared glass/reflection appearance, not pane overlap. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Shared background-office family — September 21 (verified checkpoint)
 
 - Promoted the authored continuous-band secondary-wing form into shared `buildBandArchitecture` and applied it to a deterministic one-third of procedural Westbrook offices. Rejected all-office and half-frequency trials as too uniformly striped. The final mix retains brick, limestone and pane-grid variety while adding a cleaner modern background family.

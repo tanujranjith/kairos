@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Single-surface repeated windows — September 21
+
+The detailed modular building family no longer models every upper-story window as a complete shallow box. One explicitly wound exterior quad now carries the same tint and occupied/unoccupied emission slot inside the existing proud frame. Front, rear, left and right elevations remain visible under normal back-face culling, while hidden inner and edge faces no longer consume the Low geometry budget.
+
+Opened WebGL2 and WebGPU comparisons preserve the existing silhouette and façade composition. The city sample now submits 428,325 triangles, 63,074 fewer than before the shared-office and pane passes. The surviving uneven legacy reflections remain visible and are a separate material/art limitation; this geometry change is not represented as having solved them. See [implementation and measured checks](window-geometry.md).
+
 ## Shared background offices — September 21
 
 The continuous-band secondary-wing design is now a shared architecture primitive and appears in a deterministic one-third of procedural Westbrook offices. The form retains a plinth, cornice, roof/equipment silhouette, four-sided glazing, sparse proud mullions and a canopy while continuing to mix with brick, limestone and individual-pane buildings. Screenshot review rejected all-office and half-office distributions as too repetitive; the final mix reads as a distinct modern background family rather than the whole skyline.

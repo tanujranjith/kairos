@@ -13,6 +13,15 @@ export function buildArchitecture(b:ArchitectureBuffers,s:BuildingSpec){
   const box=(g:MeshDataBuilder,px:number,py:number,pz:number,width:number,height:number,depth:number,color:readonly number[])=>{const first=g.positions.length/3,p=point(px,py,pz);g.box(p.x,p.y,p.z,width,height,depth,yaw);g.tintSince(first,color);
     if(g===b.glass){const occupied=Math.abs(Math.round(px*31+pz*13+py*7)+s.seed)%5<2;for(let i=first*2;i<g.uvs.length;i+=2){g.uvs[i]=occupied?.75:.25;g.uvs[i+1]=.5;}}
   };
+  const pane=(front:boolean,side:number,offset:number,bottom:number,width:number,height:number,plane:number,color:readonly number[])=>{
+    const first=b.glass.positions.length/3,left=offset-width/2,right=offset+width/2,top=bottom+height;
+    const points=front
+      ?side<0?[point(left,bottom,plane),point(right,bottom,plane),point(left,top,plane),point(right,top,plane)]:[point(right,bottom,plane),point(left,bottom,plane),point(right,top,plane),point(left,top,plane)]
+      :side<0?[point(plane,bottom,right),point(plane,bottom,left),point(plane,top,right),point(plane,top,left)]:[point(plane,bottom,left),point(plane,bottom,right),point(plane,top,left),point(plane,top,right)];
+    b.glass.quad(points[0],points[1],points[2],points[3]);b.glass.tintSince(first,color);
+    const occupied=Math.abs(Math.round((front?offset:plane)*31+(front?plane:offset)*13+bottom*7)+s.seed)%5<2;
+    for(let i=first*2;i<b.glass.uvs.length;i+=2){b.glass.uvs[i]=occupied?.75:.25;b.glass.uvs[i+1]=.5;}
+  };
   const wall=palettes[style],trim=[.86,.83,.73,1],metal=[.59,.65,.67,1],glass=[.55,.77,.88,1];
   const office=style==='office',factory=style==='factory',house=style==='house',setback=office?1.2:0;
   box(b.wall,0,0,0,w,office?4.3:h,d,wall);
@@ -40,7 +49,7 @@ export function buildArchitecture(b:ArchitectureBuffers,s:BuildingSpec){
       const side=face%2===0?-1:1,front=face<2,span=front?halfW:halfD;
       for(let offset=-span+1.7,index=0;offset<span-1;offset+=spacing,index++){
         const px=front?offset:side*(halfW+.027),pz=front?side*(halfD+.027):offset,paneW=office?2.05:1.6,shade=.7+((index*7+floor*3+s.seed)%9)/30;
-        box(b.glass,px,level,pz,front?paneW:.055,paneH,front?.055:paneW,glass.map((v,c)=>c===3?1:v*shade));
+        pane(front,side,offset,level,paneW,paneH,side*((front?halfD:halfW)+.065),glass.map((v,c)=>c===3?1:v*shade));
         // Proud frames and sills read as recesses without hollow, expensive wall topology.
         box(b.wall,px,level-.12,pz,front?paneW+.27:.16,.12,front?.16:paneW+.27,trim);
         if(!office)box(b.wall,px,level+paneH,pz,front?paneW+.2:.14,.13,front?.14:paneW+.2,trim);
