@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Navigation rerouting and discovery — September 21 (verified checkpoint)
+
+HUD guidance now reports remaining directed road-route length instead of straight-line distance. Returning from the map paints the active route immediately, and route/destination changes bypass the minimap's ordinary five-tick refresh so recalculation and arrival cannot show stale guidance. Development state exposes route distance in metres.
+
+The focused browser path selects Ridgeway Overlook through rendered map controls, reroutes from 2.803km to 4.330km after an off-route Foundry move, discovers the current road, arrives, clears all route UI, and reloads the persisted discovery/visit. Opened HUD/map/arrival captures match state; 249 tests / 39 files, strict build, KTX2 integrity and cold production delivery pass. See [implementation and evidence](navigation-rerouting.md).
+
 ## Chase-camera collision avoidance — September 21 (verified checkpoint)
 
 Chase and close-chase cameras now pull to their Havok-resolved safe point immediately when world geometry blocks the requested view, preventing the previous several-frame wall clip. Clearing the obstacle retains the spring-smoothed outward release. Camera mode, obstruction and requested/resolved/current distances are available in development text state; cockpit, hood and bumper mounts are unchanged.

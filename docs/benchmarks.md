@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Navigation rerouting and discovery — September 21
+
+- `scripts/verify-navigation-reroute.mjs` selects Ridgeway Overlook through rendered map controls. The initial lane-graph route is 2.803km. After a controlled off-route move to Foundry Avenue, the normal three-second update creates a new 4.330km path from the current road; its first node is within 60m of the car and its length correctly exceeds the 2.861km direct distance.
+- The HUD and minimap update on the same rendered frame as route selection, recalculation and arrival. Foundry Avenue enters discovery, arrival clears destination/route/distance/blue line, and the discovered road plus scenic visit survive IndexedDB reload. Opened rerouted HUD, full map and arrival captures agree with text state; no page, failed or external requests are recorded.
+- Two focused pure cases cover route joins, path length, direct-only fallback and immutability. The complete suite passes **249 tests / 39 files**. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-Du9sEhL0.js`, worker `cell-worker-D1LLTGra.js`). Cold 25Mbps/40ms production reaches the menu in **15.420s forced WebGL2 / 4.872s automatic**, transfers **10,520,824 bytes**, enters Free Drive/Northstar and records no page, failed or external requests.
+- The required generic input client was attempted and remained live without output/artifacts for over a minute, so it was terminated and not counted. These are local development-host checks, not target-laptop or hosted HTTPS acceptance.
+
 ## Chase-camera collision avoidance — September 21
 
 - `scripts/verify-camera-collision.mjs` crosses each chase ray with a temporary collision-group-1 wall. Standard chase clamps 6.555m to 2.750m and close chase clamps 4.921m to 2.035m. The current camera matches the collision-resolved point within 4cm on the first rendered frame, then moves partway outward after 100ms and settles within 8cm of the requested distance after 1.2s. Cockpit, hood and bumper state stays unobstructed.

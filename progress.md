@@ -1,5 +1,12 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Navigation rerouting and discovery — September 21 (verified checkpoint)
+
+- Added pure remaining-route distance and replaced misleading straight-line HUD distance with lane-route kilometres. `render_game_to_text` now exposes the same value. Initial HUD render uses live navigation state instead of showing one stale `Explore` frame after returning from the map.
+- Screenshot review exposed a second stale route: the minimap's five-tick optimization could retain a completed blue line. Destination/route-key changes now force an immediate refresh while ordinary moving-position updates remain throttled.
+- Browser verification passes rendered destination selection, a 2.803km initial route, 4.330km Foundry reroute, road discovery, arrival cleanup and IndexedDB persistence. Three captures were opened; network/error arrays are empty. Full suite passes 249 tests / 39 files; strict build and production delivery pass (`index-Du9sEhL0.js`, worker `cell-worker-D1LLTGra.js`).
+- The generic skill client again remained live without artifacts for over a minute and was terminated. NEXT: preserve immediate navigation/minimap updates and all prior model/handling/camera/service work. Actual 8GB laptop and authorized HTTPS acceptance remain external; broader visual realism remains the principal local gap. Keep the five user files untouched.
+
 ## Chase-camera collision avoidance — September 21 (verified checkpoint)
 
 - Fixed a real obstruction-transition defect: chase cameras previously smoothed inward toward a safe ray hit, allowing several frames inside a newly encountered wall. They now snap inward to the safe point and retain smooth outward release. Development state exposes camera mode plus requested, resolved and current distance.
