@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Bounded pane tint for negative seeds — September 21 (verified follow-up)
+
+- Fixed a signed-remainder bug that allowed negative deterministic building seeds to push the intended 0.70–0.97 pane tint multiplier toward 0.43. A new negative-seed test bounds every generated pane colour.
+- Forced WebGL2 and actual WebGPU pass all four Westbrook sites, four `Concrete` contacts each and normal driving at 19.325m/s. The supplied loader-aware input re-passes at 10.933m/s, four contacts, zero damage, 12+12 traffic and no failed cell. Final renderer, input and production images were opened.
+- The correction improves range consistency but does not eliminate the broader face-oriented reflection contrast; that remains an honest material/art gap. Geometry and the 218/428,325 city budget are unchanged.
+- Complete suite passes 232 tests / 36 files; strict TypeScript, nineteen KTX2 files and production build pass (`index-qIUXLs9y.js`, worker `cell-worker-BRo_S_Ez.js`). Cold25Mbps/40ms production reaches menu in 6.194s WebGL2 / 5.920s automatic request, transfers 12,977,788 bytes and has no page, failed or external requests.
+- NEXT: use the recovered city headroom for visible art or address the shared architectural glass response with a renderer-safe, screenshot-proven material change. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Single-surface architectural panes — September 21 (verified checkpoint)
 
 - Replaced repeated upper-story six-faced window boxes with correctly wound exterior quads while retaining proud frames, deterministic tint/occupancy, four visible elevations and the shared glass material. The old hidden inner/edge faces are gone; physical geometry and gameplay are unchanged.

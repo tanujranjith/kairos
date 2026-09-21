@@ -6,6 +6,8 @@ The detailed modular building family no longer models every upper-story window a
 
 Opened WebGL2 and WebGPU comparisons preserve the existing silhouette and façade composition. The city sample now submits 428,325 triangles, 63,074 fewer than before the shared-office and pane passes. The surviving uneven legacy reflections remain visible and are a separate material/art limitation; this geometry change is not represented as having solved them. See [implementation and measured checks](window-geometry.md).
 
+A follow-up normalizes pane-tint variation for negative deterministic cell seeds. The old signed remainder could escape the intended range and make some daylight panes unnecessarily dark. The correction is covered numerically and inspected on both native renderers; broader face-oriented reflection contrast remains intentionally unchanged.
+
 ## Shared background offices — September 21
 
 The continuous-band secondary-wing design is now a shared architecture primitive and appears in a deterministic one-third of procedural Westbrook offices. The form retains a plinth, cornice, roof/equipment silhouette, four-sided glazing, sparse proud mullions and a canopy while continuing to mix with brick, limestone and individual-pane buildings. Screenshot review rejected all-office and half-office distributions as too repetitive; the final mix reads as a distinct modern background family rather than the whole skyline.

@@ -4,7 +4,7 @@
 
 Repeated upper-story windows in the detailed modular building family now use one correctly wound exterior quad instead of a shallow six-faced box. Proud frames, sills, deterministic colour/occupancy, all four elevations and the shared glass material remain unchanged. Native WebGL2/WebGPU inspection shows no missing façades or culling holes, and the ordinary physical surfaces are untouched.
 
-The Low city sample falls again to 218 draws / 428,325 triangles and wet night to 219 / 428,492; the two most recent architecture checkpoints together recover 63,074 triangles from the 491,399-triangle pre-pass city sample. Four-site contacts, normal and supplied keyboard input, repeated resource cleanup, 231 tests / 36 files, strict build, texture integrity and exact production delivery pass. The surviving legacy pane-grid light/dark variation is now isolated as a material/reflection art issue and remains unfinished. See [implementation and evidence](window-geometry.md).
+The Low city sample falls again to 218 draws / 428,325 triangles and wet night to 219 / 428,492; the two most recent architecture checkpoints together recover 63,074 triangles from the 491,399-triangle pre-pass city sample. A follow-up fixes signed-remainder tint values that could darken negative-seed panes below their authored range. Four-site contacts, normal and supplied keyboard input, repeated resource cleanup, 232 tests / 36 files, strict build, texture integrity and exact production delivery pass. The surviving legacy pane-grid light/dark variation is now isolated as a material/reflection art issue and remains unfinished. See [implementation and evidence](window-geometry.md).
 
 ## Shared background-office family — September 21 (verified checkpoint)
 

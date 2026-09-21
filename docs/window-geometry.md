@@ -12,6 +12,10 @@ Forced WebGL2 and native WebGPU screenshots were opened at Cedar Square, Market 
 
 This optimization does **not** remove the remaining stylized light/dark variation on legacy pane-grid towers. That variation survives with single surfaces and is therefore a glass/material/reflection art issue rather than proof of overlapping pane geometry. It remains future work and is not represented as fixed here.
 
+### Deterministic tint range follow-up
+
+The procedural tint expression previously used JavaScript’s signed remainder directly. Negative cell seeds could therefore push the intended 0.70–0.97 multiplier down toward 0.43 and create accidental near-black daytime panes. The final expression normalizes the deterministic value before applying it. A negative-seed regression now proves every red-channel multiplier remains inside the intended range. Native WebGL2/WebGPU comparison confirms the correction is stable but intentionally records that face-oriented environment reflection still produces broader stylized variation.
+
 ## Measured evidence
 
 - Sampled structure geometry falls from 33,650 to 25,550 triangles at Cedar Square, 36,930 to 27,290 at Market Court, 41,930 to 29,370 at Harbor Exchange and 14,866 to 11,466 at Westbrook Campus.
@@ -20,5 +24,5 @@ This optimization does **not** remove the remaining stylized light/dark variatio
 - The supplied loader-aware input reaches 10.933m/s with four mixed contacts, zero damage, 12 physical + 12 distant traffic actors and no failed cell. Its screenshot and state were opened.
 - Forced WebGL2 and actual WebGPU retain four `Concrete` contacts at all four plazas and normal keyboard driving at 19.325m/s. Page/network errors are empty.
 - Three city/forest/lake streaming loops repeat exactly at 496/74/44, 368/75/45 and 318/74/44 resources. Three race/home cycles return to 138/73/43 and zero world cells.
-- Strict TypeScript, 231 tests / 36 files, all nineteen KTX2 files and the Node24 production build pass. Exact chunks are `index-DUXjTamo.js` and `cell-worker-wmMV49N6.js`.
-- Cold-cache 25Mbps/40ms local production reaches the menu in 6.312s forced WebGL2 and 6.186s on the automatic renderer request, transfers 12,977,785 bytes, and enters Free Drive plus Northstar without page, failed or external requests. These are development-host samples, not target-laptop FPS, actual Internet or authorized HTTPS evidence.
+- Strict TypeScript, 232 tests / 36 files, all nineteen KTX2 files and the Node24 production build pass. Exact chunks are `index-qIUXLs9y.js` and `cell-worker-BRo_S_Ez.js`.
+- Cold-cache 25Mbps/40ms local production reaches the menu in 6.194s forced WebGL2 and 5.920s on the automatic renderer request, transfers 12,977,788 bytes, and enters Free Drive plus Northstar without page, failed or external requests. These are development-host samples, not target-laptop FPS, actual Internet or authorized HTTPS evidence.

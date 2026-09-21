@@ -68,6 +68,9 @@ describe('original graphics assets',()=>{
   it('batches lit and unlit panes in one glass material and fades occupancy lighting at dusk',()=>{
     const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()};buildArchitecture(b,{x:0,y:0,z:0,width:21,depth:16,height:24,yaw:0,style:'office',seed:5});const slots=new Set(b.glass.uvs.filter((_,i)=>i%2===0)),glass=b.glass.finish();expect(slots).toEqual(new Set([.25,.75]));expect(glass.indices.length/3).toBeLessThan(500);expect([...glass.positions,...glass.normals].every(Number.isFinite)).toBe(true);expect(windowLighting(12)).toBe(0);expect(windowLighting(22)).toBe(1);expect(windowLighting(18)).toBeCloseTo(.5);expect(windowLighting(24)).toEqual(windowLighting(0));
   });
+  it('keeps deterministic pane tint in its intended range for negative cell seeds',()=>{
+    const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()};buildArchitecture(b,{x:0,y:0,z:0,width:21,depth:16,height:24,yaw:0,style:'office',seed:-113});const red=b.glass.colors.filter((_,index)=>index%4===0);expect(Math.min(...red)).toBeGreaterThanOrEqual(.55*.7-.0001);expect(Math.max(...red)).toBeLessThanOrEqual(.55+.0001);
+  });
   it('builds finite low-cost band-window office massing with lit and unlit glazing',()=>{
     const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},result=buildBandArchitecture(b,{x:10,y:12,z:10,width:24,depth:18,height:30,yaw:.4,style:'office',seed:9}),data=Object.values(b).map(builder=>builder.finish()),triangles=data.reduce((sum,mesh)=>sum+mesh.indices.length/3,0);
     expect(triangles).toBeGreaterThan(200);expect(triangles).toBeLessThan(1800);expect(result.height).toBeLessThan(32);expect(data.every(mesh=>[...mesh.positions,...mesh.normals,...(mesh.colors??[])].every(Number.isFinite))).toBe(true);expect(new Set(b.glass.uvs.filter((_,index)=>index%2===0))).toEqual(new Set([.25,.75]));

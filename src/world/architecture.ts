@@ -48,7 +48,7 @@ export function buildArchitecture(b:ArchitectureBuffers,s:BuildingSpec){
     for(let face=0;face<4;face++){
       const side=face%2===0?-1:1,front=face<2,span=front?halfW:halfD;
       for(let offset=-span+1.7,index=0;offset<span-1;offset+=spacing,index++){
-        const px=front?offset:side*(halfW+.027),pz=front?side*(halfD+.027):offset,paneW=office?2.05:1.6,shade=.7+((index*7+floor*3+s.seed)%9)/30;
+        const px=front?offset:side*(halfW+.027),pz=front?side*(halfD+.027):offset,paneW=office?2.05:1.6,shade=.7+(Math.abs(index*7+floor*3+s.seed)%9)/30;
         pane(front,side,offset,level,paneW,paneH,side*((front?halfD:halfW)+.065),glass.map((v,c)=>c===3?1:v*shade));
         // Proud frames and sills read as recesses without hollow, expensive wall topology.
         box(b.wall,px,level-.12,pz,front?paneW+.27:.16,.12,front?.16:paneW+.27,trim);
