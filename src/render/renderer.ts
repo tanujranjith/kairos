@@ -18,6 +18,7 @@ export class Renderer {
   showroom:TransformNode;rendererName:string;lightsEnabled=true;private shadowParts=new Set<Mesh>();private headlights:SpotLight[]=[];private cameraPosition=new Vector3();private look=new Vector3();private wasGarage=true;private rain:LinesMesh;private rainPositions:Float32Array;
   private outdoorEnvironment:ReturnType<typeof lightingEnvironment>;private studioEnvironment:ReturnType<typeof lightingEnvironment>;private pipeline:DefaultRenderingPipeline;private contactMaterial:StandardMaterial;
   reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];private floorReflection:MirrorTexture;private galleryEnvironment:BaseTexture;
+  private activeSettings:Settings|null=null;private dynamicResolutionScale=1;
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
     this.scene=new Scene(engine);const scene=this.scene;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
@@ -36,7 +37,7 @@ export class Renderer {
     for(const [name,p,power,color]of [['studio-key',new Vector3(-4,-994,4),900,new Color3(1,.86,.70)],['studio-fill',new Vector3(4,-996,-3),480,new Color3(.68,.82,1)]] as const){const lamp=new SpotLight(name,p,new Vector3(0,-999,0).subtract(p).normalize(),1.8,1,scene);lamp.diffuse=color;lamp.falloffType=Light.FALLOFF_GLTF;lamp.intensity=power;lamp.range=22;this.studioLights.push(lamp);}
     for(const side of [-1,1]){const light=new SpotLight(`headlamp-${side}`,Vector3.Zero(),Vector3.Forward(),.85,3,scene);light.diffuse=new Color3(.82,.91,1);light.falloffType=Light.FALLOFF_GLTF;light.intensity=0;light.range=100;this.headlights.push(light);}
     this.rain=MeshBuilder.CreateLineSystem('rain',{lines:Array.from({length:250},()=>[new Vector3(),new Vector3(0,-1,0)]),updatable:true},scene);this.rain.color=new Color3(.7,.78,.85);this.rain.isPickable=false;this.rain.setEnabled(false);this.rainPositions=new Float32Array(1500);
-    window.addEventListener('resize',()=>this.engine.resize());
+    window.addEventListener('resize',()=>{this.applyHardwareScale();this.engine.resize();});
   }
   static async create(canvas:HTMLCanvasElement){let engine:AbstractEngine|undefined;const forceGL=new URLSearchParams(location.search).get('renderer')==='webgl';
     configureLocalResources();
@@ -62,7 +63,10 @@ export class Renderer {
     }
   }
   prepareReflections(car:CarVisual,settings:Settings,garage:boolean,clock:number){this.reflections.update({position:car.root.position,garage,clock,stamp:`${Math.round(settings.time*4)}:${settings.weather}`},settings.quality,[car.paint,car.glass]);}
-  applySettings(settings:Settings){const profiles={Low:[1280,720,1024],Medium:[1600,900,1536],High:[1920,1080,2048],Ultra:[2560,1440,4096]},profile=profiles[settings.quality],scale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(scale/settings.resolution);this.shadow.getShadowMap()?.resize(profile[2]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}
+  private applyHardwareScale(){if(!this.activeSettings)return;const profiles={Low:[1280,720],Medium:[1600,900],High:[1920,1080],Ultra:[2560,1440]},profile=profiles[this.activeSettings.quality],viewportScale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(viewportScale/(this.activeSettings.resolution*this.dynamicResolutionScale));}
+  applySettings(settings:Settings,resetDynamic=false){this.activeSettings=settings;if(resetDynamic)this.dynamicResolutionScale=1;this.applyHardwareScale();const shadows={Low:1024,Medium:1536,High:2048,Ultra:4096};this.shadow.getShadowMap()?.resize(shadows[settings.quality]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}
+  setDynamicResolutionScale(scale:number){const next=clamp(scale,.7,1);if(Math.abs(next-this.dynamicResolutionScale)<1e-6)return;this.dynamicResolutionScale=next;this.applyHardwareScale();}
+  graphicsState(){const requested=this.activeSettings?.resolution??1;return {dynamicScale:this.dynamicResolutionScale,requestedScale:requested,effectiveScale:requested*this.dynamicResolutionScale,width:this.engine.getRenderWidth(),height:this.engine.getRenderHeight()};}
   update(vehicle:Vehicle,visual:CarVisual,settings:Settings,dt:number,garage:boolean,clock:number,wetness:number,alpha=1){
     const time=settings.time,solar=solarLighting(time),day=solar.daylight,golden=solar.golden;const overcast=settings.weather==='Rain'?.72:settings.weather==='Overcast'?.55:settings.weather==='Cloudy'?.20:0;
     this.ambient.intensity=garage?.35:.32+day*.60;this.sun.intensity=garage?2.8:day*(2.8+golden*.9)*(1-overcast);this.sun.diffuse=Color3.Lerp(new Color3(.96,.96,.89),new Color3(1,.66,.34),golden);this.scene.environmentIntensity=garage?.65:.22+day*.78;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;

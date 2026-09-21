@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Automatic quality and bounded dynamic resolution — September 20 (verified checkpoint)
+
+- Added first-run 30-frame warm-up + 120-frame p95 automatic preset benchmark. Existing saves remain manual; choosing a preset disables auto. Benchmark can continue in a real drive, but its preset is deferred until home so world/circuit resources never clear mid-session.
+- Added 120-frame dynamic-resolution windows: >40ms p95 lowers five points to a 70% floor; three <28ms windows recover one step. Loading/menu/hidden/controlled-time frames are excluded. Settings, telemetry and `render_game_to_text` expose preset, phase, p95, requested/dynamic/effective scale and actual dimensions. Simulation/rules are unchanged.
+- Pure/focused checks pass. Installed Edge integration verifies High at16ms, manual Medium,1280×720→896×504 floor→960×540 recovery, byte-equal player state, and deferred recommendation application. Screenshot review caught and corrected a verifier capture before Babylon redrew its resized backbuffer; final gameplay is visible.
+- Full serial suite passes213/213 tests across31 files in94.64s. Strict TypeScript and production build pass; final assets are `index-w2L3_m7N.js` and the known7.51MB Babylon chunk warning.
+- Two production smoke attempts exposed a verifier race between countdown removal and the independently refreshed flag label. Retained both failures and required an existing non-`GET READY` flag. Final installed Edge/WebGL2+WebGPU cold25Mbps/40ms production smoke passes showroom, Free Drive, Northstar, rendered GREEN eight-car GT launch and home; readiness7.952/7.135s,11,470,348bytes, no errors/failed/external requests. Actual images opened. This is not target-laptop/endurance/device-loss/HTTPS acceptance.
+- Required supplied-client two-iteration attempt produced one valid paced state/image before its second iteration stopped making progress and was terminated; retained rather than counted as a clean pass. The final shorter one-iteration rerun exits0 and its actual screenshot/state were opened:10.699m/s, four Lakeshore Asphalt contacts, zero damage,12 physical traffic cars and no loading/streaming error. Preserve the five supplied originals.
+
 ## Local race flags and dense retirement stress — September 20 (verified checkpoint)
 
 - Added explicit `flagReason` and on-track retirement provenance. Local yellow now covers player off-track and a stopped on-track car from250m ahead through35m after passing; pit retirement is excluded. Blue requires an active lapping car within160m behind. Checkered retains priority. HUD shows specific yellow/blue causes with distinct restrained colors.

@@ -23,7 +23,7 @@ export interface VehicleState {
   absActive: boolean; tcActive: boolean; distance: number;layer?:string;
 }
 export interface Settings {
-  quality: Quality; resolution: number; volume: number; music: boolean; weather: Weather; time: number; timeRate: number;
+  quality: Quality; automaticQuality:boolean; resolution: number; volume: number; music: boolean; weather: Weather; time: number; timeRate: number;
   traffic: number; automatic: boolean; abs: boolean; tc: boolean; esc: boolean; deadzone: number;
   steerSensitivity: number; units: 'mph' | 'km/h'; camera: number; showTelemetry: boolean;
   bindings: Record<string, string>;

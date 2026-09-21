@@ -1,5 +1,13 @@
 # Original graphics upgrade — first substantial art pass
 
+## Automatic quality and bounded dynamic resolution — September 20
+
+Fresh profiles begin on Low while a live displayed-frame benchmark warms for 30 frames and samples the next 120 valid frames. Its p95 selects Low, Medium, High or Ultra; manual preset selection disables that automatic choice. Profiles created before this field existed stay manual so an update cannot silently replace the player's saved preset. If the benchmark completes after entering gameplay, the chosen preset is deferred until returning to the showroom, preventing a density change from clearing streamed roads or race reservations in motion.
+
+Active driving uses a separate resolution-only controller. Sustained p95 above 40ms lowers the internal render dimensions in 5% steps to a 70% floor. Three healthy windows below 28ms are required per recovery step. Loading/hidden/menu frames and controlled-time tests are excluded. The Settings screen explains the current mode, and telemetry reports preset, actual pixel dimensions and requested/dynamic/effective scale. This changes presentation cost only; physics remains at 120Hz and no vehicle, AI or race parameter is touched.
+
+Pure tests cover thresholds, warm-up, manual mode, the floor, hysteretic recovery and ignored stalls. Installed Edge/WebGL2 integration verifies High from a 16ms benchmark, manual Medium override, 1280×720 to 896×504 at the floor, recovery to 960×540, unchanged vehicle state, and safe deferral/application of a driving-time recommendation. These injected frame intervals prove policy and integration, not target-laptop performance.
+
 The September 19 passes respond to the request to move away from the blocky placeholder appearance. Cars and scenery are original generated content; the gallery adds one attributed CC0 photographic environment. There are no paid assets or external runtime requests.
 
 - Car body lofts now have smoothly interpolated longitudinal and perimeter sections, wheel-arch clearances, undertrays, rounded mirrors, panel seams, shaped spoilers, exhaust rings and rounded tire profiles with multi-spoke rims. Both compressed detail levels were regenerated for all six vehicles.

@@ -1,5 +1,13 @@
 # Feature status — working build, not acceptance certification
 
+## Automatic quality and dynamic resolution — September 20 (verified checkpoint)
+
+Fresh saves now run a short live benchmark and choose among the existing four concrete graphics presets from displayed-frame p95. Existing saves retain their explicit preset as manual mode, and selecting any preset turns automatic selection off. A benchmark that completes during Free Drive or Motorsport queues its recommendation until the showroom, so world density and race-reservation resources cannot be cleared mid-session.
+
+During active driving, sustained frame time above 40ms reduces only Babylon's render resolution in 5% steps, bounded at 70%; recovery requires three healthy windows per step. Loading, menus, hidden tabs and deterministic test stepping are excluded. Settings and telemetry expose the mode, p95 result, scale and actual pixel dimensions. Physics, AI, contacts, traffic and race rules are untouched.
+
+The full serial suite passes 213 tests / 31 files in 94.64s, strict TypeScript passes, and production emits `index-w2L3_m7N.js` with the existing Babylon-size warning. Installed Edge integration verifies automatic/manual UI, safe deferred selection, unchanged player state, 1280×720 → 896×504 floor → 960×540 recovery, and visible refreshed gameplay. Final cold 25Mbps/40ms production checks pass forced WebGL2 and actual WebGPU through showroom, Free Drive, Northstar and a clean eight-car GT launch/home with all third-party hosts blocked. This does not certify the target 8GB laptop, 30-minute endurance, GPU/device-loss recovery, KTX2 delivery or authorized HTTPS deployment.
+
 ## Local race flags and dense retirement stress — September 20 (verified checkpoint)
 
 Race flags now carry an explicit reason. A stopped on-track retirement raises `YELLOW · STOPPED CAR AHEAD` from 250m before the hazard until 35m after it; a player excursion raises `YELLOW · OFF TRACK`. With no yellow condition, an active car one or more laps ahead and within 160m behind raises `BLUE · FASTER CAR APPROACHING`. Checkered remains authoritative once the winner finishes. Pit-lane retirements do not create an on-track yellow, and invalid-lap text retains HUD priority without changing the rule state.

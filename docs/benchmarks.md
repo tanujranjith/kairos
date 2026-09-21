@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Automatic quality and dynamic resolution — September 20
+
+- Six focused pure cases cover preset thresholds, 30-frame warm-up plus 120-frame p95 benchmark, manual mode, sustained overload, the 70% floor, three-window recovery and excluded stalls. Save coverage proves old profiles migrate to manual while fresh profiles default to automatic. The complete serial result is **213 tests / 31 files in 94.64s**.
+- `output/adaptive-quality/report.json` uses installed Edge/WebGL2 and the real application/renderer integration. A 16ms p95 chooses High; selecting Medium disables auto. Six 45ms windows lower actual render dimensions from **1280×720 to 896×504**; three 20ms windows recover to **960×540**. Player state remains deeply equal before/after adaptation. A driving-time High recommendation stays pending on Medium until home, then applies with zero world cells retained. The Settings and refreshed driving screenshots were opened.
+- Strict Node24 TypeScript and production build pass. Output is `index-w2L3_m7N.js` (333.32KB minified) plus `babylon-5CRPw-fs.js` (7,508.43KB; the existing warning remains).
+- Two initial production smoke attempts retained in `output/adaptive-quality-production*` read the independently refreshed race flag before its element/label reached GREEN. The verifier now requires the flag element and non-`GET READY` content, rather than treating an absent element as ready. The final unchanged-build run is `output/adaptive-quality-production-final2`.
+- Final installed Edge cold-cache, 25Mbps/40ms, third-party-blocked production results pass forced WebGL2 and actual WebGPU through showroom, Free Drive motion, Northstar, eight-car GT countdown → rendered GREEN → launch, and home return. Readiness is **7.952s / 7.135s**, input-to-motion **8.234s / 10.613s**, and tested-flow transfer **11,470,348 bytes**. Errors, failed requests and external requests are empty; WebGPU has only the known Windows `powerPreference` warning. Actual showroom/race captures were opened. This is localhost development-PC evidence, not target-laptop FPS, process/GPU memory, endurance, device-loss or HTTPS certification.
+- The required supplied web-game client has a final clean one-iteration exit under `output/adaptive-quality-skill-final`. Its opened screenshot/state show 10.699m/s, four Asphalt contacts on Lakeshore, zero damage, twelve physical traffic cars and no loading/streaming errors. A prior requested two-iteration run completed its first valid artifact but stopped progressing during the second and was terminated; it is not counted as a clean two-iteration pass. Controlled SwiftShader p95 is not performance evidence.
+
 ## Local race flags and three-retirement stress — September 20
 
 - Pure race timing adds bounded stopped-car yellow and proximity-aware blue cases. The physical browser checks use installed Edge, forced WebGL2 and controlled 120Hz simulation. They do not reposition a car or alter race timing to create the observed flag.

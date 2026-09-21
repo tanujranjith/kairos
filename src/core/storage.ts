@@ -7,6 +7,9 @@ export function validateSave(value:unknown):SaveGame {
   const clean=defaultSave();if(typeof value.selected==='string'&&VEHICLES.some(v=>v.id===value.selected))clean.selected=value.selected;
   if(object(value.settings)){
     const s=value.settings;const numeric:Record<string,[number,number]>={resolution:[.7,1.5],volume:[0,1],time:[0,24],timeRate:[0,60],traffic:[0,32],deadzone:[0,.4],steerSensitivity:[.3,1.4],camera:[0,4]};
+    // Saves created before automatic quality existed represent an explicit preset.
+    // Preserve that choice instead of silently opting an existing player into auto mode.
+    if(!('automaticQuality' in s))clean.settings.automaticQuality=false;
     for(const key of Object.keys(DEFAULT_SETTINGS))if(typeof s[key]===typeof DEFAULT_SETTINGS[key as keyof Settings]&&key!=='bindings'){
       if(key in numeric){const n=s[key] as number;if(Number.isFinite(n))(clean.settings as unknown as Record<string,unknown>)[key]=clamp(n,...numeric[key]);}
       else if(typeof s[key]==='boolean')(clean.settings as unknown as Record<string,unknown>)[key]=s[key];

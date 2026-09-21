@@ -37,6 +37,7 @@ try{
         await page.waitForFunction(()=>/^\d+$/.test(document.querySelector('#countdown')?.textContent??''));
         assert.match(await page.locator('.race-position small').textContent(),/\/ 8/);
         await page.waitForFunction(()=>document.querySelector('#countdown')?.textContent==='');
+        await page.waitForFunction(()=>{const flag=document.querySelector('#race-flag');return !!flag&&!flag.textContent?.includes('GET READY');});
         await page.keyboard.down('ArrowUp');await page.waitForFunction(()=>Number(document.querySelector('#speed')?.textContent)>5);await page.keyboard.up('ArrowUp');
         report.raceHud=await page.locator('#race-hud').textContent();assert.doesNotMatch(report.raceHud,/GET READY|\+\d+s/);
         await page.screenshot({path:`${prefix}-race.png`});await page.keyboard.press('Escape');await page.click('[data-action="home"]');await page.waitForSelector('#start-drive');report.raceEntryAndReturn=true;report.cleanCountdownLaunch=true;

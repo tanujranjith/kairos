@@ -58,7 +58,7 @@ Aster now has planted banks/tree belts and a dressed rear paddock. Racing AI req
 | Headlights | L | — |
 | Developer telemetry | F3 | — |
 
-Settings contain key remapping, assists, units, weather, time, graphics, traffic and sound. Save data is versioned IndexedDB data on this browser and origin; use export/import to transfer it. An unavailable database leaves the game playable in memory and displays a warning. Clearing browser data removes local saves.
+Settings contain key remapping, assists, units, weather, time, graphics, traffic and sound. Fresh profiles benchmark displayed frame pacing and choose a graphics preset automatically; selecting Low, Medium, High or Ultra turns that selection off. Dynamic resolution remains active during driving, with a 70% floor and gradual recovery, and never changes physics or race rules. Telemetry shows actual render dimensions and effective scale. Save data is versioned IndexedDB data on this browser and origin; use export/import to transfer it. An unavailable database leaves the game playable in memory and displays a warning. Clearing browser data removes local saves.
 
 In menus, controller D-pad / left stick up-down moves focus, left-right changes selects/sliders or cycles paint colors, A confirms and B/Menu returns. Keyboard Tab/Shift+Tab moves focus, Enter/Space activates, and Escape returns. Focus survives settings changes; held buttons must be released after connecting or entering a menu. If browser autoplay is blocked, click or press a key once to enable audio; driving does not wait for sound permission. Native save-file dialogs still require the operating system's controls.
 
@@ -97,6 +97,7 @@ node scripts/verify-audio.mjs
 node scripts/verify-interactions.mjs
 node scripts/verify-storage.mjs
 node scripts/verify-browsers.mjs msedge
+node scripts/verify-adaptive-quality.mjs
 node scripts/build-assets.mjs
 ```
 

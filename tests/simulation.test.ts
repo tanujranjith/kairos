@@ -35,5 +35,6 @@ describe('race timing',()=>{
 });
 describe('save handling',()=>{
   it('round-trips settings and records',()=>{const save=defaultSave();save.records['lap-gtx']=93.4;save.settings.weather='Rain';save.discovered=['lakeshore'];expect(validateSave(JSON.parse(JSON.stringify(save)))).toEqual(save);});
+  it('preserves an older save preset as a manual graphics choice',()=>{const save=defaultSave(),legacy=JSON.parse(JSON.stringify(save));delete legacy.settings.automaticQuality;expect(validateSave(legacy).settings.automaticQuality).toBe(false);expect(defaultSave().settings.automaticQuality).toBe(true);});
   it('rejects unsupported formats and sanitizes corrupt fields',()=>{expect(()=>validateSave({version:2})).toThrow();expect(()=>validateSave(null)).toThrow();const save=defaultSave();save.settings.volume=99;save.settings.time=NaN;save.selected='missing';save.records.x=Infinity;const clean=validateSave(save);expect(clean.settings.volume).toBe(1);expect(clean.settings.time).toBe(17.4);expect(clean.selected).toBe('velara');expect(clean.records.x).toBeUndefined();});
 });

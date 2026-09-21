@@ -10,7 +10,7 @@ export const VEHICLES: VehicleDefinition[] = [
 ];
 export const vehicleById = (id: string) => VEHICLES.find(v=>v.id===id)??VEHICLES[1];
 export const DEFAULT_SETTINGS: Settings = {
-  quality:'Low',resolution:1,volume:.55,music:false,weather:'Clear',time:17.4,timeRate:1,traffic:12,
+  quality:'Low',automaticQuality:true,resolution:1,volume:.55,music:false,weather:'Clear',time:17.4,timeRate:1,traffic:12,
   automatic:true,abs:true,tc:true,esc:true,deadzone:.12,steerSensitivity:.85,units:'mph',camera:0,showTelemetry:false,
   bindings:{throttle:'KeyW',brake:'KeyS',left:'KeyA',right:'KeyD',handbrake:'Space',up:'KeyE',down:'KeyQ',camera:'KeyC',reset:'KeyR',map:'KeyM',pause:'Escape',lights:'KeyL',fullscreen:'KeyF'}
 };
