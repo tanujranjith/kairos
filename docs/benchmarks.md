@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Player service feedback — September 21
+
+- `scripts/verify-player-service.mjs` completes the real six-second service action at Westbrook Service, Summit Service and the player's assigned Aster box 16. Each mid-service snapshot reports a bounded countdown and disabled HUD action; final fuel is within 0.01L of tank capacity after normal idle consumption, damage is zero, and all four tires exceed 99.9% wear remaining. A 4m/s station attempt is refused without starting the timer.
+- Opened 1280×720 captures show the active countdown at both world stations and in the garage-side pit box. The verifier records no page errors, failed requests or external requests.
+- The complete suite passes **247 tests / 38 files**. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-DY7WhfKh.js`, worker `cell-worker-D1LLTGra.js`). Cold 25Mbps/40ms production reaches the menu in **5.586s forced WebGL2 / 4.813s automatic**, transfers **10,520,467 bytes**, enters Free Drive/Northstar and records no page, failed or external requests.
+- The required generic web-game client remained live without output/artifacts for over a minute and was terminated; the dedicated stateful verifier supplies the changed-behavior evidence. These are local development-host checks, not actual-laptop or hosted HTTPS acceptance.
+
 ## World-map event filters — September 21
 
 - Pure membership is exactly **17 All / 9 Activities / 3 Scenic / 3 Services / 1 Motorsport**. `scripts/verify-map-filters.mjs` checks every rendered marker, active/ARIA state, keyboard activation and text-state output.

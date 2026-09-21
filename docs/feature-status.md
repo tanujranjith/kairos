@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Player service feedback — September 21 (verified checkpoint)
+
+Both authored Free Drive service stations and the assigned Aster pit box now expose their complete six-second operation in the HUD and development state. The service button becomes a disabled live countdown, then returns to its ordinary action after fuel, damage, tires and tire temperature are restored. Moving cars are refused before service begins.
+
+The focused browser verifier passes Westbrook, Summit, moving refusal and a four-car Quick Race box-16 stop through the real rendered action and normal 120Hz simulation. All three active-service captures were opened. The complete suite passes 247 tests / 38 files; strict TypeScript, nineteen KTX2 assets, production build and cold 25Mbps/40ms production delivery pass with no page, failed or external requests. This closes explicit player-service state/feedback, not target-laptop or hosted HTTPS acceptance. See [implementation and evidence](player-service.md).
+
 ## World-map event filters — September 21 (verified checkpoint)
 
 The map now provides All, Activities, Scenic, Services and Motorsport views with exact data-derived membership. Native filter buttons support mouse, keyboard and existing controller navigation. Active destinations remain visible outside their category without losing route state; completed routes cannot leave an invisible selection behind. The active filter is included in development text state.

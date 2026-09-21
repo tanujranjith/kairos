@@ -1,5 +1,12 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Player service feedback — September 21 (verified checkpoint)
+
+- Exposed `serviceRemaining` in the development snapshot and live view model. The rendered service action now becomes a disabled `SERVICING · n.n s` countdown and returns to `SERVICE / PIT` after restoration, preventing accidental timer restarts while the car is being worked on.
+- Added `verify-player-service.mjs`. It passes both authored world stations, moving refusal and Aster box 16 in a four-car Quick Race through the real HUD button and normal simulation. Fuel, damage, tire wear and temperature restoration pass; three active-service screenshots were opened and network/error arrays are empty.
+- Full suite remains 247 tests / 38 files. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-DY7WhfKh.js`, worker `cell-worker-D1LLTGra.js`). Cold25Mbps/40ms production passes in 5.586s WebGL2 / 4.813s automatic, transfers 10,520,467 bytes and has no page/failed/external requests.
+- The generic skill client was attempted and remained live without artifacts for more than a minute, so it was terminated and not counted. NEXT: preserve this service/UI contract and the shared-model/handling/graphics work. Actual 8GB laptop and authorized HTTPS acceptance remain external; broader visual realism remains the principal local gap. Keep the five user files untouched.
+
 ## World-map event filters — September 21 (verified checkpoint)
 
 - Closed the plan's missing event-filter requirement with All, Activities, Scenic, Services and Motorsport views. Exact category membership is data-derived: 17/9/3/3/1 markers. Filter buttons expose `aria-pressed`, work with mouse, keyboard and controller, and appear in `render_game_to_text`.
