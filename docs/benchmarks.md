@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Rural roadside delineators — September 21
+
+- `tests/roadside-guidance.test.ts` audits the full 4×4km region for deterministic, finite, uniquely owned posts on all five selected roads, with exact terrain support, shoulder setback and water/junction exclusion. Blueprint assertions cover both complete coloured batches and their non-colliding status. The full suite passes **224 tests / 34 files in 26.16s**.
+- `output/roadside-guidance/landscape` uses installed Edge/WebGL2 across seven Lakeshore, Pinecrest, Ridgeway, dusk and rain views. Every state retains four contacts and zero damage; normal keyboard input reaches **17.024m/s**. Page errors, unexpected warnings and external requests are empty. The opened images show repeated white/dark/amber markers without blocking the existing utility, fence, vegetation or mountain composition.
+- The upstream required client retained its five-second overlay-interception failure. The loader-aware local copy exits cleanly and records **10.933m/s**, four mixed Lakeshore contacts, zero damage, 12 physical plus 12 distant traffic actors and no failed cells in `output/roadside-guidance/input`; its screenshot and text state were opened.
+- `output/roadside-guidance/cost` records Low maxima of showroom **187 / 176,416**, Lakeshore **240 / 292,450**, forest **163 / 470,338**, mountain **142 / 238,327**, city **210 / 459,155**, wet night **211 / 459,300**, GT grid **298 / 487,166**, pit **121 / 308,204**, back straight **146 / 238,909** and Formula grid **281 / 484,764** (draw calls / active triangles). These are RTX3060/installed-Edge samples, not target-laptop FPS.
+- Production emits `index-BZoXHi10.js` and `cell-worker-BZDSEBty.js`; strict TypeScript and the nineteen-KTX2 integrity gate pass. Cold25Mbps/40ms installed-Edge checks reach the menu in **7.399s forced WebGL2 / 7.049s automatic WebGPU**, enter Free Drive and Northstar, and record no page, failed or external requests. Initial transfer is 12,976,638 / 12,992,109 bytes. All reviewed production images render the expected complete car and world.
+- This visual-only layer does not replace actual retroreflection, certify every route/weather/camera, measure the target laptop or authorize an HTTPS deployment.
+
 ## Wet-night driving interactions — September 21
 
 - `scripts/verify-wet-night-driving.mjs` runs installed Edge/WebGL2 in streamed Westbrook at 22:00, Rain and 85% wetness. It checks both 650-intensity player headlights, the 500-vertex rain system, headlight off/on resource stability, two enabled pooled streetlights, all 24 traffic actors, five cameras, pause/resume and zero streaming failures.

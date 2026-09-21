@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Rural delineators and road-edge depth — September 21 (verified checkpoint)
+
+- Added deterministic road-progress delineators to Lakeshore, Lake Crossing, Ridgeway, Pinecrest and Orchard Way. White posts now have a dark band and two outward-facing amber lenses; forty-two-metre cadence adds scale and poor-weather edge guidance while excluding route ends, water, bridge/tunnel spans and junction sightlines.
+- Geometry merges into existing white/yellow paint buffers and is non-colliding. It adds no material, texture, light, draw call, external asset, Havok body or road/contact change. Full-region tests cover >300 finite placements, exact cell ownership, terrain support, shoulder setback and exclusions.
+- Installed Edge/WebGL2 passes seven region/weather views and real keyboard driving at 17.024m/s, four contacts and zero damage. Opened Lakeshore, forest, mountain, rain and drive images. The required upstream client again hit its fixed five-second overlay timeout; the loader-aware copy exits cleanly at 10.933m/s with four mixed contacts, zero damage, 12+12 traffic actors and no failed cell, and its screenshot/state were opened.
+- Low720p remains inside budget: Lakeshore 240/292,450, forest 163/470,338, mountain 142/238,327, city 210/459,155, wet night 211/459,300, GT 298/487,166 and Formula 281/484,764 (draws/triangles). Full suite passes 224 tests/34 files; strict TypeScript, KTX2 verification and production build pass (`index-BZoXHi10.js`).
+- Cold25Mbps/40ms exact production reaches menu in 7.399s WebGL2 / 7.049s WebGPU, enters Free Drive and Northstar and has no page/failed/external requests. All production captures opened. This is local development-host evidence, not target-laptop FPS or authorized HTTPS validation.
+- NEXT: preserve delineator, rural, model, handling, streaming, endurance and wet-night evidence. Continue broader world/material and interaction/fault coverage; actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Wet-night driving interaction matrix — September 21 (verified checkpoint)
 
 - Added `scripts/verify-wet-night-driving.mjs`, an installed-Edge/WebGL2 integration path through real streamed Westbrook traffic in Rain at 22:00 and 85% wetness. It verifies the 500-vertex rain system, two 650-intensity player spotlights, headlight off/on without material/texture/light allocation, two active pooled streetlights, 24 retained traffic actors, no failed cells, all five cameras and pause/resume.

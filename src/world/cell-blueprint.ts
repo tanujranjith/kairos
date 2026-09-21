@@ -17,6 +17,7 @@ import {buildPitForecourt} from './pit-forecourt';
 import {buildStreetscape} from './streetscape';
 import {ruralDressing} from './rural-dressing';
 import {buildRuralInfrastructure} from './rural-infrastructure';
+import {roadsideGuidance} from './roadside-guidance';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk';
@@ -91,6 +92,23 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   const settingStart=asphalt.indices.length/3;
   buildCircuitSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows},asphalt,white);
   buildPitForecourt(cx,cz,{wall:buildings,roof:roofs,glass:windows},asphalt,white);
+  // Rural delineators share the existing paint batches: better depth and wet-
+  // night road guidance with no extra material, draw call or collision shape.
+  for(const post of roadsideGuidance(cx,cz).delineators){
+    const whiteStart=white.positions.length/3;
+    white.box(post.x,post.y,post.z,.12,.86,.10,post.yaw);
+    white.tintSince(whiteStart,[.92,.94,.88,1]);
+    const bandStart=white.positions.length/3;
+    white.box(post.x,post.y+.47,post.z,.145,.23,.108,post.yaw);
+    white.tintSince(bandStart,[.055,.075,.07,1]);
+    // Two lenses sit proud of the road-facing surfaces, so the marker reads
+    // from either direction instead of disappearing inside the post volume.
+    for(const facing of [-1,1]){
+      const amberStart=yellow.positions.length/3,offset=facing*.066;
+      yellow.box(post.x+Math.sin(post.yaw)*offset,post.y+.535,post.z+Math.cos(post.yaw)*offset,.11,.10,.024,post.yaw);
+      yellow.tintSince(amberStart,[1,.63,.12,1]);
+    }
+  }
   if(asphalt.indices.length/3>settingStart)roadContacts.push({start:settingStart,end:asphalt.indices.length/3,surface:'Asphalt',layer:'surface'});
   add('verge',verge,'shoulder',true,{surface:'Gravel',layer:'surface'},vergeContacts);add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('paint',white,'marking');add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
   const random=rng(hash(cx,cz)),urban=x0<-650&&z0<-300,count=quality==='Low'&&urban?32:{Low:44,Medium:60,High:80,Ultra:105}[quality];

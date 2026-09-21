@@ -60,6 +60,8 @@ Repeated scenery uses thin instances. Each cell owns unique instance-buffer geom
 
 Rural utility/fence definitions also resolve from road progress in the worker. Each pole, twenty-metre wire segment, fence rail or farm has one cell owner. Utility and fence primitives merge into one non-colliding bark-material detail mesh per occupied cell; farms reuse the existing wall/roof/glass architecture and structure collision batches. This avoids per-prop resources and thin Havok shapes while preserving normal cell cancellation/disposal. See [rural infrastructure](rural-infrastructure.md).
 
+Rural delineators are another pure road-progress layer. Their stations reject water, structural spans and junction sightlines before the worker appends white/dark geometry to the existing marking buffer and two amber faces to the existing yellow-paint buffer. They have no collider or independent runtime resource, and actual position rather than source-segment ownership selects the streamed cell. See [roadside guidance](roadside-guidance.md).
+
 ## Race timing
 
 `src/content/race-course.ts` defines race rules and finite-width, height-clipped directional timing gates. `RaceRouteTracker` owns per-entrant physical circuit/pit proof; `RaceManager` consumes interpolated crossing events for ordered checkpoints, sectors, laps, penalties and classification. The pit has its own ordered gate chain and circuit-equivalent progress anchored at entry, the extended finish plane and exit. Stationary service cannot advance race position, and resets/skipped gates cannot fabricate lap credit. See `race-timing.md` for tests and remaining AI/rejoin limitations.

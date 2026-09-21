@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Rural delineators and poor-weather edge guidance — September 21 (verified checkpoint)
+
+Five scenic two-lane routes now carry original white roadside delineators with dark bands and two visible amber reflector faces. Stations follow authored road distance rather than cell-local repetition, sit beyond the gravel recovery shoulder and exclude endpoints, water, bridges, tunnels and junction sightlines. Their geometry merges into the existing white/yellow paint batches and remains visual-only, so it adds no draw call, material, texture, light, collider or tire-contact change.
+
+Full-region ownership/clearance tests, seven native-browser region/weather views, real keyboard driving, the loader-aware supplied input sequence, the 224-test suite, strict build, Low render audit and exact production smoke pass. The forest remains below the geometry budget at 163 draws / 470,338 triangles and the GT grid remains at 298 / 487,166. This improves rural scale and road readability but is not a claim of finished world art, retroreflective materials, target-laptop performance or hosted HTTPS acceptance.
+
 ## Wet-night interaction coverage — September 21 (verified checkpoint)
 
 The dedicated rainy-city browser path now covers real keyboard acceleration, wet steering and braking, player headlight off/on, five cameras, pause/resume, physical+distant traffic retention, pooled streetlights, streamed-cell health and screenshot readability in one stateful sequence. It retains four contacts in every sampled step, brakes from 20.997m/s to 9.541m/s with 2.768deg maximum sideslip, keeps all 24 traffic actors and records no damage, browser warning/error, failed request or external request.
