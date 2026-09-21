@@ -9,7 +9,7 @@ import { cameraMounts } from '../src/render/camera-mounts';
 import { mountainMesh,mountainHeight,meadowColor } from '../src/world/landscape';
 import { buildArchitecture,buildBandArchitecture,type BuildingStyle } from '../src/world/architecture';
 import { MeshDataBuilder } from '../src/world/mesh-data';
-import { solarLighting,windowLighting } from '../src/render/atmosphere';
+import { drivingLighting,solarLighting,windowLighting } from '../src/render/atmosphere';
 import { buildServicePavilion } from '../src/world/service-pavilion';
 import { configureArchitecturalGlass } from '../src/render/architectural-glass';
 import {SHARED_CAR_MODEL,visualModelId} from '../src/render/car-assets';
@@ -18,9 +18,15 @@ describe('original graphics assets',()=>{
   it('reuses one authored sports-car visual across every handling profile',()=>{
     expect(SHARED_CAR_MODEL).toBe('velara');expect(new Set(VEHICLES.map(vehicle=>visualModelId(vehicle.id)))).toEqual(new Set(['velara']));
   });
-  it('shares a lower warm evening sun and turns direct sunlight off at night',()=>{
+  it('shares a lower warm evening sun and normalized day cycle',()=>{
     const noon=solarLighting(12),evening=solarLighting(17.4),night=solarLighting(0);expect(evening.elevation).toBeLessThan(noon.elevation*.25);expect(evening.golden).toBeGreaterThan(.5);expect(noon.golden).toBe(0);expect(night.daylight).toBe(0);
     for(const t of [0,6,12,17.4,22,24]){const s=solarLighting(t);expect(Math.hypot(s.direction.x,s.direction.y,s.direction.z)).toBeCloseTo(1,8);expect(s.daylight).toBeGreaterThanOrEqual(0);expect(s.daylight).toBeLessThanOrEqual(1);}
+  });
+  it('keeps night roads readable with a bounded weather-aware moon key',()=>{
+    const noon=drivingLighting(12,'Clear'),night=drivingLighting(22,'Clear'),rain=drivingLighting(22,'Rain');
+    expect(noon.ambientIntensity).toBeCloseTo(.92);expect(noon.environmentIntensity).toBe(1);expect(noon.directIntensity).toBeCloseTo(2.8);
+    expect(night.day).toBe(0);expect(night.ambientIntensity).toBe(.38);expect(night.environmentIntensity).toBe(.28);expect(night.directIntensity).toBe(.3);expect(night.exposure).toBeGreaterThan(1.15);
+    expect(rain.directIntensity).toBeGreaterThan(.15);expect(rain.directIntensity).toBeLessThan(night.directIntensity);expect(rain.overcast).toBe(.72);
   });
   it('batches detailed service pavilions and their terrace with bounded original geometry',()=>{
     const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},paving=new MeshDataBuilder();buildServicePavilion(b,paving,{x:0,y:12,z:0,yaw:0});let total=0;

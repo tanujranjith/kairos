@@ -6,6 +6,12 @@ The current source is locally release-candidate ready: garage/customization/sett
 
 This closes the broad local interaction/fault audit, not the full external acceptance target. The actual secondary 8 GB integrated-graphics laptop has not been made available, no HTTPS project has been authorized, no physical gamepad motor was available, and the original procedural art remains visibly stylized rather than mockup-level photorealism. See [release readiness and handoff](release-readiness.md).
 
+## Night ambience and legibility — September 21 (verified checkpoint)
+
+Clear and rainy nights now retain readable road, vehicle, vegetation and terrain silhouettes beyond the headlamp cone. The existing directional light becomes a restrained weather-aware moon key after sunset, while the generated sky receives a richer blue-black horizon, brighter sparse stars and a wider moon halo. No light, mesh, texture, physics or traffic allocation was added.
+
+Both installed-Edge backends pass eight fixed-clock weather/time views with identical controlled driving, stable 319/75/44 mesh/material/texture counts and clean error arrays. The clear-night key is 0.30 intensity; rain reduces it to 0.18. Latest clear/rain, upward-sky and moon-direction captures were opened on WebGL2 and actual WebGPU. The full suite passes 250 tests / 39 files, and Low wet night remains 267 draws / approximately 495.8k triangles. See [directional sky](atmosphere.md).
+
 ## Browser visibility pause — September 21 (verified checkpoint)
 
 Losing document visibility while driving now enters the ordinary pause state immediately, clears held controls, resets the fixed-step accumulator and records an explicit background-interruption reason. The pause view explains what happened; resume clears that reason and continues from the unchanged simulation timestamp and pose. Manual pause and controller disconnection retain distinct messages.

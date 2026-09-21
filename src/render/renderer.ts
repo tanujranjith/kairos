@@ -5,7 +5,7 @@ import type { Vehicle } from '../sim/physics';
 import type { CarVisual } from './car';
 import { configureLocalResources, initializeLocalTextureDecoder, localShaderOptions } from './local-resources';
 import { lightingEnvironment } from './lighting-environment';
-import { solarLighting } from './atmosphere';
+import { drivingLighting } from './atmosphere';
 import { SkyDome } from './sky-material';
 import { atmosphereFog } from './sky-field';
 import { LocalReflections } from './local-reflections';
@@ -13,12 +13,14 @@ import { createShowroom } from './showroom';
 import { cameraMounts } from './camera-mounts';
 import type { MirrorTexture,BaseTexture } from '@babylonjs/core';
 
+const AMBIENT_DAY=new Color3(.8,.87,.98),AMBIENT_NIGHT=new Color3(.48,.62,.88),GROUND_DAY=new Color3(.22,.20,.15),GROUND_NIGHT=new Color3(.12,.17,.25),SUN_DAY=new Color3(.96,.96,.89),SUN_GOLD=new Color3(1,.66,.34),MOON_LIGHT=new Color3(.48,.62,.88);
+
 export class Renderer {
   scene:Scene;camera:FreeCamera;sun:DirectionalLight;ambient:HemisphericLight;shadow:ShadowGenerator;sky:Mesh;atmosphere:SkyDome;
   showroom:TransformNode;rendererName:string;lightsEnabled=true;private shadowParts=new Set<Mesh>();private headlights:SpotLight[]=[];private cameraPosition=new Vector3();private look=new Vector3();private wasGarage=true;private cameraMode=0;private cameraObstructed=false;private cameraRequestedDistance=0;private cameraResolvedDistance=0;private cameraCurrentDistance=0;private rain:LinesMesh;private rainPositions:Float32Array;
   private outdoorEnvironment:ReturnType<typeof lightingEnvironment>;private studioEnvironment:ReturnType<typeof lightingEnvironment>;private pipeline:DefaultRenderingPipeline;private contactMaterial:StandardMaterial;
   reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];private floorReflection:MirrorTexture;private galleryEnvironment:BaseTexture;
-  private activeSettings:Settings|null=null;private dynamicResolutionScale=1;
+  private activeSettings:Settings|null=null;private dynamicResolutionScale=1;private daylightColour=new Color3();
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
     this.scene=new Scene(engine);const scene=this.scene;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
@@ -85,10 +87,11 @@ export class Renderer {
   graphicsState(){const requested=this.activeSettings?.resolution??1;return {dynamicScale:this.dynamicResolutionScale,requestedScale:requested,effectiveScale:requested*this.dynamicResolutionScale,width:this.engine.getRenderWidth(),height:this.engine.getRenderHeight()};}
   cameraState(){return {mode:this.cameraMode,obstructed:this.cameraObstructed,requestedDistance:this.cameraRequestedDistance,resolvedDistance:this.cameraResolvedDistance,currentDistance:this.cameraCurrentDistance};}
   update(vehicle:Vehicle,visual:CarVisual,settings:Settings,dt:number,garage:boolean,clock:number,wetness:number,alpha=1){
-    const time=settings.time,solar=solarLighting(time),day=solar.daylight,golden=solar.golden;const overcast=settings.weather==='Rain'?.72:settings.weather==='Overcast'?.55:settings.weather==='Cloudy'?.20:0;
-    this.ambient.intensity=garage?.35:.32+day*.60;this.sun.intensity=garage?2.8:day*(2.8+golden*.9)*(1-overcast);this.sun.diffuse=Color3.Lerp(new Color3(.96,.96,.89),new Color3(1,.66,.34),golden);this.scene.environmentIntensity=garage?.65:.22+day*.78;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;
-    this.scene.imageProcessingConfiguration.exposure=garage?1.1:1.12+day*.06+golden*.15;
-    if(garage)this.sun.direction.set(.55,-.6,-.65).normalize();else this.sun.direction.set(-solar.direction.x,-Math.max(.02,solar.direction.y),-solar.direction.z).normalize();
+    const time=settings.time,lighting=drivingLighting(time,settings.weather),solar=lighting.solar,day=lighting.day,night=lighting.night,golden=solar.golden;
+    this.ambient.intensity=garage?.35:lighting.ambientIntensity;Color3.LerpToRef(AMBIENT_DAY,AMBIENT_NIGHT,lighting.nightBlend,this.ambient.diffuse);Color3.LerpToRef(GROUND_DAY,GROUND_NIGHT,lighting.nightBlend,this.ambient.groundColor);
+    Color3.LerpToRef(SUN_DAY,SUN_GOLD,golden,this.daylightColour);this.sun.intensity=garage?2.8:lighting.directIntensity;Color3.LerpToRef(this.daylightColour,MOON_LIGHT,lighting.nightBlend,this.sun.diffuse);this.scene.environmentIntensity=garage?.65:lighting.environmentIntensity;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;
+    this.scene.imageProcessingConfiguration.exposure=garage?1.1:lighting.exposure;
+    if(garage)this.sun.direction.set(.55,-.6,-.65).normalize();else if(day>.04)this.sun.direction.set(-solar.direction.x,-Math.max(.02,solar.direction.y),-solar.direction.z).normalize();else this.sun.direction.set(solar.direction.x,Math.min(-.20,solar.direction.y),solar.direction.z).normalize();
     this.scene.fogColor.set(...atmosphereFog(time,settings.weather));this.scene.fogDensity=.00013+golden*.000025+wetness*.0006;
     this.sky.visibility=1;this.atmosphere.update(time,settings.weather,clock);
     this.showroom.setEnabled(garage);
@@ -97,7 +100,7 @@ export class Renderer {
     this.registerCar(visual,garage||vehicle.state.grounded);
     this.studioLights.forEach(light=>light.setEnabled(garage));this.headlights.forEach(light=>light.setEnabled(!garage));
     if(garage){visual.glass.alpha=.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;for(const n of visual.root.getChildTransformNodes())if(/brake-\d$/.test(n.name)){n.position.y=-.32;n.rotationQuaternion=null;n.rotation.set(0,0,0);}}
-    this.headlights.forEach((light,i)=>{const f=new Vector3(Math.sin(vehicle.state.yaw),-.08,Math.cos(vehicle.state.yaw)),r=new Vector3(Math.cos(vehicle.state.yaw),0,-Math.sin(vehicle.state.yaw));light.position.copyFrom(vehicle.node.position).addInPlace(f.scale(vehicle.definition.length*.48)).addInPlace(r.scale(i===0?-.55:.55));light.direction.copyFrom(f);light.intensity=!garage&&this.lightsEnabled?(day<.28?650:1):0;});
+    this.headlights.forEach((light,i)=>{const f=new Vector3(Math.sin(vehicle.state.yaw),-.08,Math.cos(vehicle.state.yaw)),r=new Vector3(Math.cos(vehicle.state.yaw),0,-Math.sin(vehicle.state.yaw));light.position.copyFrom(vehicle.node.position).addInPlace(f.scale(vehicle.definition.length*.48)).addInPlace(r.scale(i===0?-.55:.55));light.direction.copyFrom(f);light.intensity=!garage&&this.lightsEnabled?(night>.72?650:1):0;});
     if(garage){const a=-.58+Math.sin(clock*.07)*.08;visual.wheels.forEach(w=>{w.position.y=-.32;w.rotation.set(0,0,0);w.rotationQuaternion=null;});visual.root.position.set(0,-1000+.105+.32+vehicle.definition.wheelRadius,0);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(.2,0,0);this.camera.position.set(Math.sin(a)*8.5,-998.32,Math.cos(a)*8.5);this.camera.setTarget(new Vector3(0,-999.12,0));this.camera.fov=.59;this.sun.position.copyFrom(visual.root.position).subtractInPlace(this.sun.direction.scale(90));this.scene.fogDensity=.0003;this.wasGarage=true;}
     else{
       visual.root.position.copyFrom(Vector3.Lerp(vehicle.previousPosition,vehicle.node.position,alpha));visual.root.rotationQuaternion=Quaternion.Slerp(vehicle.previousRotation,vehicle.node.rotationQuaternion!,alpha);visual.update(vehicle.state);

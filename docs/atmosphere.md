@@ -8,11 +8,19 @@ The old sky repainted a 1024 × 256 equirectangular texture whenever the time bu
 
 `sky-field.ts` generates one original 512 × 512 packed periodic cloud texture at startup. Its channels encode cloud coverage, edge erosion and wisps. It has mipmaps for distant compression and no external asset dependency. Time, weather and slow cloud movement update uniforms only; no coloured-sky regeneration or texture upload is required per weather/time change. One sun definition continues to drive both visible direction and the directional light. The sun mesh/material are removed; texture count is unchanged, with approximately one-third extra mip storage for the atlas.
 
+## Night legibility continuation — September 21
+
+The existing directional light now reverses to the shared lunar direction after the solar light is below the horizon. Clear night uses a restrained 0.30 cool key; rain reduces that key to 0.18. Ambient and reflection-environment floors rise to 0.38 and 0.28, with a 1.17 night exposure. The generated shader has a richer blue-black horizon, more readable sparse stars and a broader low-energy moon halo. Headlight activation and all daytime/golden-hour values remain on the same solar envelope.
+
+This reuses the already-budgeted sun/shadow path. It adds no lights, materials, textures, meshes, draw calls or physical effects. The pure lighting envelope is regression-tested so weather cannot accidentally remove all direct night definition or turn rain brighter than clear night.
+
+The final installed-Edge WebGL2 and actual-WebGPU matrices each pass eight fixed-clock states, normal keyboard driving and resource cleanup at exactly 319 meshes / 75 materials / 44 textures. Clear/rain, upward-sky and moon-direction screenshots were opened on both renderers and visually match. Babylon's WebGPU KTX2 wrapper reports a placeholder 1×1 logical size even while its compressed source is ready and rendered; the verifier therefore checks the same-origin source/fallback state plus rendered parity rather than treating that wrapper metadata as decoded dimensions. WebGL2 reports the expected 512×512 internal atlas.
+
 ## Scope and limits
 
-This is a layered sky approximation, not volumetric ray marching or a physically calibrated atmospheric scattering simulation. There are no moving cloud shadows or astronomical lunar phases. Storm fog is desaturated with the sky to avoid bright blue distant cutouts. Lighting intensity, vehicle inputs, tire forces, terrain geometry and collision contacts are unchanged. Local reflections can naturally pick up the new sky.
+This is a layered sky approximation, not volumetric ray marching or a physically calibrated atmospheric scattering simulation. There are no moving cloud shadows or astronomical lunar phases. Storm fog is desaturated with the sky to avoid bright blue distant cutouts. Vehicle inputs, tire forces, terrain geometry and collision contacts are unchanged. Local reflections can naturally pick up the new sky.
 
-Before/after captures are retained in `output/atmosphere/`. The original and final native-renderer checks reproduce the same keyboard driving trace. Inspected images show softer cloud shapes, warm dusk and visible night stars; vegetation density, white boulders, ground-detail bands, buildings and car finish remain unfinished work. All 194 unit tests, the strict production build, both native eight-view checks, the supplied input/screenshot loop, Low geometry audit and Chrome/Edge production flows pass. The production preview serves `index-BgxEANZM.js`; full measurements and their hardware limitations are recorded in [benchmarks](benchmarks.md).
+Historical captures remain in `output/atmosphere/`; the current continuation is in `output/night-ambience-webgl/` and `output/night-ambience-webgpu/`. The current full suite passes 250 tests, strict production build, both native eight-view checks and the Low geometry audit. The production preview serves `index-BBNmaQ2P.js`; full measurements and their hardware limitations are recorded in [benchmarks](benchmarks.md).
 
 ```sh
 node scripts/verify-atmosphere.mjs --output=output/atmosphere/webgl

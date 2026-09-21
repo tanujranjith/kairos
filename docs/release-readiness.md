@@ -4,7 +4,7 @@ Kairos is a playable local release candidate. The current source integrates the 
 
 ## Verified locally
 
-- Strict TypeScript, nineteen KTX2 assets, production build and 249 tests in 39 files pass.
+- Strict TypeScript, nineteen KTX2 assets, production build and 250 tests in 39 files pass.
 - Garage, customization, settings, map/routing, Free Drive, reverse/reset, all five cameras, pause/resume, night, the handling course and persisted reload pass in a complete rendered browser flow.
 - Save export/import, corrupt data preservation, failed writes and unavailable IndexedDB fail safely.
 - Keyboard and controller navigation are covered; real fullscreen, disconnect pause and bounded vibration dispatch pass. A physical controller motor was not available.
@@ -14,7 +14,7 @@ Kairos is a playable local release candidate. The current source integrates the 
 - Installed Chrome and Edge both drive through actual WebGPU and forced WebGL2 with third-party hosts blocked.
 - Selected 30-minute race endurance, maximum-speed streaming, 16-car racing/pits, wet-night traffic, handling/surface, race weekend and production delivery checks are retained in the dated benchmark evidence.
 
-The exact audited production files include `index-j6fe0Xaa.js` and `cell-worker-D1LLTGra.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.359 seconds forced WebGL2 and 4.820 seconds automatic, with 10,520,925 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests.
+The exact audited production files include `index-BBNmaQ2P.js` and `cell-worker-D1LLTGra.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.277 seconds forced WebGL2 and 4.852 seconds automatic, with 10,521,118 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests.
 
 ## Remaining acceptance boundary
 

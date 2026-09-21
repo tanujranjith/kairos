@@ -2,6 +2,14 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Night ambience and legibility — September 21
+
+- `verify-atmosphere.mjs` passes dawn, noon, golden hour, cloudy, overcast, rain, clear night and wet night on installed Edge WebGL2 and actual WebGPU. Simulation state remains fixed across captures, ordinary keyboard driving reaches **17.023624m/s**, resources remain exactly **319 meshes / 75 materials / 44 textures**, and page-error/external-request arrays are empty.
+- Clear night uses **0.38 ambient / 0.30 directional / 0.28 environment / 1.17 exposure** with a downward 0.90-Y moon direction. Rain retains the ambient/environment floor but reduces the directional key to **0.18**. Both renderer paths produce the same 204 peak moon readback. Opened clear night, wet night, upward sky and moon-direction captures from both backends; car, tree, terrain and road-edge silhouettes remain visible while rain reads darker.
+- The Low audit is unchanged in submission cost: wet night **267 draws / 495,786 triangles**; the worst GT/Formula grids remain **291 / 496,846**. All sampled views remain under 300 draws and 500k triangles. This is an RTX 3060 submission audit, not target-laptop frame pacing.
+- Complete suite: **250 tests / 39 files**. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-BBNmaQ2P.js`, worker `cell-worker-D1LLTGra.js`). Cold 25Mbps/40ms production reaches the menu in **5.277s forced WebGL2 / 4.852s automatic**, transfers **10,521,118 bytes**, enters Free Drive/Northstar and records no page, failed or external requests.
+- The required generic input client was attempted and again remained live without output/artifacts for over a minute, so it was terminated and not counted. These are development-host results, not actual-laptop or hosted HTTPS acceptance.
+
 ## Local release-candidate interaction/fault audit — September 21
 
 - `verify-interactions.mjs` passes the rendered six-profile garage, customization, settings, map routing, acceleration, frozen pause clock, five cameras, reset, reverse, night, save reload and traffic-free Northstar entry/reset flow. `verify-platform-interactions.mjs` passes real 1280×720 fullscreen, bounded dual-rumble dispatch/rejection, controller-loss pause/input release and keyboard resume.
