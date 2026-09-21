@@ -1,5 +1,11 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Save reset and quota recovery — September 21 (verified checkpoint)
+
+- Expanded the browser storage verifier through the real rendered Reset progress control and confirmation dialog. A seeded non-default profile resets exactly to Velara/default settings and remains reset after reload; the opened capture shows the resulting settings state and confirmation toast.
+- Injected a real IndexedDB `QuotaExceededError` into the ordinary save path. The full-storage warning renders, play still enters Free Drive, and a later successful write proves the serialized queue recovers. The opened quota capture and report have empty page, failed-request and external-request arrays.
+- Export/import, corrupt-profile preservation, closed-database warning and unavailable-IndexedDB playability remain covered. No runtime source or production bundle changed. NEXT: preserve this persistence contract and all prior driving/model/world work. Actual 8GB laptop and authorized HTTPS acceptance remain external; mockup-level photorealism remains outside the current procedural-art result. Keep the five user files untouched.
+
 ## Navigation rerouting and discovery — September 21 (verified checkpoint)
 
 - Added pure remaining-route distance and replaced misleading straight-line HUD distance with lane-route kilometres. `render_game_to_text` now exposes the same value. Initial HUD render uses live navigation state instead of showing one stale `Explore` frame after returning from the map.

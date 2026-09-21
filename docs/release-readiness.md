@@ -6,7 +6,7 @@ Kairos is a playable local release candidate. The current source integrates the 
 
 - Strict TypeScript, nineteen KTX2 assets, production build and 250 tests in 39 files pass.
 - Garage, customization, settings, map/routing, Free Drive, reverse/reset, all five cameras, pause/resume, night, the handling course and persisted reload pass in a complete rendered browser flow.
-- Save export/import, corrupt data preservation, failed writes and unavailable IndexedDB fail safely.
+- Confirmed progress reset survives reload. Save export/import, corrupt data preservation, genuine quota failure/recovery, closed-database writes and unavailable IndexedDB fail safely while play remains available.
 - Keyboard and controller navigation are covered; real fullscreen, disconnect pause and bounded vibration dispatch pass. A physical controller motor was not available.
 - Audio entry survives autoplay blocking and unlocks on the next real interaction. Engine/load, shift, transmission, road, wind, tire, impact, rain, cockpit and tunnel paths produce finite output; mute and pause reach silence.
 - Automatic preset selection, manual override and dynamic resolution's 70% floor/recovery do not alter simulation state.

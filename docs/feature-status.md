@@ -1,8 +1,14 @@
 # Feature status — working build, not acceptance certification
 
+## Save reset and quota recovery — September 21 (verified checkpoint)
+
+The rendered Reset progress action now has direct end-to-end coverage: a seeded non-default profile is confirmed through the browser dialog, reset to the default Velara state, and remains reset after reload. The storage fault path also injects an actual `QuotaExceededError`, displays the full-storage warning, keeps the game playable, and proves a later successful write can recover the save queue.
+
+Export/import, corrupt-profile preservation, closed-database handling and unavailable-IndexedDB fallback still pass in the same run. Both new screenshots were opened; page, failed-request and external-request arrays are empty. This closes the explicit local reset/quota evidence gap without changing runtime behavior. The complete suite remains 250 tests / 39 files.
+
 ## Local release-candidate audit — September 21 (verified checkpoint)
 
-The current source is locally release-candidate ready: garage/customization/settings/map, Free Drive, all five cameras, handling course, pause/resume, persistence, save transfer/failures, audio unlock/mixing, real fullscreen, controller loss/vibration policy, automatic quality/dynamic resolution, graphics loss recovery and the Chrome/Edge × WebGPU/WebGL2 matrix all pass their dedicated browser checks. The latest captures were opened across these flows. The complete suite remains 249 tests / 39 files, and the exact production bundle passes cold 25Mbps/40ms delivery with no page, failed or external requests.
+The current source is locally release-candidate ready: garage/customization/settings/map, Free Drive, all five cameras, handling course, pause/resume, persistence, confirmed reset, save transfer/failures, audio unlock/mixing, real fullscreen, controller loss/vibration policy, automatic quality/dynamic resolution, graphics loss recovery and the Chrome/Edge × WebGPU/WebGL2 matrix all pass their dedicated browser checks. The latest captures were opened across these flows. The complete suite passes 250 tests / 39 files, and the exact production bundle passes cold 25Mbps/40ms delivery with no page, failed or external requests.
 
 This closes the broad local interaction/fault audit, not the full external acceptance target. The actual secondary 8 GB integrated-graphics laptop has not been made available, no HTTPS project has been authorized, no physical gamepad motor was available, and the original procedural art remains visibly stylized rather than mockup-level photorealism. See [release readiness and handoff](release-readiness.md).
 

@@ -2,6 +2,12 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Save reset and quota recovery — September 21
+
+- `verify-storage.mjs` now exercises the rendered **Reset progress** action through its real confirmation dialog after seeding a different selected profile, activity record, discovery, visit, distance and clock. The UI returns to the default Velara state and the exact reset state survives a page reload.
+- The same browser run injects a real `QuotaExceededError` through IndexedDB's write path. Kairos displays `Progress could not be saved. Storage is unavailable or full; use Export save before closing.`, remains playable, and successfully writes again after storage recovers, proving the serialized save queue is not left rejected.
+- Export/import, corrupt-profile preservation, closed-database warning and unavailable-IndexedDB fallback continue to pass. The opened reset and quota-warning captures are retained in `output/storage/`; page-error, failed-request and external-request arrays are empty.
+
 ## Night ambience and legibility — September 21
 
 - `verify-atmosphere.mjs` passes dawn, noon, golden hour, cloudy, overcast, rain, clear night and wet night on installed Edge WebGL2 and actual WebGPU. Simulation state remains fixed across captures, ordinary keyboard driving reaches **17.023624m/s**, resources remain exactly **319 meshes / 75 materials / 44 textures**, and page-error/external-request arrays are empty.
@@ -13,7 +19,7 @@ These are development-host results, not certification of the secondary 8GB integ
 ## Local release-candidate interaction/fault audit — September 21
 
 - `verify-interactions.mjs` passes the rendered six-profile garage, customization, settings, map routing, acceleration, frozen pause clock, five cameras, reset, reverse, night, save reload and traffic-free Northstar entry/reset flow. `verify-platform-interactions.mjs` passes real 1280×720 fullscreen, bounded dual-rumble dispatch/rejection, controller-loss pause/input release and keyboard resume.
-- `verify-storage.mjs` passes export/import, corrupt-profile preservation, failed-write warning and playable unavailable-IndexedDB fallback. `verify-audio.mjs` passes blocked-autoplay entry/unlock and finite dry, tunnel, cockpit, rain, transmission, road, wind, slip, pause, shift, mute and engine-only output. `verify-adaptive-quality.mjs` passes automatic High selection, manual Medium override, a 70% dynamic floor, 75% recovery and deferred High application without changing player simulation.
+- `verify-storage.mjs` passes rendered confirmed reset with reload persistence, export/import, corrupt-profile preservation, genuine quota failure and recovery, closed-database warning and playable unavailable-IndexedDB fallback. `verify-audio.mjs` passes blocked-autoplay entry/unlock and finite dry, tunnel, cockpit, rain, transmission, road, wind, slip, pause, shift, mute and engine-only output. `verify-adaptive-quality.mjs` passes automatic High selection, manual Medium override, a 70% dynamic floor, 75% recovery and deferred High application without changing player simulation.
 - Forced WebGL2 loss rebuilds in place in **1.971s**, preserves player state, resumes grounded with four contacts and records only Babylon's expected loss/restoration notices. Forced WebGPU destruction holds state for the bounded **20.008s** attempt, offers the explicit saved-profile WebGL2 restart and resumes grounded with four contacts. The latest recovery UI and resumed captures were opened.
 - Installed Chrome and Edge each pass actual WebGPU and forced WebGL2. All four controlled drives reach **11.325672m/s**, retain four wheel contacts and record empty page-error/external-request arrays. The latest browser captures were opened.
 - The exact production bundle remains `index-j6fe0Xaa.js` with worker `cell-worker-D1LLTGra.js`; 249 tests / 39 files and strict build pass. Cold 25Mbps/40ms delivery remains **5.359s forced WebGL2 / 4.820s automatic**, **10,520,925 bytes**, with clean Free Drive/Northstar entry and no page, failed or external requests. This is local release-candidate evidence, not actual 8 GB laptop, physical-controller, Internet/HTTPS or reference-art certification.
