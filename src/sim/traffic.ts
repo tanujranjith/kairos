@@ -47,11 +47,11 @@ export class TrafficController {
     const conflict=a.id===b.id||a.targetLane===b.targetLane||a.points.some((p,i)=>i%2===0&&b.points.some((q,j)=>j%2===0&&Math.abs(p.y-q.y)<2&&distance(p,q)<3.5));
     this.conflicts.set(key,conflict);return conflict;
   }
-  private mayEnter(agent:TrafficAgent,turn:LanePath,observation:TrafficObservation,others:TrafficObservation[],clock:number){
+  private mayEnter(agent:TrafficAgent,turn:LanePath,observation:TrafficObservation,others:TrafficObservation[],clock:number,stoppingDeceleration=5){
     const junction=this.graph.junctions.get(turn.junction!)!,own=this.reservations.get(agent.id);
     if(own?.path===turn.id&&own.expires>=clock)return true;
     const aspect=signalAspect(junction,turn.signalGroup??-1,clock),gap=this.graph.paths.get(agent.pathId)!.length-agent.progress-3.5;
-    if(aspect==='red'||aspect==='amber'&&observation.speed**2/(2*5)<Math.max(0,gap))return false;
+    if(aspect==='red'||aspect==='amber'&&observation.speed**2/(2*stoppingDeceleration)<Math.max(0,gap))return false;
     const exit=this.graph.paths.get(turn.targetLane!)!;
     // Keep the crossing clear when a queue leaves no room beyond the exit.
     if(others.some(other=>{if(other.id===agent.id||Math.abs(other.position.y-junction.y)>3||Math.abs(other.speed)>2)return false;const p=projectPath(exit,other.position);return p.distance<(observation.width+other.width)/2+.3&&p.progress<12;}))return false;
@@ -98,22 +98,23 @@ export class TrafficController {
     }
     return true;
   }
-  decide(agent:TrafficAgent,observation:TrafficObservation,others:TrafficObservation[],clock:number,wheelbase=2.65):TrafficDecision{
+  decide(agent:TrafficAgent,observation:TrafficObservation,others:TrafficObservation[],clock:number,wheelbase=2.65,wetness=0):TrafficDecision{
     const projection=this.sync(agent,observation),speed=Math.max(0,observation.speed);
-    let path=this.graph.paths.get(agent.pathId)!,targetSpeed=path.speedLimit*(.84+(agent.index%4)*.035),reason='cruise';
+    const roadGrip=1-clamp(wetness,0,1)*.28,deceleration=3.5*roadGrip,weatherPace=1-clamp(wetness,0,1)*.1;
+    let path=this.graph.paths.get(agent.pathId)!,targetSpeed=path.speedLimit*(.84+(agent.index%4)*.035)*weatherPace,reason='cruise';
     agent.decisions++;agent.decisionAt=nextDecision(clock,agent.index);
     const next=agent.nextId?this.graph.paths.get(agent.nextId):undefined;
     const look=clamp(7+speed*.65,7,35),route=[...(next?[next.id]:[]),...(next?.next??[])];
     for(let ahead=0;ahead<=140;ahead+=8){
-      const p=this.graph.sample(path,agent.progress+ahead,route),corner=Math.sqrt(.42*9.81/Math.max(.0001,Math.abs(p.curvature)));
-      targetSpeed=Math.min(targetSpeed,Math.sqrt(corner*corner+2*3.5*ahead));
+      const p=this.graph.sample(path,agent.progress+ahead,route),corner=Math.sqrt(.42*9.81*roadGrip/Math.max(.0001,Math.abs(p.curvature)));
+      targetSpeed=Math.min(targetSpeed,Math.sqrt(corner*corner+2*deceleration*ahead));
     }
-    if(next)targetSpeed=Math.min(targetSpeed,Math.sqrt(next.speedLimit**2+2*3.5*Math.max(0,path.length-agent.progress-4)));
+    if(next)targetSpeed=Math.min(targetSpeed,Math.sqrt((next.speedLimit*weatherPace)**2+2*deceleration*Math.max(0,path.length-agent.progress-4)));
     if(path.kind==='lane'&&next?.kind==='connector'){
       const gap=path.length-agent.progress-3.5;
       if(gap<60){
-        agent.permitted=this.mayEnter(agent,next,observation,others,clock);
-        if(!agent.permitted){targetSpeed=Math.min(targetSpeed,Math.sqrt(2*3.2*Math.max(0,gap-.8)));reason=signalAspect(this.graph.junctions.get(next.junction!)!,next.signalGroup??-1,clock)==='green'?'yield':'signal';if(gap<1.8)targetSpeed=0;}
+        agent.permitted=this.mayEnter(agent,next,observation,others,clock,5*roadGrip);
+        if(!agent.permitted){targetSpeed=Math.min(targetSpeed,Math.sqrt(2*3.2*roadGrip*Math.max(0,gap-.8)));reason=signalAspect(this.graph.junctions.get(next.junction!)!,next.signalGroup??-1,clock)==='green'?'yield':'signal';if(gap<1.8)targetSpeed=0;}
       }else agent.permitted=false;
     }else if(path.kind==='connector')this.reservations.set(agent.id,{agent:agent.id,path:path.id,expires:clock+4});
     if(!next){const endSpeed=Math.sqrt(6*Math.max(0,path.length-agent.progress-4));if(endSpeed<targetSpeed){targetSpeed=endSpeed;reason='end-of-road';}}
@@ -133,7 +134,7 @@ export class TrafficController {
       const gap=(inLane?along:forward)-(observation.length+other.length)*.5;
       if(gap>100)continue;
       const lead=Math.max(0,other.speed*Math.cos(wrap(other.yaw-observation.yaw)));
-      const safe=Math.max(0,Math.min(lead+(gap-4-speed*1.15)*.55,Math.sqrt(lead*lead+2*3.5*Math.max(0,gap-3))));
+      const safe=Math.max(0,Math.min(lead+(gap-4-speed*1.15)*.55,Math.sqrt(lead*lead+2*deceleration*Math.max(0,gap-3))));
       if(safe<targetSpeed){targetSpeed=safe;reason='traffic';obstruction=true;minGap=Math.min(minGap,gap);}
     }
     if(path.kind==='lane'&&!agent.laneChange&&clock>agent.changeCooldown&&path.length-agent.progress>Math.max(85,speed*5)&&agent.progress>30&&Math.abs(projection.point.curvature)<.007){
@@ -156,7 +157,11 @@ export class TrafficController {
     if(targetSpeed<.15){input.throttle=0;input.brake=Math.max(.4,input.brake);}
     if(minGap<2+speed*.3){input.throttle=0;input.brake=1;}
     agent.waitingSince=speed<.5&&targetSpeed<.5?(agent.waitingSince??clock):null;
-    agent.blockedFor=speed<.5&&reason==='recovery'?agent.blockedFor+.1:0;
+    // A physically wedged car can remain close to its lane centre with a valid
+    // cruise target, so lane error alone cannot identify every deadlock. Count
+    // only cars that are commanded to move; red lights and following/yield
+    // queues have a near-zero target and never enter recovery through this path.
+    agent.blockedFor=speed<.5&&targetSpeed>2?agent.blockedFor+.1:0;
     agent.targetSpeed=targetSpeed;agent.reason=reason;
     return {input,targetSpeed,reason,laneError};
   }

@@ -56,7 +56,7 @@ export class TrafficRuntime {
     actor.observation=observation(actor.physical.vehicle);this.controller.sync(actor.agent,actor.observation);
     actor.physical.vehicle.dispose();actor.physical.visual.dispose();actor.physical=null;this.demotions++;
   }
-  beforeStep(player:Vehicle,clock:number,dt:number){
+  beforeStep(player:Vehicle,clock:number,dt:number,wetness=0){
     if(!this.actors.length)return;
     const playerState=observation(player);
     for(const actor of this.actors)if(actor.physical)actor.observation=observation(actor.physical.vehicle);
@@ -73,7 +73,7 @@ export class TrafficRuntime {
     const all=[playerState,...this.actors.map(a=>a.observation)];let decisions=0;
     for(const actor of this.actors){
       if(clock+1e-8>=actor.agent.decisionAt){
-        const result=this.controller.decide(actor.agent,actor.observation,all,clock,actor.physical?.vehicle.definition.wheelbase??2.65);decisions++;
+        const result=this.controller.decide(actor.agent,actor.observation,all,clock,actor.physical?.vehicle.definition.wheelbase??2.65,wetness);decisions++;
         if(actor.physical)actor.physical.input=result.input;
       }
       if(!actor.physical)actor.observation=this.controller.advanceDistant(actor.agent,actor.observation,dt,clock);
@@ -87,10 +87,14 @@ export class TrafficRuntime {
         // Nonphysical actors just outside the promotion horizon can otherwise sit
         // forever in the old 450–600m gap while the nearby population stays low.
         const refill=shortage>0&&!actor.physical&&separation>Math.max(450,Math.abs(playerState.speed)*6+80);
-        const stranded=actor.physical&&(actor.physical.vehicle.needsRecovery()||actor.agent.blockedFor>10);
+        const stalled=actor.physical&&actor.agent.blockedFor>10,stranded=actor.physical&&(actor.physical.vehicle.needsRecovery()||stalled);
+        // Preserve every nearby queue. A car that has requested motion for over
+        // thirty seconds may be recycled from the middle distance so one wedged
+        // connector occupant cannot starve an entire junction indefinitely.
+        const recoveryDistance=stalled&&actor.agent.blockedFor>30?80:160;
         // Never reset visible nearby queues or move a car onto the player. Waiting at
         // signals/obstructions is not a recovery failure and does not count as stranded.
-        if(!far&&!refill&&!(stranded&&separation>160))continue;
+        if(!far&&!refill&&!(stranded&&separation>recoveryDistance))continue;
         const candidates=SPAWNS.filter(p=>{const d=distance(p.point,playerState.position),ahead=(p.point.x-playerState.position.x)*Math.sin(playerState.yaw)+(p.point.z-playerState.position.z)*Math.cos(playerState.yaw);return d>(refill?220:500)&&d<(refill?410:1000)&&(!refill||ahead<d*.4)&&this.clearAt(p.point,actor.agent.id,playerState,25);});
         const spawn=candidates[(actor.agent.index*17+actor.recoveries*13)%Math.max(1,candidates.length)];if(!spawn)continue;
         this.demote(actor);this.controller.remove(actor.agent.id);actor.agent=this.controller.add(actor.agent.id,actor.agent.index,spawn.pathId,spawn.progress,clock);actor.recoveries++;
@@ -106,5 +110,5 @@ export class TrafficRuntime {
   }
   criticalPositions(player:Vehicle){return this.actors.filter(a=>{const d=distance(a.observation.position,player.state.position);return a.physical||d<160||a.pendingPromotion&&d<Math.max(500,Math.abs(player.state.speed)*6+100);}).map(a=>a.physical?a.physical.vehicle.node.position:a.observation.position);}
   clear(){this.generation++;for(const actor of this.actors){actor.physical?.vehicle.dispose();actor.physical?.visual.dispose();}this.actors=[];this.controller.clear();this.promotions=0;this.demotions=0;this.peakPhysical=0;this.maxDecisionsPerStep=0;}
-  snapshot(){return {physical:this.cars.length,distant:this.actors.filter(a=>!a.physical).length,promotions:this.promotions,demotions:this.demotions,peakPhysical:this.peakPhysical,maxDecisionsPerStep:this.maxDecisionsPerStep,agents:this.actors.map(a=>({id:a.agent.id,tier:a.physical?'physical':'distant',path:a.agent.pathId,progress:a.agent.progress,position:a.observation.position,speed:a.observation.speed,targetSpeed:a.agent.targetSpeed,reason:a.agent.reason,decisions:a.agent.decisions,recoveries:a.recoveries}))};}
+  snapshot(){return {physical:this.cars.length,distant:this.actors.filter(a=>!a.physical).length,promotions:this.promotions,demotions:this.demotions,peakPhysical:this.peakPhysical,maxDecisionsPerStep:this.maxDecisionsPerStep,agents:this.actors.map(a=>({id:a.agent.id,tier:a.physical?'physical':'distant',path:a.agent.pathId,progress:a.agent.progress,position:a.observation.position,speed:a.observation.speed,targetSpeed:a.agent.targetSpeed,reason:a.agent.reason,blockedFor:a.agent.blockedFor,decisions:a.agent.decisions,recoveries:a.recoveries}))};}
 }

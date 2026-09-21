@@ -153,7 +153,7 @@ export class Kairos {
     if(this.loading){this.loading=false;this.loadingOverlay.hide();}
     const dt=FIXED_DT;this.clock+=dt;this.saveClock+=dt;this.aiClock+=dt;this.routeClock+=dt;
     const settings=this.save.settings;settings.time=(settings.time+dt*settings.timeRate/3600)%24;this.wetness=clamp(this.wetness+(settings.weather==='Rain'?.012:-.003)*dt,0,1);
-    if(this.mode==='Free Drive')this.trafficSystem.beforeStep(this.player,this.clock,dt);
+    if(this.mode==='Free Drive')this.trafficSystem.beforeStep(this.player,this.clock,dt,this.wetness);
     const raceActive=this.mode!=='Free Drive',all=[this.player,...this.opponents.map(o=>o.vehicle),...this.traffic.map(t=>t.vehicle)];
     if(this.aiClock>=.1){const elapsed=this.aiClock;this.aiClock=0;for(let i=0;i<this.opponents.length;i++){
       const o=this.opponents[i],v=o.vehicle;

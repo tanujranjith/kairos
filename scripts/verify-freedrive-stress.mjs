@@ -15,6 +15,10 @@ const capture=async name=>{await page.evaluate(async()=>{const game=window.kairo
 
 try{
   await page.goto(`${origin}/?renderer=webgl`,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.kairos?.ui&&!document.querySelector('#loading'));
+  // The first traffic instantiation attaches one reusable Velara material
+  // template set from the preloaded AssetContainer. Warm that intentional
+  // process-lifetime cache before measuring per-session cleanup.
+  await page.evaluate(async()=>{const game=window.kairos;game.save.settings.traffic=12;await game.startDrive();await game.advanceTime(1000);await game.action('home');await game.advanceTime(0);});
   const baseline=await page.evaluate(()=>{const scene=window.kairos.renderer.scene;return {meshes:scene.meshes.length,materials:scene.materials.length,textures:scene.textures.length};});
   await page.evaluate(async()=>{
     const game=window.kairos;game.save.selected='velara';Object.assign(game.save.settings,{automaticQuality:false,quality:'Low',resolution:1,traffic:12,volume:0,timeRate:0,weather:'Clear'});game.applySettings(true);await game.startDrive();game.race.state.session.difficulty=1;await game.advanceTime(1000);

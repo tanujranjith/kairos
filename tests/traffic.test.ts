@@ -110,6 +110,20 @@ describe('traffic rules and distant simulation',()=>{
     const opposing=[...graph.paths.values()].find(p=>p.direction===-1)!;expect(controller.decide(agent,car,[car,observed(opposing,880,'opposing',20)],2).reason).toBe('cruise');
     controller.decide(agent,car,[car,lead],5);expect(agent.laneChange?.to).toBe(target.id);
   });
+  it('reduces cruise, corner and stopping targets as rain lowers available road grip',()=>{
+    const dryController=new TrafficController(TRAFFIC_GRAPH),wetController=new TrafficController(TRAFFIC_GRAPH);
+    const dry=dryController.add('car',2,lane.id,20),wet=wetController.add('car',2,lane.id,20),car=observed(lane,20,'car',12);
+    const dryDecision=dryController.decide(dry,car,[car],1,2.65,0),wetDecision=wetController.decide(wet,car,[car],1,2.65,.9);
+    expect(wetDecision.targetSpeed).toBeLessThan(dryDecision.targetSpeed);expect(wetDecision.targetSpeed).toBeGreaterThan(dryDecision.targetSpeed*.75);
+  });
+  it('classifies a commanded but immobile car as blocked without classifying a legal queue',()=>{
+    const controller=new TrafficController(TRAFFIC_GRAPH),moving=controller.add('moving',2,lane.id,20),car=observed(lane,20,'moving',0);
+    for(let tick=0;tick<120;tick++)controller.decide(moving,car,[car],tick*.1);
+    expect(moving.targetSpeed).toBeGreaterThan(2);expect(moving.blockedFor).toBeGreaterThan(10);
+    const queued=controller.add('queued',0,lane.id,lane.length-5),stopped=observed(lane,lane.length-5,'queued',0);
+    for(let tick=0;tick<120;tick++)controller.decide(queued,stopped,[stopped],tick*.1);
+    expect(queued.targetSpeed).toBe(0);expect(queued.blockedFor).toBe(0);
+  });
   it('staggered 10Hz schedules stay bounded and distant cars obey stop lines',()=>{
     const controller=new TrafficController(TRAFFIC_GRAPH),agents=Array.from({length:24},(_,i)=>controller.add(`car-${i}`,i,lane.id,lane.length-5));
     let max=0;
