@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Local race flags and dense retirement stress — September 20 (verified checkpoint)
+
+- Added explicit `flagReason` and on-track retirement provenance. Local yellow now covers player off-track and a stopped on-track car from250m ahead through35m after passing; pit retirement is excluded. Blue requires an active lapping car within160m behind. Checkered retains priority. HUD shows specific yellow/blue causes with distinct restrained colors.
+- Pure race tests cover bounded yellow, clearing, blue proximity and yellow priority. Installed Edge/WebGL2 physical GT local-yellow and four-car natural-lapping blue checks pass; state and HUD text agree and actual captures were opened.
+- Both sixteen-car, three-lap GT and Formula stress runs fault racers1/5/9 after lap one at racing speed. Each reaches results with13 finishers,3 physical `DNF · OUT OF FUEL` retirees, local yellow, zero reset calls, zero damage and zero finisher warnings/penalties. Opened both yellow and results screenshots.
+- Required supplied-client run completed two paced input iterations after the change. Both text snapshots have four grounded contacts, finite telemetry, live traffic, zero damage and no loading/error state; actual screenshots were opened.
+- An initial noninteractive full-suite wrapper lost its aggregate output after its workers exited; a focused rerun passed21/21. The final observable serial run passes206tests/30files in181.09s. Strict Node24 TypeScript and Vite build pass; production emits index-Cc5UZk4u.js with the known7.51MB Babylon warning. Preserve the five original reference/context files and keep the full goal active.
+- Final installed-Edge production smoke passes forcedWebGL2/actualWebGPU, cold25Mbps/40ms cache and blocked third-party hosts through showroom, Free Drive, Northstar, clean8carGT launch and home return. Menus14.072/8.133s,11,469,029bytes, no errors/failed/external requests or dev hooks. Actual final drive/race images opened. This remains localhost development-host evidence, not target-laptop/endurance/HTTPS acceptance.
+
 ## Fuel depletion, retirement and stopped-hazard response — September 20 (verified checkpoint)
 
 - Previous user/model-choice turn made no implementation progress. Re-read the full objective, web-game skill/action payload and current tree. Continued the explicit fuel-depletion racing validation gap without changing tire grip, suspension, power or keyboard handling.

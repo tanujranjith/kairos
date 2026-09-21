@@ -3,7 +3,7 @@ import {CIRCUIT,PIT,pointAt,nearestRoad} from './world';
 import {clamp,lerp} from '../core/math';
 import {PIT_SERVICE_BOXES,PIT_SERVICE_GATE_HALF_WIDTH} from './pit-plan';
 
-export const RACE_RULES={checkpoints:12,trackMargin:1.5,trackLimitDelay:.65,warningInterval:3,trackPenalty:5,falseStartPenalty:10,pitSpeed:60/3.6,pitSpeedTolerance:.83,pitPenalty:5,finishWindow:120} as const;
+export const RACE_RULES={checkpoints:12,trackMargin:1.5,trackLimitDelay:.65,warningInterval:3,trackPenalty:5,falseStartPenalty:10,pitSpeed:60/3.6,pitSpeedTolerance:.83,pitPenalty:5,finishWindow:120,yellowAhead:250,yellowBehind:35,blueBehind:160} as const;
 export const RACE_AI={wornTireThreshold:.55,wornTireSpeed:{ROAD:27,GT:27,FORMULA:18},
   laneChangeSpeed:1.2,overlapHorizon:1.2,longitudinalClearance:3,lateralClearance:.7,
   // Reserve space for measured corner-following error and the full vehicle,

@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Local race flags and three-retirement stress — September 20
+
+- Pure race timing adds bounded stopped-car yellow and proximity-aware blue cases. The physical browser checks use installed Edge, forced WebGL2 and controlled 120Hz simulation. They do not reposition a car or alter race timing to create the observed flag.
+- GT reaches local yellow at race time 147.492s with the stopped car 236m ahead. A separate four-car run reaches `BLUE · FASTER CAR APPROACHING` from a naturally lapping active AI car within the configured 160m window. State and rendered HUD text match; actual yellow and blue screenshots were opened.
+- Both 16-car, three-lap GT and Formula runs fault racers 1, 5 and 9 after lap one while each is moving above 12m/s. All three in each run coast to a grounded stop, report zero reset calls and damage, remain physical, and trigger local yellow. Thirteen finishers reach results with zero warnings/penalties; the three final rows read `DNF · OUT OF FUEL`. Reports and opened captures are in `output/multi-retirement-gt-first/` and `output/multi-retirement-formula-first/`.
+- The supplied unmodified web-game client completed two paced input iterations after this change. Both snapshots remain in Free Drive with four contacts, finite telemetry, live traffic, zero damage and no loading/error artifact; screenshots were opened. Its SwiftShader p95 is not a hardware performance result.
+- Final serial regression: **206 tests / 30 files** in **181.09s** on the loaded development host. Strict TypeScript passes under bundled Node 24.19.0. The production build passes and emits `index-Cc5UZk4u.js`; the existing minified Babylon chunk remains 7.51 MB and still warns above the configured 1.8 MB threshold.
+- Final installed-Edge production smoke (`output/race-flags-production`) passes forced WebGL2 and actual WebGPU with cold cache, 25Mbps/40ms browser emulation and external hosts blocked. Menu readiness is **14.072s / 8.133s**, transferred bytes are **11,469,029** per full flow, and JS heap snapshots are **143,357,676 / 153,909,908 bytes**. Both enter Free Drive, Northstar and a clean eight-car GT race, then return home with no page/failed/external requests or exposed development hooks. Opened final drive and race captures. These are localhost samples, not actual-laptop FPS/process/GPU memory, endurance or HTTPS evidence.
+
 ## Fuel retirement and stopped-hazard response — September 20 (verified checkpoint)
 
 - Full serial suite: **204 tests / 30 files**, 133.66 seconds on the loaded development host. Strict TypeScript and Vite production builds pass directly under bundled Node 24.19.0; the final allocation-cleanup output is `index-CpE-6xvK.js` plus the existing 7.51 MB minified Babylon chunk warning. Preview 5192 serves the new index.

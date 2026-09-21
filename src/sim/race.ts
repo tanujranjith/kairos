@@ -10,6 +10,7 @@ export function validatedRaceDistance(r:RacerProgress){
   return (r.lap-1)*CIRCUIT.length+Math.max(lower,Math.min(upper,r.progress));
 }
 export const DRIVER_NAMES=['You','M. Laurent','A. Kim','S. Moretti','R. Okafor','L. Chen','K. Rivera','J. Berg','E. Sato','T. Walsh','N. Varga','I. Costa','D. Park','H. Rossi','F. Silva','P. Anders'];
+const forwardDistance=(from:number,to:number)=>((to-from)%CIRCUIT.length+CIRCUIT.length)%CIRCUIT.length;
 function startingGrid(config:RaceSessionConfig,qualified?:readonly string[]){
   const roster=Array.from({length:config.entrants},(_,i)=>i===0?'player':`racer-${i}`);
   if(qualified){
@@ -22,12 +23,12 @@ export class RaceManager {
   state:RaceState;stage=0;
   private offTrack=new Map<string,number>();private limitsLatch=new Set<string>();private pitLatch=new Set<string>();
   private routes=new Map<string,RaceRouteTracker>();private gridPositions=new Map<string,V3>();private checkeredAt=Infinity;private falseStarts=new Set<string>();
-  constructor(){this.state={phase:'idle',elapsed:0,remaining:0,countdown:3,flag:'',entrants:[],grid:[],session:{kind:'Free Drive',laps:5,entrants:8,difficulty:.65,position:4,vehicleClass:'GT'}};}
+  constructor(){this.state={phase:'idle',elapsed:0,remaining:0,countdown:3,flag:'',flagReason:'',entrants:[],grid:[],session:{kind:'Free Drive',laps:5,entrants:8,difficulty:.65,position:4,vehicleClass:'GT'}};}
   start(config:RaceSessionConfig,stage=0,qualified?:readonly string[]){
     const grid=startingGrid(config,qualified);
     this.stage=stage;this.checkeredAt=Infinity;this.falseStarts.clear();this.offTrack.clear();this.limitsLatch.clear();this.pitLatch.clear();this.routes.clear();this.gridPositions.clear();
     const phase=config.kind==='Practice'||config.kind==='Race Weekend'&&stage===0?'practice':config.kind==='Qualifying'||config.kind==='Race Weekend'&&stage===1?'qualifying':'countdown';
-    this.state={phase,elapsed:0,remaining:phase==='qualifying'||config.kind==='Race Weekend'&&stage===0?300:Infinity,countdown:3,flag:phase==='countdown'?'GET READY':'GREEN',grid,session:{...config,position:grid.indexOf('player')+1},entrants:Array.from({length:config.entrants},(_,i)=>({id:i===0?'player':`racer-${i}`,name:DRIVER_NAMES[i],lap:0,checkpoint:0,progress:0,lastProgress:0,lapStart:0,best:Infinity,last:0,sectorStart:0,sectors:[],valid:true,warnings:0,penalty:0,finished:false,finishTime:0,retired:false,retirementReason:'',pit:false,pitRoute:false,pitCheckpoint:0,pitValid:false}))};
+    this.state={phase,elapsed:0,remaining:phase==='qualifying'||config.kind==='Race Weekend'&&stage===0?300:Infinity,countdown:3,flag:phase==='countdown'?'GET READY':'GREEN',flagReason:'',grid,session:{...config,position:grid.indexOf('player')+1},entrants:Array.from({length:config.entrants},(_,i)=>({id:i===0?'player':`racer-${i}`,name:DRIVER_NAMES[i],lap:0,checkpoint:0,progress:0,lastProgress:0,lapStart:0,best:Infinity,last:0,sectorStart:0,sectors:[],valid:true,warnings:0,penalty:0,finished:false,finishTime:0,retired:false,retirementReason:'',retirementOnTrack:false,pit:false,pitRoute:false,pitCheckpoint:0,pitValid:false}))};
   }
   nextSession():RaceSessionStart|null{
     if(this.state.phase!=='finished'||this.state.session.kind!=='Race Weekend'||this.stage>=2)return null;
@@ -38,15 +39,24 @@ export class RaceManager {
   resetLap(id:string){const r=this.state.entrants.find(r=>r.id===id);if(r){r.valid=false;this.routes.get(id)?.reset();r.pitRoute=false;r.pitCheckpoint=0;r.pitValid=false;}}
   retire(id:string,reason:string){
     const r=this.state.entrants.find(r=>r.id===id);if(!r||r.finished||r.retired)return false;
-    r.retired=true;r.retirementReason=reason;r.valid=false;r.pit=false;r.pitRoute=false;r.pitCheckpoint=0;r.pitValid=false;
+    r.retired=true;r.retirementReason=reason;r.retirementOnTrack=!r.pit&&!r.pitRoute;r.valid=false;r.pit=false;r.pitRoute=false;r.pitCheckpoint=0;r.pitValid=false;
     this.routes.delete(id);this.offTrack.delete(id);this.limitsLatch.delete(id);this.pitLatch.delete(id);return true;
   }
-  end(){this.state.phase='finished';this.state.flag='CHECKERED';}
+  private updateFlag(){
+    const state=this.state,player=state.entrants[0];if(!player||player.finished||player.retired){state.flag='GREEN';state.flagReason='';return;}
+    if((this.offTrack.get(player.id)??0)>0){state.flag='YELLOW';state.flagReason='OFF TRACK';return;}
+    const hazard=state.entrants.find(r=>r.retired&&r.retirementOnTrack&&(forwardDistance(player.progress,r.progress)<RACE_RULES.yellowAhead||forwardDistance(r.progress,player.progress)<RACE_RULES.yellowBehind));
+    if(hazard){state.flag='YELLOW';state.flagReason='STOPPED CAR AHEAD';return;}
+    const lapping=state.entrants.find(r=>r.id!==player.id&&!r.finished&&!r.retired&&r.lap>player.lap&&forwardDistance(r.progress,player.progress)<RACE_RULES.blueBehind);
+    if(lapping){state.flag='BLUE';state.flagReason='FASTER CAR APPROACHING';return;}
+    state.flag='GREEN';state.flagReason='';
+  }
+  end(){this.state.phase='finished';this.state.flag='CHECKERED';this.state.flagReason='';}
   update(dt:number,samples:RaceSample[]){
     const state=this.state;if(state.phase==='idle'||state.phase==='finished')return;
     if(state.phase==='countdown'){
       for(const sample of samples){const initial=this.gridPositions.get(sample.id);if(!initial)this.gridPositions.set(sample.id,{...sample.position});else if(Math.hypot(sample.position.x-initial.x,sample.position.z-initial.z)>1&&sample.speed>1&&!this.falseStarts.has(sample.id)){const r=state.entrants.find(r=>r.id===sample.id);if(r){r.penalty+=RACE_RULES.falseStartPenalty;this.falseStarts.add(r.id);}}}
-      state.countdown-=dt;if(state.countdown<=0){state.phase='racing';state.elapsed=0;state.flag='GREEN';this.routes.clear();}return;
+      state.countdown-=dt;if(state.countdown<=0){state.phase='racing';state.elapsed=0;state.flag='GREEN';state.flagReason='';this.routes.clear();}return;
     }
     state.elapsed+=dt;if(Number.isFinite(state.remaining)){state.remaining=Math.max(0,state.remaining-dt);if(state.remaining===0){this.end();return;}}
     state.flag='GREEN';
@@ -57,7 +67,7 @@ export class RaceManager {
       if(route.invalid||sample.reset)r.valid=false;
       if(route.pit||route.pitRoute){if(sample.speed>RACE_RULES.pitSpeed+RACE_RULES.pitSpeedTolerance&&!this.pitLatch.has(r.id)){r.penalty+=RACE_RULES.pitPenalty;this.pitLatch.add(r.id);}if(route.pit)this.limitsLatch.delete(r.id);}else this.pitLatch.delete(r.id);
       if(!route.onTrack&&!route.pit){
-        const duration=(this.offTrack.get(r.id)??0)+dt;this.offTrack.set(r.id,duration);if(r.id==='player')state.flag='YELLOW';
+        const duration=(this.offTrack.get(r.id)??0)+dt;this.offTrack.set(r.id,duration);
         if(duration>RACE_RULES.trackLimitDelay&&!this.limitsLatch.has(r.id)){r.valid=false;r.warnings++;if(r.warnings%RACE_RULES.warningInterval===0)r.penalty+=RACE_RULES.trackPenalty;this.limitsLatch.add(r.id);}
       }else{this.offTrack.set(r.id,0);this.limitsLatch.delete(r.id);}
       if(sample.reset)continue;
@@ -72,9 +82,9 @@ export class RaceManager {
         r.checkpoint=(r.checkpoint+1)%RACE_RULES.checkpoints;r.lastProgress=route.progress;
       }
     }
-    const player=state.entrants[0];if(player&&!player.finished&&!player.retired&&this.order()[0]?.lap>player.lap+1)state.flag='BLUE';
     if(state.entrants.length&&state.entrants.every(r=>r.finished||r.retired)){this.end();return;}
-    if(Number.isFinite(this.checkeredAt)){state.flag='CHECKERED';if(state.entrants.every(r=>r.finished||r.retired)||state.elapsed-this.checkeredAt>RACE_RULES.finishWindow)this.end();}
+    if(Number.isFinite(this.checkeredAt)){state.flag='CHECKERED';state.flagReason='';if(state.entrants.every(r=>r.finished||r.retired)||state.elapsed-this.checkeredAt>RACE_RULES.finishWindow)this.end();}
+    else this.updateFlag();
   }
   order():RacerProgress[]{
     const timing=this.state.phase==='practice'||this.state.phase==='qualifying'||this.state.phase==='finished'&&(this.state.session.kind==='Practice'||this.state.session.kind==='Qualifying'||this.state.session.kind==='Race Weekend'&&this.stage<2);
