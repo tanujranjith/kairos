@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Signal crosswalks — September 21
+
+- Pure coverage checks every lane-zero signal approach for six finite full-road bands between 0.4m and 3.65m behind its junction edge. The complete suite passes **237 tests / 37 files**.
+- Installed Edge verification under forced WebGL2 and actual WebGPU reports **4 approaches / 24 bands / 1 shared paint mesh / 336 paint triangles**, four grounded contacts, zero damage, no page errors and no external requests. Driver and aerial captures were opened.
+- The complete traffic browser matrix remains green, including red departure, left/right/U-turn, merge, queue, passing, obstruction recovery and physical/distant population. The supplied input reaches **10.933m/s** with four contacts and zero damage.
+- Low cost is showroom **187/176,416**, Lakeshore **240/292,546**, city **262/487,353**, wet night **263/487,520**, GT **298/487,166**, pit **121/308,204**, circuit **146/238,909** and Formula **281/484,764** (draws/triangles).
+- Three city/forest/lake loops repeat at **905/84/44**, **368/85/45** and **319/84/44** resources; race/home repeats at **138/83/43** and zero cells.
+- Strict TypeScript, nineteen KTX2 assets and production build pass (`index-oBk1swCr.js`, `cell-worker-4NqBEf0t.js`). Cold25Mbps/40ms production reaches menu in **6.291s WebGL2 / 5.736s automatic**, transfers **12,795,069 bytes**, enters Free Drive/Northstar and records no page, failed or external request.
+
 ## Westbrook boulevard planting — September 21
 
 - Fixture inventory is now **83 lamps / 19 benches / 30 bins / 86 planters / 10 shelters**. Every bed carries one reused oak/trunk and two grass-card tufts. Pure clearance and ownership checks pass.

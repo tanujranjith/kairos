@@ -5,6 +5,16 @@ import { samplePath, signalAspect, type LaneJunction } from '../sim/lane-graph';
 import { Geometry } from './geometry';
 
 export interface SignalMesh {junction:LaneJunction;group:number;aspect:'red'|'amber'|'green';mesh:Mesh}
+export interface CrosswalkBand {x:number;y:number;z:number;width:number;depth:number;yaw:number}
+
+/** Markings derive from the same incoming lane endpoint as the signal and stop
+ * bar, so visual crossing geometry cannot drift away from traffic rules. */
+export function signalCrosswalk(pathId:string):CrosswalkBand[]{
+  const path=TRAFFIC_GRAPH.paths.get(pathId);if(!path||path.kind!=='lane'||path.laneIndex!==0)return [];
+  const end=samplePath(path,path.length),road=TRAFFIC_GRAPH.roads.find(road=>road.id===path.roadId);if(!road)return [];
+  const forward={x:Math.sin(end.yaw),z:Math.cos(end.yaw)};
+  return Array.from({length:6},(_,index)=>{const distance=.4+index*.65;return {x:end.x-forward.x*distance,y:end.y+.047,z:end.z-forward.z*distance,width:road.width-.8,depth:.34,yaw:end.yaw};});
+}
 export class TrafficScenery {
   private lamps:Record<'red'|'amber'|'green',StandardMaterial>;
   constructor(private scene:Scene){
@@ -32,7 +42,8 @@ export class TrafficScenery {
           if(!junction.priority.includes(path.roadId))for(let side=-halfLane;side<halfLane;side+=.8)paint.box(end.x+right.x*side,end.y+.045,end.z+right.z*side,.45,.02,.5,end.yaw);
           continue;
         }
-        paint.box(end.x-forward.x*.8,end.y+.045,end.z-forward.z*.8,halfLane*2-.5,.02,.4,end.yaw);
+        paint.box(end.x-forward.x*4.65,end.y+.045,end.z-forward.z*4.65,halfLane*2-.5,.02,.4,end.yaw);
+        for(const band of signalCrosswalk(id))paint.box(band.x,band.y,band.z,band.width,.018,band.depth,band.yaw);
         poles.box(x,y,z,.13,4.2,.13);poles.box(x,y+3,z,.6,1.55,.35,end.yaw);
         const group=junction.signalGroups!.findIndex(g=>g.includes(path.roadId));let geometry=groups.get(group);
         if(!geometry){geometry={red:new Geometry(),amber:new Geometry(),green:new Geometry()};groups.set(group,geometry);}

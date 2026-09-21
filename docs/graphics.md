@@ -1,5 +1,9 @@
 # Original graphics upgrade — first substantial art pass
 
+## Lane-derived Westbrook crosswalks — September 21
+
+Every signalized road approach now carries a six-band crossing and an approach-side stop bar derived from its actual lane endpoint, road width and yaw. The accepted driver and aerial captures are clean in native WebGL2 and WebGPU; the car waits before the stop line, then the crossing, then the junction. All marks merge into the existing cell-owned white-paint mesh, adding no material, light, texture, collider, draw call or request. Low city remains under target at 262 draws / 487,353 triangles. See [implementation and measured evidence](urban-crosswalks.md).
+
 ## Westbrook boulevard tree line — September 21
 
 All 83 street-lamp stations now share their corridor cadence with 86 raised tree planters. Beds reuse the original oak canopy/trunk and grass-card models, so the view gains a stronger vertical rhythm without a new asset family. The first revision left full oak meshes in the tiny shrub positions and was rejected at 509,677 city triangles; low-cost grass tufts restore the final city to 487,063 triangles.

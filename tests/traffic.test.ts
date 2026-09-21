@@ -5,6 +5,7 @@ import { makeRoad, RoadGraph, PUBLIC_ROADS } from '../src/content/world';
 import { TrafficController, type TrafficObservation } from '../src/sim/traffic';
 import type { LanePath } from '../src/sim/lane-graph';
 import { subtractConvex, terrainOutsideJunctions } from '../src/content/terrain-clipping';
+import {signalCrosswalk} from '../src/render/traffic';
 
 const observed=(path:LanePath,s:number,id='car',speed=0):TrafficObservation=>{const p=samplePath(path,s);return {id,position:{x:p.x,y:p.y+.7,z:p.z},yaw:p.yaw,speed,length:4.4,width:1.8};};
 
@@ -43,6 +44,11 @@ describe('authored directed traffic lanes',()=>{
     expect(signalAspect(junction,0,13)).toBe('amber');
     expect(signalAspect(junction,0,15.5)).toBe('red');expect(signalAspect(junction,1,15.5)).toBe('red');
     expect(signalAspect(junction,1,17)).toBe('green');
+  });
+  it('derives six full-road crosswalk bands behind every signal approach',()=>{
+    for(const junction of TRAFFIC_GRAPH.junctions.values())if(junction.control==='signal')for(const id of junction.incoming){const path=TRAFFIC_GRAPH.paths.get(id)!;if(path.laneIndex!==0)continue;const end=samplePath(path,path.length),bands=signalCrosswalk(id);expect(bands).toHaveLength(6);
+      for(const band of bands){const behind=(band.x-end.x)*Math.sin(end.yaw)+(band.z-end.z)*Math.cos(end.yaw);expect(behind).toBeLessThanOrEqual(-.399);expect(behind).toBeGreaterThan(-3.7);expect(band.width).toBeGreaterThan(7);expect([band.x,band.y,band.z,band.width,band.depth,band.yaw].every(Number.isFinite)).toBe(true);}
+    }
   });
   it('reaches every ambient path through legal turns and same-direction lane changes',()=>{
     const paths=[...TRAFFIC_GRAPH.paths.values()].filter(p=>p.trafficAllowed),seen=new Set<string>(),queue=[paths[0].id];

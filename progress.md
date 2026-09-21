@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Signal crosswalks — September 21 (verified checkpoint)
+
+- Added six lane-derived zebra bands and a correctly ordered stop bar to every primary signal approach. All geometry joins the existing cell paint batch; no new material, texture, light, collider, draw or external request.
+- Opened final driver/aerial captures under forced WebGL2 and actual WebGPU. Both report four approaches / 24 bands / one paint mesh / 336 paint triangles, with four contacts and zero damage. Complete traffic behavior and the supplied input pass unchanged.
+- Low city/wet-night remain inside target at 262/487,353 and 263/487,520 draws/triangles. Three region cycles are exact at 905/84/44, 368/85/45 and 319/84/44; three race/home cycles return to 138/83/43 and zero cells.
+- Complete suite passes 237 tests / 37 files. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-oBk1swCr.js`, worker `cell-worker-4NqBEf0t.js`). Cold25Mbps/40ms production passes in 6.291s WebGL2 / 5.736s automatic, 12,795,069 bytes, with no page/failed/external request.
+- User explicitly permits reusing the same authored car model throughout instead of creating more bespoke models. Preserve the verified model-reuse path and handling fixes. NEXT: make that visual-reuse policy explicit in live vehicle loading without erasing class physics/race rules, or continue another broad remaining end-state gap. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Westbrook boulevard planting — September 21 (verified checkpoint)
 
 - Extended the existing 36m fixture cadence from 43 to 86 raised planters, pairing all 83 lamp stations with one reused oak/trunk and low-cost grass-card underplanting. No new asset, material, texture, light or runtime request.

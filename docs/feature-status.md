@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Signal crosswalks — September 21 (verified checkpoint)
+
+Every Westbrook signal approach now derives a full-road six-band zebra crossing and driver-side stop bar from the same lane endpoint used by traffic control. The geometry merges into the ordinary cell-owned white-marking batch, adds no scene resource or collider, and leaves tire surfaces and handling unchanged.
+
+Both renderer paths show the player correctly waiting before the stop line/crossing; four approaches, 24 bands and 336 shared-paint triangles are verified. Traffic behavior, supplied keyboard input, repeated streaming/race cleanup, 237 tests / 37 files, strict TypeScript, KTX2 integrity, production build and cold-cache delivery pass. Low city remains 262 draws / 487,353 triangles. This improves a conspicuously bare junction but does not add pedestrians, finish the broad central apron, certify the target laptop or provide hosted HTTPS acceptance. See [implementation and evidence](urban-crosswalks.md).
+
 ## Westbrook boulevard planting — September 21 (verified checkpoint)
 
 The existing 36-metre street-furniture cadence now carries 86 raised tree planters across Westbrook's four city roads, pairing every lamp station with one correctly scaled reused oak/trunk and two inexpensive grass-card tufts. A first attempt kept full oak meshes as tiny shrubs and was rejected after exceeding the Low geometry target.
