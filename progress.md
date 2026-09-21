@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Real-time repeated-session endurance — September 21 (verified checkpoint)
+
+- Added `scripts/verify-endurance.mjs`, an installed-Edge real-time harness that keeps the normal render loop and 120Hz simulation active, repeatedly runs an eight-car/three-lap GT Quick Race, returns home, asserts zero collision/detail cells and restarts. It samples rolling frame p95, physics, FPS, scene resources, renderer recovery, streaming and CDP heap every30s.
+- The final 30.000-minute WebGL2/Low720p run completes four races (6.347–6.366 minutes each) with a fifth underway. Each home return restores exactly132meshes/73materials/43textures and zero world cells. Settled JS heap changes185.66→187.04MB (+1.38MB); max/median frame p9518.6/18.1ms, sampled physics max5.5ms, and FPS after the first minute remains≥56.04. Errors, warnings, failed and external requests are empty.
+- Opened start, midpoint, endpoint and all four results screenshots. Circuit surfaces, field, HUD, scenery and visible classification rows remain intact. This is development-host race-session evidence, not whole-process/GPU memory, target-laptop, maximum-speed Free Drive/traffic, WebGPU or HTTPS certification.
+- Removed one unused verifier variable and documented the command, scope and limits. No runtime source, handling, vehicle or rendering behavior changed, so the previously verified218-test/build bundle remains authoritative.
+- NEXT: preserve recovery, handling, fleet and endurance checkpoints. Continue full scope with KTX2/runtime delivery optimization and remaining world/car realism; then maximum-speed Free Drive/traffic stress, actual8GB laptop performance and authorizedHTTPS deployment when available. Preserve the five original user reference/context files untouched.
+
 ## Graphics interruption recovery — September 21 (verified checkpoint)
 
 - Added tokened renderer recovery state and a dedicated pause/failure interface. Context/device loss clears controls and fixed-step backlog, pauses audio/simulation, preserves moving vehicle/session state and blocks resume/reset until safe. Snapshots and telemetry expose phase, attempts, duration and resume intent.

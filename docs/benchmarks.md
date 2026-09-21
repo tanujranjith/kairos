@@ -2,6 +2,14 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Real-time repeated-session endurance — September 21
+
+- `scripts/verify-endurance.mjs` uses installed Edge, forced WebGL2, Low 1280×720, the normal render loop and the game's ordinary 120Hz fixed-step simulation. It repeatedly runs an eight-car, three-lap GT Quick Race through the same input/vehicle systems, returns home after each classification and starts a fresh session. This is wall-clock testing rather than controlled-time acceleration.
+- The retained `output/endurance-real30/report.json` covers **30.000 minutes** and completes **four full races** in 6.347, 6.366, 6.351 and 6.359 minutes; a fifth session is active at the endpoint. Every home transition releases all streamed race cells and returns to exactly **132 meshes / 73 materials / 43 textures**, with zero collision/detail cells. The drive-state resource spread is 91 meshes, 5 materials, 5 textures and 0 transform nodes, matching sector streaming rather than cumulative ownership growth.
+- Settled JavaScript heap changes from **185.66MB to 187.04MB**, a **1.38MB** increase. Rolling displayed-frame p95 peaks at **18.6ms** and has an **18.1ms** median. Sampled physics peaks at **5.5ms**. After the first minute's startup/countdown warm-up, sampled FPS never falls below **56.04**; the report's raw 13.87 minimum is the initial sample and is retained rather than discarded.
+- Browser errors, unexpected warnings, failed requests and external requests are all empty. Start, midpoint, four result screens and endpoint captures were opened; they retain complete circuit surfaces, opponents, HUD, terrain and lighting. The result screen shows seven rows at once because the eighth classification is on the existing next-page control, not because an entrant is missing.
+- This satisfies the repeated race/session endurance check on the development RTX/Edge host. CDP JavaScript heap is not whole-process resident memory or GPU allocation, and this run does not certify the secondary 8GB laptop, maximum-speed Free Drive, broad traffic behavior, WebGPU endurance or hosted HTTPS delivery.
+
 ## Graphics context/device recovery — September 21
 
 - Four focused state-machine cases and one rebuilt-texture readiness case pass, including stale callback rejection and exact cross-realm lost-device cancellation matching. The final full serial run passes **218 tests / 32 files in 126.10s**; strict Node24 TypeScript and production Vite build pass. Production emits `index-BVeLKvlh.js` (339.11KB) plus the existing 7.51MB Babylon chunk warning.
@@ -661,4 +669,4 @@ Final production cold-cache 25Mbps/40ms emulation functionally passes startup, F
 
 ## Outstanding hardware and deployment acceptance
 
-Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; p95 frame time; separate physics/AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); real-time 30-minute endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. No target-budget pass is claimed for these unmeasured items.
+Actual 8GB laptop city / mountain-highway / wet-night / eight-car-race routes; separate AI/GPU timing; resident process and GPU memory; actual-hosted 25Mbps cold download (local emulation now has evidence above); maximum-speed Free Drive and broader traffic endurance; complete interaction/fault matrix; HTTPS smoke test after an authorized destination is supplied. The development-host repeated-race endurance result above does not establish these remaining items or a target-laptop budget pass.
