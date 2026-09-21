@@ -109,6 +109,17 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       yellow.tintSince(amberStart,[1,.63,.12,1]);
     }
   }
+  for(const sign of roadsideGuidance(cx,cz).chevrons){
+    const darkStart=white.positions.length/3,c=Math.cos(sign.yaw),s=Math.sin(sign.yaw);
+    for(const lateral of [-.43,.43])white.box(sign.x+c*lateral,sign.y,sign.z-s*lateral,.075,.80,.075,sign.yaw);
+    white.box(sign.x,sign.y+.72,sign.z,1.34,.67,.09,sign.yaw);
+    white.tintSince(darkStart,[.045,.06,.055,1]);
+    const amberStart=yellow.positions.length/3,direction=-sign.side,tail=-direction*.38,tip=direction*.38;
+    const vertex=(u:number,v:number,face:number)=>({x:sign.x+c*u+Math.sin(sign.yaw)*face*.052,y:sign.y+1.055+v,z:sign.z-s*u+Math.cos(sign.yaw)*face*.052});
+    const bar=(au:number,av:number,bu:number,bv:number,face:number)=>{const du=bu-au,dv=bv-av,length=Math.hypot(du,dv),ou=-dv/length*.055,ov=du/length*.055,a=vertex(au+ou,av+ov,face),b=vertex(au-ou,av-ov,face),d=vertex(bu+ou,bv+ov,face),e=vertex(bu-ou,bv-ov,face);yellow.quad(a,b,d,e);yellow.quad(b,a,e,d);};
+    for(const face of [-1,1]){bar(tail,.22,tip,0,face);bar(tail,-.22,tip,0,face);}
+    yellow.tintSince(amberStart,[1,.63,.12,1]);
+  }
   if(asphalt.indices.length/3>settingStart)roadContacts.push({start:settingStart,end:asphalt.indices.length/3,surface:'Asphalt',layer:'surface'});
   add('verge',verge,'shoulder',true,{surface:'Gravel',layer:'surface'},vergeContacts);add('roads',asphalt,'road',true,{surface:'Asphalt',layer:'surface'},roadContacts);add('paint',white,'marking');add('center',yellow,'yellow');add('curbs',curbs,'curb');add('guardrails',rails,'roof',true);
   const random=rng(hash(cx,cz)),urban=x0<-650&&z0<-300,count=quality==='Low'&&urban?32:{Low:44,Medium:60,High:80,Ultra:105}[quality];

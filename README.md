@@ -31,7 +31,7 @@ Ground materials blend meadow, dry grass, woodland soil, shore sediment and expo
 
 The [directional sky](docs/atmosphere.md) now has layered clouds, sunward dusk haze, a small cloud-obscured sun, and a readable night gradient with stars and moon. It uses one shared cloud atlas and native shaders on both renderers, not a low-resolution coloured sky repainted every time the clock changes. This does not change driving physics or complete the wider scenery upgrade.
 
-Rural roads now use [authored roadside groves and weathered boulders](docs/rural-landscape.md) instead of uniform tree scatter and white concrete-looking rocks. A complementary [utility, field-edge and farm layer](docs/rural-infrastructure.md) adds road-following poles/wires, timber fencing with gate gaps and five distant farm clusters. [Roadside delineators](docs/roadside-guidance.md) add dark reflector bands and outward-facing amber lenses at a continuous road-distance cadence. All three layers are deterministic, streamed by cell and kept clear of protected roads, water and junction views. Utility/fence and delineator detail is visual-only; it does not alter road, shoulder or vehicle physics. The result is less empty and easier to read in poor weather, while the world and cars remain stylized and need further art passes.
+Rural roads now use [authored roadside groves and weathered boulders](docs/rural-landscape.md) instead of uniform tree scatter and white concrete-looking rocks. A complementary [utility, field-edge and farm layer](docs/rural-infrastructure.md) adds road-following poles/wires, timber fencing with gate gaps and five distant farm clusters. [Roadside guidance](docs/roadside-guidance.md) adds dark-banded reflector posts at a continuous road-distance cadence and yellow-on-black chevron boards on Ridgeway's two sharp hairpins. All three layers are deterministic, streamed by cell and kept clear of protected roads, water and junction views. Utility/fence and guidance detail is visual-only; it does not alter road, shoulder or vehicle physics. The result is less empty and easier to read in poor weather, while the world and cars remain stylized and need further art passes.
 
 In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
 
@@ -91,6 +91,7 @@ node scripts/verify-contested-pits.mjs
 node scripts/verify-scenery.mjs
 node scripts/verify-streetscape.mjs
 node scripts/verify-streetscape.mjs --renderer=auto --output=output/streetscape-webgpu
+node scripts/verify-roadside-guidance.mjs
 node scripts/verify-graphics-streaming.mjs
 node scripts/verify-wet-night-driving.mjs
 node scripts/verify-freedrive-stress.mjs
