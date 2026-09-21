@@ -2,6 +2,17 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Shared Velara body — September 21
+
+- Forced WebGL2 and actual WebGPU each resolve all six handling profiles to `velara`; every loaded profile reports **29 parts / 37,936 triangles / 4 wheel pivots** while retaining its own profile ID. Only `velara-lod0.glb` and `velara-lod1.glb` are requested.
+- Free Drive verifies the player, **12 physical traffic cars** and **17 parked cars** on the same model. An eight-car Formula-class grid verifies the player and seven opponents on it as well. Opened garage, grid and normal driving captures are clean.
+- The six-profile road-model matrix passes **18 profile/livery combinations**, live steering/fixed calipers, five cameras per profile, telemetry, four contacts and zero-damage driving.
+- With all GLBs aborted, all six profiles retain one procedural Velara body at **28 parts / 38,602 triangles**. The fallback screenshot was opened.
+- Supplied keyboard input reaches **10.933m/s**, four contacts and zero damage. Six physics definitions and race rules are unchanged.
+- Low cost is showroom **188/176,908**, Lakeshore **240/293,364**, city **262/487,353**, wet night **263/487,520**, either eight-car grid **291/496,870**, pit **121/315,224** and circuit **146/245,929** (draws/triangles). The grid retains only about **3,100 triangles** of measured headroom.
+- Three city/forest/lake loops repeat at **905/84/44**, **368/85/45** and **319/84/44** resources; three race/home cycles return to **138/83/43** and zero cells.
+- The complete suite passes **238 tests / 37 files**. Strict TypeScript, nineteen KTX2 files and production build pass (`index-NicfuzSm.js`, `cell-worker-4NqBEf0t.js`). Cold25Mbps/40ms production reaches menu in **5.529s WebGL2 / 4.908s automatic**, transfers **10,517,042 bytes**, enters Free Drive/Northstar and records no page, failed or external request.
+
 ## Signal crosswalks — September 21
 
 - Pure coverage checks every lane-zero signal approach for six finite full-road bands between 0.4m and 3.65m behind its junction edge. The complete suite passes **237 tests / 37 files**.

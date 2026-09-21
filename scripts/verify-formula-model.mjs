@@ -19,7 +19,7 @@ try{
       await page.screenshot({path:`${output}/${name}-${livery}.png`});await page.evaluate(()=>document.querySelector('#ui').style.visibility='');
     }
   }
-  assert.equal(models[0].asset,true);assert.ok(models.slice(1).every(m=>!m.asset));assert.ok(models.every(m=>m.pivots.length===4&&m.triangles<40000));
+  assert.ok(models.every(m=>m.asset));assert.ok(models.every(m=>m.pivots.length===4&&m.triangles<40000));
   await page.evaluate(async()=>{const g=window.kairos;await g.action('custom',JSON.stringify({key:'livery',value:0}));g.save.settings.timeRate=0;g.save.settings.traffic=0;g.raceConfig.vehicleClass='FORMULA';g.raceConfig.entrants=8;await g.startRace();await g.advanceTime(4200);});
   await page.keyboard.down('ArrowUp');await page.evaluate(()=>window.advanceTime(2000));await page.keyboard.up('ArrowUp');
   await page.keyboard.down('ArrowUp');

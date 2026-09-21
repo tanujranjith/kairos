@@ -27,7 +27,7 @@ try{
     return {rows,baseline,after:{meshes:scene.meshes.length,materials:scene.materials.length,nodes:scene.transformNodes.length,textures:scene.textures.length}};
   });
   for(const row of lods.rows){assert.ok(row.far<row.near*.72,JSON.stringify(row));assert.equal(row.stableRoot,true);assert.equal(row.partsStable,true);assert.equal(row.pivots,4);assert.equal(row.finite,true);assert.equal(row.contacts,1);assert.deepEqual(row.nearPaint,row.farPaint);}
-  assert.deepEqual(lods.after,lods.baseline);checks.push('six GLB and six livery rigs switch detail, preserve paint/pivots, reduce geometry and dispose without resource growth');
+  assert.deepEqual(lods.after,lods.baseline);checks.push('six handling profiles reuse the shared GLB, switch detail, preserve paint/pivots and dispose without resource growth');
   const probes=await page.evaluate(async()=>{
     const g=window.kairos,r=g.renderer;await g.advanceTime(0);const first=r.reflections.snapshot();
     for(let i=0;i<20;i++)await g.advanceTime(0);

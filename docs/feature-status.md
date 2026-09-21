@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Shared Velara body — September 21 (verified checkpoint)
+
+The player, showroom background, physical traffic, race opponents and parked-city cars now resolve to one authored Velara S LOD0/LOD1 pair. The garage calls the six choices tuning profiles and gives every card the same silhouette. Their independent FWD/RWD/AWD, GT and Formula-class physics, setup values and race rules remain; paint, wheel and accent customization remain per profile. Asset failure also falls back to one procedural Velara body.
+
+Installed Edge verifies all six profiles, normal traffic/parked population and an eight-car Formula grid in both WebGL2 and WebGPU while requesting only two GLBs. The blocked-GLB path also returns identical geometry for all profiles. Supplied input, repeated streaming/race cleanup, 238 tests / 37 files, strict TypeScript, texture integrity, production build and cold-cache delivery pass. Both race classes measure 291 draws / 496,870 triangles, leaving narrow but positive Low headroom. See [implementation and evidence](shared-car-model.md).
+
 ## Signal crosswalks — September 21 (verified checkpoint)
 
 Every Westbrook signal approach now derives a full-road six-band zebra crossing and driver-side stop bar from the same lane endpoint used by traffic control. The geometry merges into the ordinary cell-owned white-marking batch, adds no scene resource or collider, and leaves tire surfaces and handling unchanged.

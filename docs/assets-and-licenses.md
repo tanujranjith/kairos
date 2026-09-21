@@ -4,8 +4,9 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 
 | Content | Source / terms |
 |---|---|
+| Shared live Velara body | Original local `velara-lod0.glb` / `velara-lod1.glb` and matching procedural fallback. Reused for player, traffic, racing, showroom and parked scenery; no downloaded model, brand, paid asset or runtime host. |
 | Signal crosswalk and stop-bar geometry | Original Kairos lane-derived geometry in `src/render/traffic.ts`; merged into the existing local white-marking material with no downloaded asset, texture or runtime host. |
-| Six car meshes, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project |
+| Historical car source generators/GLBs, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project. Non-Velara car GLBs remain source artifacts but are not requested by the current runtime. |
 | Parked Westbrook cars | Reused instances of the original local `velara-lod1.glb`; no separate mesh, texture, brand, downloaded asset or license added. Placement/collision ownership is original Kairos code in `urban-parcel.ts`, `cell-blueprint.ts`, `car-assets.ts` and `world.ts`. |
 | Directional sky, packed periodic cloud atlas, layered clouds, sun/moon/stars | Original source in `src/render/sky-field.ts` and `sky-material.ts`. Native GLSL/WGSL, no downloaded sky image, external runtime request or new dependency. |
 | Authored rural grove corridors, deterministic copses, understory and weathered boulder mesh/material | Original source in `src/content/rural-landscape.ts`, `src/world/rural-dressing.ts`, `src/render/boulders.ts` and `src/render/surface-textures.ts`; no downloaded model, texture, paid asset or external runtime request. |

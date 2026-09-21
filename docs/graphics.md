@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## One shared live car body — September 21
+
+The runtime now resolves every handling profile to the same authored Velara S LOD0/LOD1 pair. Player, traffic, race opponents, showroom background and parked cars all reuse that body; only paint/accent and physical profile differ. The garage explicitly presents six tuning profiles and uses one consistent silhouette. The local procedural fallback follows the same mapping when GLBs are blocked.
+
+Both native renderer paths, a normal city population, an eight-car Formula-class grid and the blocked-asset fallback pass visual and metadata inspection. Production startup requests two car GLBs instead of twelve and the 25Mbps transfer falls to 10.52 MB. Both eight-car classes remain within Low at 291 draws / 496,870 triangles. See [implementation and measured evidence](shared-car-model.md).
+
 ## Lane-derived Westbrook crosswalks — September 21
 
 Every signalized road approach now carries a six-band crossing and an approach-side stop bar derived from its actual lane endpoint, road width and yaw. The accepted driver and aerial captures are clean in native WebGL2 and WebGPU; the car waits before the stop line, then the crossing, then the junction. All marks merge into the existing cell-owned white-paint mesh, adding no material, light, texture, collider, draw call or request. Low city remains under target at 262 draws / 487,353 triangles. See [implementation and measured evidence](urban-crosswalks.md).

@@ -12,8 +12,12 @@ import { MeshDataBuilder } from '../src/world/mesh-data';
 import { solarLighting,windowLighting } from '../src/render/atmosphere';
 import { buildServicePavilion } from '../src/world/service-pavilion';
 import { configureArchitecturalGlass } from '../src/render/architectural-glass';
+import {SHARED_CAR_MODEL,visualModelId} from '../src/render/car-assets';
 
 describe('original graphics assets',()=>{
+  it('reuses one authored sports-car visual across every handling profile',()=>{
+    expect(SHARED_CAR_MODEL).toBe('velara');expect(new Set(VEHICLES.map(vehicle=>visualModelId(vehicle.id)))).toEqual(new Set(['velara']));
+  });
   it('shares a lower warm evening sun and turns direct sunlight off at night',()=>{
     const noon=solarLighting(12),evening=solarLighting(17.4),night=solarLighting(0);expect(evening.elevation).toBeLessThan(noon.elevation*.25);expect(evening.golden).toBeGreaterThan(.5);expect(noon.golden).toBe(0);expect(night.daylight).toBe(0);
     for(const t of [0,6,12,17.4,22,24]){const s=solarLighting(t);expect(Math.hypot(s.direction.x,s.direction.y,s.direction.z)).toBeCloseTo(1,8);expect(s.daylight).toBeGreaterThanOrEqual(0);expect(s.daylight).toBeLessThanOrEqual(1);}

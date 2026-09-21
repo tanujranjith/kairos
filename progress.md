@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Shared live Velara model — September 21 (verified checkpoint)
+
+- Implemented the user's explicit direction to use the same car/model throughout. Player, showroom, traffic, seven race opponents and 17 parked cars now reuse only Velara LOD0/LOD1; the six choices remain handling/physics profiles. Garage copy and thumbnails make this explicit.
+- Both native renderer paths verify all six profiles at 29 parts / 37,936 triangles / four pivots and only two model requests. The blocked-GLB path preserves one procedural Velara at 28 parts / 38,602 triangles for every profile. The 18-case livery, steering/caliper, five-camera, telemetry and grounded-driving matrix also passes. Opened final garage, grid, chase, cockpit, driving and fallback captures.
+- Supplied input remains 10.933m/s, four contacts and zero damage. Six physics/race definitions are unchanged. Low city is 262/487,353; both eight-car classes are 291/496,870, below target but with only about 3.1k triangle headroom.
+- Region loops remain exact at 905/84/44, 368/85/45 and 319/84/44; race/home returns to 138/83/43 and zero cells. Complete suite passes 238 tests / 37 files. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-NicfuzSm.js`, worker `cell-worker-4NqBEf0t.js`).
+- Cold25Mbps/40ms production improves to 5.529s WebGL2 / 4.908s automatic and 10,517,042 bytes, with no page/failed/external requests. NEXT: preserve shared-model policy, handling corrections and narrow race-grid budget while continuing a broad end-state gap. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Signal crosswalks — September 21 (verified checkpoint)
 
 - Added six lane-derived zebra bands and a correctly ordered stop bar to every primary signal approach. All geometry joins the existing cell paint batch; no new material, texture, light, collider, draw or external request.

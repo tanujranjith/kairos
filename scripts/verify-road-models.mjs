@@ -34,6 +34,6 @@ try{
     for(const b of state.brakes){assert.ok(Math.abs(b.spin)>1);assert.equal(b.caliperSpin,0);assert.equal(b.caliperSteer,b.steer);assert.equal(b.positionError,0);}
     rows.push({id,drive:state,cameras,steered});console.log(id,'showroom/liveries/cameras/contacts/fixed-calipers pass');await page.keyboard.press('Escape');await page.click('[data-action="home"]');
   }
-  for(const r of rows.filter(r=>r.livery!==undefined)){assert.equal(r.asset,!fallback&&r.livery===0);assert.equal(r.brakes,4);assert.equal(r.parkedBrakes,true);assert.equal(r.steeringPivot,true);assert.equal(r.wheels,4);assert.ok(r.triangles<40000,JSON.stringify(r));}
+  for(const r of rows.filter(r=>r.livery!==undefined)){assert.equal(r.asset,!fallback);assert.equal(r.brakes,4);assert.equal(r.parkedBrakes,true);assert.equal(r.steeringPivot,true);assert.equal(r.wheels,4);assert.ok(r.triangles<40000,JSON.stringify(r));}
   assert.deepEqual(errors,[]);assert.deepEqual(external,[]);await fs.writeFile(`${output}/report.json`,JSON.stringify({fallback,rows,errors,external},null,2));
 }catch(error){await fs.writeFile(`${output}/failure.json`,JSON.stringify({error:String(error),rows,errors,external,state:await page.evaluate(()=>JSON.parse(window.render_game_to_text())).catch(()=>null)},null,2));throw error;}finally{await browser.close();}

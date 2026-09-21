@@ -7,22 +7,25 @@ import { finishCarTrim,finishCarPaint } from './car-materials';
 import {updateSteeringVisual} from './car-steering';
 const libraries=new WeakMap<Scene,Map<string,AssetContainer>>();
 let staticInstance=0;
-export async function loadCarAssets(scene:Scene,ids:string[]){
+export const SHARED_CAR_MODEL='velara';
+export const visualModelId=(_vehicleId:string)=>SHARED_CAR_MODEL;
+
+export async function loadCarAssets(scene:Scene,_ids:string[]){
   const library=libraries.get(scene)??new Map<string,AssetContainer>();libraries.set(scene,library);
-  await Promise.all(ids.flatMap(id=>[0,1].map(async lod=>{try{const container=await LoadAssetContainerAsync(`/models/${id}-lod${lod}.glb`,scene);library.set(`${id}:${lod}`,container);}catch(error){console.warn(`Kairos: using original procedural fallback for ${id} LOD${lod}`,error);}})));
+  await Promise.all([0,1].map(async lod=>{try{const container=await LoadAssetContainerAsync(`/models/${SHARED_CAR_MODEL}-lod${lod}.glb`,scene);library.set(`${SHARED_CAR_MODEL}:${lod}`,container);}catch(error){console.warn(`Kairos: using original procedural fallback for shared ${SHARED_CAR_MODEL} LOD${lod}`,error);}}));
 }
 export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Customization,lite=false):CarVisual|null{
-  const container=libraries.get(scene)?.get(`${d.id}:${lite?1:0}`);if(!container||(setup?.livery??0)>0)return null;
-  const root=new TransformNode(`visual-${d.id}`,scene),entry=container.instantiateModelsToScene(name=>`${d.id}-instance-${name}`,true,{doNotInstantiate:true});root.metadata={kairosCar:true};entry.rootNodes.forEach(n=>n.parent=root);
+  const modelId=visualModelId(d.id),container=libraries.get(scene)?.get(`${modelId}:${lite?1:0}`);if(!container)return null;
+  const root=new TransformNode(`visual-${d.id}`,scene),entry=container.instantiateModelsToScene(name=>`${d.id}-instance-${name}`,true,{doNotInstantiate:true});root.metadata={kairosCar:true,visualModel:modelId,handlingProfile:d.id};entry.rootNodes.forEach(n=>n.parent=root);
   const parts=root.getChildMeshes().filter((m):m is Mesh=>m instanceof Mesh),nodes=root.getChildTransformNodes(),wheels=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`wheel-${i}`))!);
   const brakes=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`brake-${i}`)));
   const steering=nodes.find(node=>node.name.endsWith('steering-pivot'));if(steering&&!steering.rotationQuaternion)steering.rotationQuaternion=Quaternion.Identity();
   const materials=[...new Set(parts.map(p=>p.material).filter((m):m is PBRMaterial=>m instanceof PBRMaterial))];
-  const find=(name:string)=>materials.find(m=>m.name.includes(`${d.id}-${name}`))!;
+  const find=(name:string)=>materials.find(m=>m.name.includes(`${modelId}-${name}`))!;
   const trim=find('carbon');if(trim)finishCarTrim(trim);
   const paint=find('paint'),glass=find('glass')??new PBRMaterial('unused-open-wheel-glass',scene),lights=find('headlight')??find('taillight'),tail=find('taillight');if(!materials.includes(glass))materials.push(glass);
   if(!paint||!glass||!lights||!tail||wheels.some(w=>!w)){root.dispose();materials.forEach(m=>m.dispose());return null;}
-  finishCarPaint(paint);paint.albedoColor=Color3.FromHexString(setup?.paint??d.color).toLinearSpace();const alloy=find('alloy');if(alloy)alloy.albedoColor=Color3.FromHexString(setup?.wheels??'#b2bac0').toLinearSpace();parts.forEach(p=>{p.isPickable=false;p.receiveShadows=true;});
+  finishCarPaint(paint);paint.albedoColor=Color3.FromHexString(setup?.paint??d.color).toLinearSpace();const alloy=find('alloy');if(alloy)alloy.albedoColor=Color3.FromHexString(setup?.wheels??'#b2bac0').toLinearSpace();const accent=find('accent');if(accent&&(setup?.livery??0)>0)accent.albedoColor=Color3.FromHexString(setup?.livery===1?'#e9edf0':'#2a9bb7').toLinearSpace();parts.forEach(p=>{p.isPickable=false;p.receiveShadows=true;});
   const display=find('instruments');
   // PBRMaterial.clone also clones embedded GLB textures. The static instrument
   // image is replaced by a live display: release only this instance's clone,
@@ -37,9 +40,9 @@ export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Custo
  * hardware instances where the GLB hierarchy permits it, while every parked
  * car keeps the exact same geometry and materials as the driveable model. */
 export function instantiateStaticCarAsset(scene:Scene,d:VehicleDefinition){
-  const container=libraries.get(scene)?.get(`${d.id}:1`);if(!container)return null;
+  const modelId=visualModelId(d.id),container=libraries.get(scene)?.get(`${modelId}:1`);if(!container)return null;
   const id=staticInstance++,root=new TransformNode(`parked-${d.id}-${id}`,scene),entry=container.instantiateModelsToScene(name=>`parked-${id}-${name}`,false,{doNotInstantiate:false});
-  root.metadata={kairosCar:true,parkedCar:true};entry.rootNodes.forEach(node=>node.parent=root);
+  root.metadata={kairosCar:true,parkedCar:true,visualModel:modelId};entry.rootNodes.forEach(node=>node.parent=root);
   for(const part of root.getChildMeshes()){
     part.isPickable=false;if(part instanceof InstancedMesh)part.sourceMesh.receiveShadows=true;else part.receiveShadows=true;
     const material=part.material;if(material instanceof PBRMaterial)material.maxSimultaneousLights=6;
