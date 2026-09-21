@@ -2,6 +2,16 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Off-line pit service boxes — September 20 (verified checkpoint)
+
+- Sixteen assigned boxes are generated from `pit-plan.ts` on the existing physical apron. The player uses box 16; up to fifteen opponents retain identity-owned boxes 1–15. The fast lane remains continuous. Timing gates widen only on the garage side across the service range, while wrong-side offsets and all prior reset/skip/elevation cases remain rejected.
+- The full suite passes 201 tests / 30 files in 82.39 seconds with two workers. Strict Node24 TypeScript and Vite production build pass; the existing Babylon chunk warning remains. Focused tests cover dimensions, separation, ingress/egress offsets, concurrent service, through-lane clearance and ordered apron timing.
+- `output/pit-boxes-second` verifies physical eight-car GT and Formula AI visits through ordinary inputs: exactly one service, all 24 pit gates, subsequent valid lap, restored fuel/tires and no sampled warning, penalty or damage. The first off-line run is retained under `pit-boxes-first`; it exposed the old narrow timing-line assumption and is not counted as a pass.
+- `output/contested-pits-first` verifies two neighboring GT boxes occupied simultaneously. Both cars complete exactly once, return to racing with valid timing, restored fuel/tires and no sampled damage; the opened screenshot shows both boxes occupied and the fast lane clear.
+- `output/pit-timing` verifies input-only player GT and Formula runs from the normal grid through box 16 and the following lap. Maximum target-path errors are 1.61 m / 1.65 m; all 24 gates, HUD limit, service and rejoin pass without position or velocity correction. `output/pits` separately rejects centerline service and restores both classes only in the assigned box.
+- The supplied web-game client output `output/pit-boxes-input-final` was opened: Free Drive at 7.87045 m/s, four Asphalt contacts, zero damage/loading errors and eleven nearby physical traffic cars. This checkpoint does not establish every 16-car arrival pattern, service-overshoot recovery, depletion/retirement, actual-laptop performance, 30-minute endurance or HTTPS deployment.
+- Final preview5192 serves `index-CHUeFZPQ.js`. Installed Edge cold-cache production checks at 25 Mbps/40 ms pass forced WebGL2 and actual WebGPU through showroom, Free Drive motion, Northstar, clean eight-car GT launch and home return. Menu readiness is 8.054/7.372 seconds; tested-flow transfer is 11,468,438 bytes. Errors, failed requests and external requests are empty; WebGPU emits only the known Windows power-preference warning. Both showroom and grid captures were opened. These remain development-host delivery checks, not target-laptop or HTTPS acceptance.
+
 ## Six-car lighting, tire and safety-cell upgrade — September 20 (verified checkpoint)
 
 - The full suite passes 199 tests / 30 files in 51.45 seconds with two workers. The final strict build runs under Node 24.19.0 and emits `index-CjFQ_PDh.js`; the existing Babylon chunk warning remains. All twelve public GLBs exactly match their `dist/models` SHA-256 counterparts.

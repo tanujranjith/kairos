@@ -1,4 +1,4 @@
-import { CELL_SIZE,ROADS,LANDMARKS,CIRCUIT,pointAt,terrainHeight,nearestRoad,inLake,JUNCTIONS,junctionRadius } from '../content/world';
+import { CELL_SIZE,ROADS,LANDMARKS,CIRCUIT,PIT,pointAt,terrainHeight,nearestRoad,inLake,JUNCTIONS,junctionRadius } from '../content/world';
 import { inHandlingCourse } from '../content/handling-course';
 import { buildTerrainMesh } from './terrain-mesh';
 import { TUNNELS } from '../content/structures';
@@ -16,6 +16,7 @@ import {buildCircuitSetting} from './circuit-setting';
 import {buildPitForecourt} from './pit-forecourt';
 import {buildStreetscape} from './streetscape';
 import {ruralDressing} from './rural-dressing';
+import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
@@ -79,7 +80,12 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
     // The garage fronts open onto a level working apron, not a strip of lawn.
     asphalt.quad({x:x-115,y:17.025,z:-1456.5},{x:x+115,y:17.025,z:-1456.5},{x:x-115,y:17.025,z:-1444.5},{x:x+115,y:17.025,z:-1444.5});
     roadContacts.push({start,end:asphalt.indices.length/3,surface:'Asphalt',layer:'surface',roadId:'pit'});
-    for(let bay=0;bay<12;bay++){const px=x-105.6+bay*19.2;for(const side of [-1,1])white.box(px+side*3.2,17.05,-1450.7,.10,.004,6.5);white.box(px,17.05,-1453.9,6.5,.004,.10);}
+    // These markings come from the same sixteen assigned boxes used by race AI.
+    // The upstream end remains open so each car can drive through and rejoin.
+    for(const box of PIT_SERVICE_BOXES){const p=box.position;if(Math.floor(p.x/CELL_SIZE)!==cx||Math.floor(p.z/CELL_SIZE)!==cz)continue;
+      for(const side of [-1,1]){const edge=pointAt(PIT,box.progress,box.lateral+side*PIT_BOX_WIDTH/2);white.box(edge.x,edge.y+.05,edge.z,.10,.004,PIT_BOX_LENGTH,edge.yaw);}
+      const stop=pointAt(PIT,box.progress+PIT_BOX_LENGTH/2,box.lateral);white.box(stop.x,stop.y+.05,stop.z,PIT_BOX_WIDTH,.004,.10,stop.yaw);
+    }
   }
   const settingStart=asphalt.indices.length/3;
   buildCircuitSetting(cx,cz,{wall:buildings,roof:roofs,glass:windows},asphalt,white);

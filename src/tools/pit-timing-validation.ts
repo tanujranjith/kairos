@@ -5,6 +5,7 @@ import {projectPath,samplePath} from '../sim/lane-graph';
 import {racingInput} from '../sim/ai';
 import {neutralInput} from '../sim/physics';
 import {clamp,smooth,wrap,distance} from '../core/math';
+import {PIT_POLICY,pitServiceBox,pitServiceOffset} from '../content/pit-plan';
 
 /** Follow the real authored entry/exit connectors, not a teleport into service. */
 function visitPath(){
@@ -22,7 +23,7 @@ function visitPath(){
 }
 export async function installPitTimingDriver(g:Kairos,vehicleClass:'GT'|'FORMULA'){
   await g.advanceTime(0);g.save.settings.volume=0;g.save.settings.timeRate=0;Object.assign(g.raceConfig,{kind:'Practice',vehicleClass,entrants:1,position:1});await g.startRace();
-  const visit=visitPath(),poll=g.input.poll.bind(g.input);let phase:'circuit'|'pit'|'service'|'exit'|'done'='circuit',serviceAt=0,maxError=0,served=false;
+  const visit=visitPath(),box=pitServiceBox(15),poll=g.input.poll.bind(g.input);let phase:'circuit'|'pit'|'service'|'exit'|'done'='circuit',serviceAt=0,maxError=0,served=false;
   const service:unknown[]=[];
   g.input.poll=():InputFrame=>{
     const v=g.player,s=v.state,track=nearestRoad(s.position.x,s.position.z,r=>r.id===CIRCUIT.id),pit=nearestRoad(s.position.x,s.position.z,r=>r.id===PIT.id);
@@ -33,15 +34,17 @@ export async function installPitTimingDriver(g:Kairos,vehicleClass:'GT'|'FORMULA
       if(phase==='circuit'&&g.race.player.lap>=1&&ahead>0&&ahead<240){const target=Math.sqrt(12*12+2*2.5*ahead);input.throttle=Math.min(input.throttle,clamp((target-s.speed)*.2,0,1));input.brake=Math.max(input.brake,clamp((s.speed-target)*.2,0,.5));}
       return input;
     }
-    const n=projectPath(visit.road,s.position,true);maxError=Math.max(maxError,n.distance);
+    const n=projectPath(visit.road,s.position,true),onPit=pit.progress>140&&pit.progress<PIT.length-120&&pit.distance<16;
+    const intended=onPit?pointAt(PIT,pit.progress,pitServiceOffset(box,pit.progress,phase==='exit')):n.point;maxError=Math.max(maxError,distance(s.position,intended));
     if(phase==='service'){
       if(g.clock-serviceAt<6.3)return {...neutralInput(),brake:1};
       served=true;phase='exit';service.push({when:'after',fuel:s.fuel,wear:s.wheels.map(w=>w.wear),race:structuredClone(g.race.player)});
     }
     if(phase==='exit'&&n.progress>visit.road.length-4){phase='done';return racingInput(v,[v],.65,g.wetness,0);}
-    const look=7+Math.abs(s.speed)*.65,aim=samplePath(visit.road,n.progress+look),delta=wrap(Math.atan2(aim.x-s.position.x,aim.z-s.position.z)-s.yaw);
-    const curve=Math.max(...[0,10,20,30].map(a=>Math.abs(samplePath(visit.road,n.progress+a).curvature)));let speed=Math.min(12,Math.sqrt(2.8/Math.max(.004,curve)));
-    if(phase==='pit'&&pit.progress>150&&pit.distance<5){speed=Math.min(speed,Math.sqrt(Math.max(0,450-pit.progress)*2));if(Math.abs(s.speed)<.5&&Math.abs(pit.progress-450)<7){
+    const look=7+Math.abs(s.speed)*.65,aimProgress=phase==='pit'?Math.min(box.progress,pit.progress+look):pit.progress+look;
+    const aim=onPit?pointAt(PIT,aimProgress,pitServiceOffset(box,aimProgress,phase==='exit')):samplePath(visit.road,n.progress+look),delta=wrap(Math.atan2(aim.x-s.position.x,aim.z-s.position.z)-s.yaw);
+    const curve=onPit?Math.max(...[0,10,20,30].map(a=>Math.abs(pointAt(PIT,pit.progress+a).curvature))):Math.max(...[0,10,20,30].map(a=>Math.abs(samplePath(visit.road,n.progress+a).curvature)));let speed=Math.min(PIT_POLICY.speed,Math.sqrt(2.8/Math.max(.004,curve)));
+    if(phase==='pit'&&pit.progress>150&&pit.distance<16){speed=Math.min(speed,Math.sqrt(Math.max(0,box.progress-pit.progress)*2*PIT_POLICY.braking));if(Math.abs(s.speed)<PIT_POLICY.stoppedSpeed&&distance(s.position,box.position)<PIT_POLICY.stopTolerance){
       s.fuel=5;s.wheels.forEach(w=>w.wear=.4);service.push({when:'before',fuel:s.fuel,wear:s.wheels.map(w=>w.wear),race:structuredClone(g.race.player)});
       serviceAt=g.clock;phase='service';void g.action('service');return {...neutralInput(),brake:1};
     }}

@@ -1,6 +1,7 @@
 import type {V3} from '../core/types';
 import {CIRCUIT,PIT,nearestRoad} from '../content/world';
 import {CIRCUIT_GATES,PIT_GATES,PIT_TIMING,RACE_RULES,pitRaceProgress,gateCrossing,insidePitLane} from '../content/race-course';
+import {insidePitServiceApron} from '../content/pit-plan';
 
 export interface RaceSample {id:string;position:V3;speed:number;grounded:boolean;reset?:boolean}
 export interface RaceGateEvent {checkpoint:number;fraction:number;via:'circuit'|'pit'}
@@ -10,7 +11,10 @@ export class RaceRouteTracker {
   reset(){this.previous=undefined;this.pitActive=false;this.pitValid=false;this.pitNext=0;}
   update(sample:RaceSample,dt:number){
     const p=sample.position,track=nearestRoad(p.x,p.z,r=>r.id===CIRCUIT.id),pit=nearestRoad(p.x,p.z,r=>r.id===PIT.id);
-    const inPit=insidePitLane(pit.progress,pit.distance,track.distance)&&Math.abs(p.y-pit.point.y)<2.5;
+    const lateral=(p.x-pit.point.x)*Math.cos(pit.point.yaw)-(p.z-pit.point.z)*Math.sin(pit.point.yaw);
+    const inServiceApron=insidePitServiceApron(pit.progress,lateral),heightValid=Math.abs(p.y-pit.point.y)<2.5;
+    const inPit=(insidePitLane(pit.progress,pit.distance,track.distance)||inServiceApron)&&heightValid;
+    const inPitRouteCorridor=pit.progress>10&&pit.progress<PIT.length-12&&(pit.distance<PIT.width/2+1||inServiceApron)&&heightValid;
     let invalid=false;const events:RaceGateEvent[]=[];const previous=this.previous;
     this.previous={...sample,position:{...p}};
     if(sample.reset){this.pitActive=false;this.pitValid=false;this.pitNext=0;invalid=true;}
@@ -26,7 +30,7 @@ export class RaceRouteTracker {
     if(this.pitActive){
       // Leaving the actual lane, skipping a gate or teleporting cannot create
       // timing credit by nearest-point projection on the parallel main straight.
-      if(pit.distance>PIT.width/2+1||Math.abs(p.y-pit.point.y)>2.5)this.pitValid=false;
+      if(!inPitRouteCorridor)this.pitValid=false;
       if(this.pitNext<PIT_GATES.length&&pit.progress>PIT_GATES[this.pitNext].roadS+12)this.pitValid=false;
       if(this.pitValid)while(this.pitNext<PIT_GATES.length){
         const gate=PIT_GATES[this.pitNext],fraction=crossing(gate);if(fraction===null)break;

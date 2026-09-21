@@ -1,8 +1,8 @@
 import {describe,it,expect} from 'vitest';
-import {PIT_VISIT,pitBox} from '../src/content/pit-plan';
+import {PIT_VISIT,PIT_BOX_LATERAL,PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES,pitBox,pitServiceBox,pitServiceOffset} from '../src/content/pit-plan';
 import {PitDriver,pitMergeBlocker,serviceReason} from '../src/sim/pit-driver';
 import {RaceManager} from '../src/sim/race';
-import {CIRCUIT,PIT,pointAt} from '../src/content/world';
+import {CIRCUIT,PIT,nearestRoad,pointAt} from '../src/content/world';
 import {vehicleById} from '../src/content/vehicles';
 import {distance} from '../src/core/math';
 import type {VehicleState} from '../src/core/types';
@@ -39,6 +39,8 @@ describe('AI pit strategy and physical route',()=>{
     for(let i=1;i<p.length;i++){expect(p[i].s).toBeGreaterThan(p[i-1].s);expect(distance(p[i],p[i-1])).toBeLessThan(12);}
     expect(distance(p[0],pointAt(CIRCUIT,PIT_VISIT.start))).toBeLessThan(.01);expect(PIT_VISIT.hold).toBeLessThan(PIT_VISIT.road.length-100);
     expect(new Set(Array.from({length:16},(_,i)=>pitBox(i))).size).toBe(16);expect(pitBox(15)).toBeLessThan(PIT.length-170);
+    expect(PIT_SERVICE_BOXES).toHaveLength(16);expect(PIT_BOX_WIDTH).toBeGreaterThan(vehicleById('gtx').width+1);expect(PIT_BOX_LENGTH).toBeGreaterThan(vehicleById('gtx').length+2);
+    for(let i=0;i<PIT_SERVICE_BOXES.length;i++){const box=PIT_SERVICE_BOXES[i],near=pointAt(PIT,box.progress,box.lateral);expect(box.position).toEqual(near);expect(box.lateral).toBe(PIT_BOX_LATERAL);expect(Math.abs(pitServiceOffset(box,box.entry))).toBe(0);expect(pitServiceOffset(box,box.progress)).toBe(box.lateral);expect(Math.abs(pitServiceOffset(box,box.exit,true))).toBe(0);if(i)expect(distance(box.position,PIT_SERVICE_BOXES[i-1].position)).toBeGreaterThan(24);}
   });
   it('requests fuel/tires from actual state, but no unnecessary last-lap tire stop or finished/grid stop',()=>{
     const race=session(),s=state(),d=vehicleById('gtx');expect(serviceReason(s,d,race.player,race.state)).toBe('');
@@ -54,13 +56,20 @@ describe('AI pit strategy and physical route',()=>{
     const above=state('above',CIRCUIT,merge-10);above.position.y+=5;expect(pitMergeBlocker(s,[above,s])).toBeNull();
   });
   it('requires a stopped grounded car in its own box for a contiguous six seconds and services only once',()=>{
-    const race=session(),s=state('racer-1',PIT,pitBox(0)),driver=new PitDriver(0),v={state:s,definition:vehicleById('gtx')} as Vehicle;
+    const race=session(),box=pitServiceBox(0),s=state('racer-1',PIT,pitBox(0)),driver=new PitDriver(0),v={state:s,definition:vehicleById('gtx')} as Vehicle;s.position=box.position;s.yaw=box.position.yaw;
     driver.phase='approach';s.fuel=3;s.grounded=false;expect(driver.update(.1,v,[v],race.state,0).serviceComplete).toBe(false);expect(driver.phase).toBe('approach');
     s.grounded=true;for(let i=0;i<30;i++)expect(driver.update(.1,v,[v],race.state,0).serviceComplete).toBe(false);
     s.speed=1;driver.update(.1,v,[v],race.state,0);expect(driver.serviceElapsed).toBe(0);s.speed=0;
     let services=0;for(let i=0;i<61;i++)services+=Number(driver.update(.1,v,[v],race.state,0).serviceComplete);
     expect(services).toBe(1);expect(driver.stops).toBe(1);expect(driver.phase).toBe('exit');expect(s.fuel).toBe(3); // Controller requests service; runtime owns replenishment.
     for(let i=0;i<70;i++)expect(driver.update(.1,v,[v],race.state,0).serviceComplete).toBe(false);
+  });
+  it('services two assigned off-line boxes concurrently without blocking the fast lane',()=>{
+    const race=session(),drivers=[new PitDriver(0),new PitDriver(1)],vehicles=drivers.map((driver,index)=>{const box=pitServiceBox(index),s=state(`racer-${index+1}`,PIT,box.progress);s.position=box.position;s.yaw=box.position.yaw;s.fuel=3;driver.phase='approach';return {state:s,definition:vehicleById('gtx')} as Vehicle;});
+    let completed=[0,0];for(let tick=0;tick<61;tick++)for(let i=0;i<2;i++)completed[i]+=Number(drivers[i].update(.1,vehicles[i],vehicles,race.state,0).serviceComplete);
+    expect(completed).toEqual([1,1]);expect(drivers.map(d=>d.stops)).toEqual([1,1]);expect(vehicles.every(v=>nearestRoad(v.state.position.x,v.state.position.z,r=>r.id===PIT.id).distance>PIT.width/2+4)).toBe(true);
+    const through=state('through',PIT,(pitBox(0)+pitBox(1))/2,8),throughVehicle={state:through,definition:vehicleById('gtx')} as Vehicle,throughDriver=new PitDriver(5);throughDriver.phase='exit';
+    expect(throughDriver.update(.1,throughVehicle,[throughVehicle,...vehicles],race.state,0).input.brake).toBeLessThan(.2);
   });
   it('does not turn back into a missed pit approach or service from a wrong position',()=>{
     const race=session(),s=state('racer-1',CIRCUIT,PIT_VISIT.start+80,20),driver=new PitDriver(0),v={state:s,definition:vehicleById('gtx')} as Vehicle;

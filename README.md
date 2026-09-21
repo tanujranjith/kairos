@@ -37,9 +37,9 @@ In Free Drive, select **Aster International** on the map to drive through its ac
 
 Choose one of six unlocked original vehicles in the garage, then Free Drive or Motorsport. The map lists destinations and optional activities. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.
 
-Pit visits use their own ordered timing route. Stay below **60 km/h (37 mph)**, stop in the service area and select **SERVICE / PIT** for fuel and tires. The HUD displays the limit; speeding incurs a penalty. See [timing and pit verification](docs/race-timing.md).
+Pit visits use their own ordered timing route. Stay below **60 km/h (37 mph)**, stop in your assigned garage-side box and select **SERVICE / PIT** for fuel and tires. The HUD displays the limit; speeding incurs a penalty. See [timing and pit verification](docs/race-timing.md).
 
-Aster now has planted banks/tree belts and a dressed rear paddock. Racing AI requests fuel/tire service and follows the actual pit connectors, with exit yielding. Predictive lane reservation, gradual line changes and yaw-rate feedback correct the reproduced opening-lap spins; both eight-car weekends and sixteen-car three-lap races pass the selected clean-field checks. Race Weekend now preserves the entire [earned qualifying grid](docs/qualifying-grid.md), including identity, ties and loading retries. Restart weekend starts fresh practice without overwriting your setup position. Service still queues single-file. See [racing control](docs/racing-ai.md), the [feature status](docs/feature-status.md) and [measured checks](docs/benchmarks.md), rather than treating the working build as final acceptance.
+Aster now has planted banks/tree belts and a dressed rear paddock. Racing AI requests fuel/tire service, leaves the continuous fast lane for one of sixteen assigned drive-through boxes, and yields at the circuit exit. Predictive lane reservation, gradual line changes and yaw-rate feedback correct the reproduced opening-lap spins; both eight-car weekends and sixteen-car three-lap races pass the selected clean-field checks. Race Weekend now preserves the entire [earned qualifying grid](docs/qualifying-grid.md), including identity, ties and loading retries. Restart weekend starts fresh practice without overwriting your setup position. See [racing control](docs/racing-ai.md), the [feature status](docs/feature-status.md) and [measured checks](docs/benchmarks.md), rather than treating the working build as final acceptance.
 
 **Handling course** in the sidebar opens Northstar's traffic-free proving ground with the selected car. It contains braking lanes, a slalom, three skidpad rings, measured bumps, a banked road, a gradient, a curb and a launch ramp. It is also connected to the public road network. Reset inside the course returns to its braking lane. See [course layout and measured tests](docs/handling-course.md).
 
@@ -85,6 +85,7 @@ node scripts/verify-layers.mjs
 node scripts/verify-access.mjs
 node scripts/verify-pits.mjs
 node scripts/verify-pit-timing.mjs
+node scripts/verify-contested-pits.mjs
 node scripts/verify-scenery.mjs
 node scripts/verify-streetscape.mjs
 node scripts/verify-streetscape.mjs --renderer=auto --output=output/streetscape-webgpu

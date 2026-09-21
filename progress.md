@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Off-line pit service boxes — September 20 (verified checkpoint)
+
+- Replaced centerline service stops with sixteen shared, garage-side drive-through box definitions. AI uses a gradual physical ingress/egress while the fast lane stays clear; player service is restricted to assigned box16. Painted U-boxes, timing coverage and snapshots consume the same data. Existing pit entry/exit, 60km/h limit and main-track yield remain.
+- The first real AI run serviced correctly but exposed narrow timing gates: pit proof stopped at6/24 and warned. Kept that failed report under `output/pit-boxes-first`; widened only service-range gates and accepted only the garage-side apron. Opposite-side, reset, skipped-gate and height rejection still pass.
+- Final GT/Formula AI runs pass exactly one physical stop, all24gates, valid subsequent lap, restored fuel/tires and zero sampled warnings/penalties/damage. Two neighboring GT cars then overlap service successfully and return cleanly; opened screenshot shows both boxes occupied and through lane clear. Player GT/Formula full-grid-to-box16-to-next-lap runs pass with1.61/1.65m max tracking error and no corrections/damage.
+- Full201tests/30files pass in82.39s, strict check/build pass. Assigned-box manual service passes both classes. Supplied-client state/image opened at7.87045m/s, four Asphalt contacts, zero damage/loading error and11physical traffic cars. Actual service, overlap, pit-limit and rejoin screenshots opened.
+- Final preview5192 serves index-CHUeFZPQ.js. Edge production forcedWebGL2/actualWebGPU, cold25Mbps/40ms/external blocked pass showroom, Free Drive, handling and clean8carGT launch/home. Menus8.054/7.372s,11,468,438bytes, no errors/failures/external requests; actual showroom/grid images opened. This is not target-laptop or HTTPS evidence.
+- NEXT: retain handling, terrain, atmosphere, scenery, fleet and pit proofs. Continue full scope with depletion/retirement and overshoot cases, then adaptive quality/device-loss/KTX2, broader art, actual8GB laptop/30-minute endurance and authorizedHTTPS. Full game remains active.
+
 ## Fleet lighting, tire and safety-cell model pass — September 20 (verified checkpoint)
 
 - The explicit user requirement for a further substantial car-model upgrade now has a six-car implementation: all wheels gain sidewall moulding, valves, rotor hats and road tread/Formula slick detail; five enclosed cars gain covered projector optics and segmented rear lamps; Apex gains head-surround padding, camera fairing and antenna. All12GLBs regenerated. Physical dimensions, pivots, camera mounts, tire forces, controls and AI unchanged.

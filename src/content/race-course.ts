@@ -1,6 +1,7 @@
 import type {Road,V3} from '../core/types';
 import {CIRCUIT,PIT,pointAt,nearestRoad} from './world';
 import {clamp,lerp} from '../core/math';
+import {PIT_SERVICE_BOXES,PIT_SERVICE_GATE_HALF_WIDTH} from './pit-plan';
 
 export const RACE_RULES={checkpoints:12,trackMargin:1.5,trackLimitDelay:.65,warningInterval:3,trackPenalty:5,falseStartPenalty:10,pitSpeed:60/3.6,pitSpeedTolerance:.83,pitPenalty:5,finishWindow:120} as const;
 export const RACE_AI={wornTireThreshold:.55,wornTireSpeed:{ROAD:27,GT:27,FORMULA:18},
@@ -37,7 +38,8 @@ function pitAtRaceProgress(s:number){const i=PIT_PROGRESS_KNOTS.findIndex((p,i)=
 const pitMarks:{s:number;mainCheckpoint?:number}[]=[{s:PIT_TIMING.entry},{s:PIT_TIMING.exit}];
 for(let s=PIT_TIMING.entry+50;s<PIT_TIMING.exit-5;s+=50)pitMarks.push({s});
 for(let i=0;i<RACE_RULES.checkpoints;i++){const s=pitAtRaceProgress(CIRCUIT.length+i*CIRCUIT.length/RACE_RULES.checkpoints);if(s>PIT_TIMING.entry&&s<PIT_TIMING.exit)pitMarks.push({s,mainCheckpoint:i});}
-export const PIT_GATES=pitMarks.sort((a,b)=>a.s-b.s).map(({s,mainCheckpoint},i)=>gate(PIT,s,`pit-${i}`,PIT.width/2+1,mainCheckpoint));
+const serviceStart=PIT_SERVICE_BOXES[0].entry-2,serviceEnd=PIT_SERVICE_BOXES.at(-1)!.exit+2;
+export const PIT_GATES=pitMarks.sort((a,b)=>a.s-b.s).map(({s,mainCheckpoint},i)=>gate(PIT,s,`pit-${i}`,s>serviceStart&&s<serviceEnd?PIT_SERVICE_GATE_HALF_WIDTH:PIT.width/2+1,mainCheckpoint));
 // The timing line across the pit is parallel to the circuit finish line.
 PIT_GATES.find(g=>g.mainCheckpoint===0)!.yaw=CIRCUIT_GATES[0].yaw;
 export const insidePitLane=(progress:number,distance:number,trackDistance:number)=>progress>10&&progress<PIT.length-12&&distance<PIT.width/2&&trackDistance>CIRCUIT.width/2;

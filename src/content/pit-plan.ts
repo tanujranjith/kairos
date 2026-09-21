@@ -5,6 +5,27 @@ import {projectPath} from '../sim/lane-graph';
 
 export const PIT_POLICY={speed:12,braking:2.5,serviceSeconds:6,stopTolerance:2.5,stoppedSpeed:.5,wearThreshold:.55,fuelReserve:2,initialFuelPerMetre:.0013,mergeGap:9,mergeClearSeconds:.6} as const;
 export const pitBox=(index:number)=>260+Math.min(15,Math.max(0,index))*25;
+export const PIT_BOX_LATERAL=-9.25;
+export const PIT_BOX_LENGTH=8;
+export const PIT_BOX_WIDTH=4.8;
+export interface PitServiceBox {index:number;progress:number;lateral:number;entry:number;exit:number;position:RoadPoint}
+export function pitServiceBox(index:number):PitServiceBox{
+  const assigned=Math.min(15,Math.max(0,Math.floor(index))),progress=pitBox(assigned);
+  return {index:assigned,progress,lateral:PIT_BOX_LATERAL,entry:progress-25,exit:progress+25,position:pointAt(PIT,progress,PIT_BOX_LATERAL)};
+}
+export const PIT_SERVICE_BOXES=Array.from({length:16},(_,index)=>pitServiceBox(index));
+export const PIT_SERVICE_GATE_HALF_WIDTH=Math.abs(PIT_BOX_LATERAL)+PIT_BOX_WIDTH/2+1;
+export function insidePitServiceApron(progress:number,lateral:number){
+  const first=PIT_SERVICE_BOXES[0],last=PIT_SERVICE_BOXES.at(-1)!;
+  return progress>first.entry-2&&progress<last.exit+2&&lateral>PIT_BOX_LATERAL-PIT_BOX_WIDTH/2-1&&lateral<PIT.width/2+1;
+}
+
+/** Drive-through stall offset. Cars leave the fast lane before their stop and
+ * remain parallel to it until service is complete, then merge back gradually. */
+export function pitServiceOffset(box:PitServiceBox,progress:number,leaving=false){
+  if(leaving)return box.lateral*(1-smooth((progress-(box.progress+2))/(box.exit-box.progress-2)));
+  return box.lateral*smooth((progress-box.entry)/(box.progress-box.entry-5));
+}
 
 /** Shared authored connectors: the pit controller never steers across the
  * intervening grass from a nearest point on the unrelated pit spline. */

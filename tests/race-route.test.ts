@@ -4,6 +4,7 @@ import {CIRCUIT_GATES,PIT_GATES,PIT_TIMING,pitRaceProgress,gateCrossing} from '.
 import {RaceRouteTracker} from '../src/sim/race-route';
 import {RaceManager,validatedRaceDistance} from '../src/sim/race';
 import type {Road,V3} from '../src/core/types';
+import {pitServiceBox,pitServiceOffset} from '../src/content/pit-plan';
 
 const observation=(position:V3,speed=10)=>({id:'player',position,grounded:true,speed});
 const create=()=>{const r=new RaceManager();r.start({kind:'Practice',laps:3,entrants:2,difficulty:.65,position:1,vehicleClass:'GT'});return r;};
@@ -30,8 +31,16 @@ describe('directional circuit and ordered pit timing',()=>{
     drive(r,PIT,0,450);expect(r.player.lap).toBe(2);expect(r.player.pitValid).toBe(true);expect(r.player.valid).toBe(true);expect(r.player.penalty).toBe(0);
     const progress=validatedRaceDistance(r.player),checkpoint=r.player.pitCheckpoint;for(let i=0;i<30;i++)sample(r,PIT,450,0,0);
     expect(validatedRaceDistance(r.player)).toBeCloseTo(progress,8);expect(r.player.pitCheckpoint).toBe(checkpoint);
-    drive(r,PIT,452,PIT.length);expect(r.player.pitRoute).toBe(false);expect(r.player.checkpoint).toBe(3);expect(r.player.valid).toBe(true);
+    drive(r,PIT,452,PIT.length);expect(r.player.pitRoute).toBe(false);expect(r.player.checkpoint).toBe(3);expect(r.player.valid,JSON.stringify(r.player)).toBe(true);
     drive(r,CIRCUIT,842,CIRCUIT.length-1);sample(r,CIRCUIT,1);expect(r.player.lap).toBe(3);expect(r.player.valid).toBe(true);expect(Number.isFinite(r.player.best)).toBe(true);
+  });
+  it('retains ordered timing while a car visits the garage-side service apron',()=>{
+    const r=create(),box=pitServiceBox(0);beforePit(r);drive(r,PIT,0,box.entry);
+    for(let s=box.entry+2;s<=box.progress;s+=2)r.update(.2,[observation(pointAt(PIT,s,pitServiceOffset(box,s)),8)]);
+    for(let i=0;i<35;i++)r.update(.2,[observation(box.position,0)]);
+    for(let s=box.progress+2;s<=box.exit;s+=2)r.update(.2,[observation(pointAt(PIT,s,pitServiceOffset(box,s,true)),8)]);
+    drive(r,PIT,box.exit+2,PIT.length);expect(r.player.pitRoute).toBe(false);expect(r.player.pitCheckpoint,JSON.stringify(r.player)).toBe(PIT_GATES.length);expect(r.player.lap).toBe(2);expect(r.player.valid).toBe(true);expect(r.player.warnings).toBe(0);expect(r.player.penalty).toBe(0);
+    const wrong=create();beforePit(wrong);drive(wrong,PIT,0,box.entry);for(let s=box.entry+2;s<box.progress;s+=2)sample(wrong,PIT,s,Math.abs(box.lateral));expect(wrong.player.valid).toBe(false);
   });
   it('rejects a spawn/reset in the middle, skipped pit gates, and wrong-height shortcuts',()=>{
     for(const mode of ['middle','skip','height','reset']){

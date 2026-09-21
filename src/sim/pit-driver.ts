@@ -2,8 +2,8 @@ import type {InputFrame,RacerProgress,RaceState,VehicleState,VehicleDefinition} 
 import type {Vehicle} from './physics';
 import {neutralInput} from './physics';
 import {racingInput} from './ai';
-import {CIRCUIT,PIT,nearestRoad} from '../content/world';
-import {PIT_POLICY,PIT_VISIT,pitBox} from '../content/pit-plan';
+import {CIRCUIT,PIT,nearestRoad,pointAt} from '../content/world';
+import {PIT_POLICY,PIT_VISIT,pitServiceBox,pitServiceOffset} from '../content/pit-plan';
 import {clamp,wrap} from '../core/math';
 import {projectPath,samplePath} from './lane-graph';
 
@@ -35,7 +35,7 @@ export class PitDriver {
   constructor(readonly index:number){}
   get active(){return !['circuit','requested'].includes(this.phase);}
   reset(){this.phase='circuit';this.reason='';this.serviceElapsed=0;this.clearTime=0;this.waitingFor=null;}
-  snapshot(){return {phase:this.phase,reason:this.reason,box:pitBox(this.index),serviceElapsed:this.serviceElapsed,stops:this.stops,waitingFor:this.waitingFor,routeProgress:this.routeProgress,fuelPerLap:this.fuelRate*CIRCUIT.length};}
+  snapshot(){const box=pitServiceBox(this.index);return {phase:this.phase,reason:this.reason,box:box.progress,serviceBox:{index:box.index,progress:box.progress,lateral:box.lateral,position:box.position},serviceElapsed:this.serviceElapsed,stops:this.stops,waitingFor:this.waitingFor,routeProgress:this.routeProgress,fuelPerLap:this.fuelRate*CIRCUIT.length};}
   update(dt:number,vehicle:Vehicle,others:Vehicle[],race:RaceState,wetness:number):{input:InputFrame;serviceComplete:boolean}{
     const s=vehicle.state,track=nearestRoad(s.position.x,s.position.z,r=>r.id===CIRCUIT.id),r=race.entrants.find(r=>r.id===s.id);
     // Learn consumption from normal travel only. Refueling/reset and injected
@@ -54,8 +54,8 @@ export class PitDriver {
         return {input,serviceComplete:false};
       }
     }
-    const n=projectPath(PIT_VISIT.road,s.position,true),pit=nearestRoad(s.position.x,s.position.z,r=>r.id===PIT.id);this.routeProgress=n.progress;
-    const box=pitBox(this.index),atBox=pit.distance<2&&Math.abs(pit.progress-box)<PIT_POLICY.stopTolerance&&Math.abs(s.position.y-pit.point.y)<2.5&&s.grounded&&Math.abs(s.speed)<PIT_POLICY.stoppedSpeed;
+    const n=projectPath(PIT_VISIT.road,s.position,true),pit=nearestRoad(s.position.x,s.position.z,r=>r.id===PIT.id),box=pitServiceBox(this.index);this.routeProgress=n.progress;
+    const boxDistance=Math.hypot(s.position.x-box.position.x,s.position.z-box.position.z),atBox=boxDistance<PIT_POLICY.stopTolerance&&Math.abs(pit.progress-box.progress)<PIT_POLICY.stopTolerance&&Math.abs(s.position.y-box.position.y)<2.5&&s.grounded&&Math.abs(s.speed)<PIT_POLICY.stoppedSpeed;
     if(this.phase==='approach'&&atBox)this.phase='service';
     if(this.phase==='service'){
       this.serviceElapsed=atBox?this.serviceElapsed+dt:0;
@@ -64,18 +64,21 @@ export class PitDriver {
       else return {input:{...neutralInput(),brake:1},serviceComplete:false};
     }
     if(this.phase==='rejoin'&&n.progress>PIT_VISIT.road.length-4){this.reset();return {input:racingInput(vehicle,others,race.session.difficulty,wetness,this.index,CIRCUIT,dt),serviceComplete:false};}
-    const look=7+Math.abs(s.speed)*.65,aim=samplePath(PIT_VISIT.road,n.progress+look),delta=wrap(Math.atan2(aim.x-s.position.x,aim.z-s.position.z)-s.yaw);
-    const curve=Math.max(...[0,10,20,30].map(a=>Math.abs(samplePath(PIT_VISIT.road,n.progress+a).curvature)));
+    const look=7+Math.abs(s.speed)*.65,onPit=pit.progress>140&&pit.progress<PIT.length-120&&pit.distance<16;
+    const aimProgress=this.phase==='approach'?Math.min(box.progress,pit.progress+look):pit.progress+look;
+    const aim=onPit?pointAt(PIT,aimProgress,pitServiceOffset(box,aimProgress,this.phase!=='approach')):samplePath(PIT_VISIT.road,n.progress+look),delta=wrap(Math.atan2(aim.x-s.position.x,aim.z-s.position.z)-s.yaw);
+    const curve=onPit?Math.max(...[0,10,20,30].map(a=>Math.abs(pointAt(PIT,pit.progress+a).curvature))):Math.max(...[0,10,20,30].map(a=>Math.abs(samplePath(PIT_VISIT.road,n.progress+a).curvature)));
     let targetSpeed=Math.min(PIT_POLICY.speed,Math.sqrt(2.8/Math.max(.004,curve)));
-    if(this.phase==='approach'&&pit.progress>150&&pit.distance<6)targetSpeed=Math.min(targetSpeed,Math.sqrt(Math.max(0,box-pit.progress)*2));
+    if(this.phase==='approach'&&pit.progress>150&&pit.distance<16)targetSpeed=Math.min(targetSpeed,Math.sqrt(Math.max(0,box.progress-pit.progress)*2*PIT_POLICY.braking));
     if((this.phase==='exit'||this.phase==='yield')&&n.progress>PIT_VISIT.hold-100){
       this.waitingFor=pitMergeBlocker(s,others.map(v=>v.state));this.clearTime=this.waitingFor?0:this.clearTime+dt;
       if(this.clearTime<PIT_POLICY.mergeClearSeconds){this.phase='yield';targetSpeed=Math.min(targetSpeed,Math.sqrt(Math.max(0,PIT_VISIT.hold-n.progress)*2*PIT_POLICY.braking));}
       else if(n.progress>PIT_VISIT.hold-3){this.phase='rejoin';this.waitingFor=null;}
       else this.phase='exit';
     }
-    // Single-file pit traffic: no passing through a stopped service car. Predict
-    // a stopping distance instead of braking only at bumper contact.
+    // Cars in the same lane still queue using a predicted stopping distance.
+    // A stopped car in its off-line service box is laterally clear and does not
+    // block the continuous fast lane or an adjacent assigned stall.
     for(const other of others){if(other===vehicle)continue;const dx=other.state.position.x-s.position.x,dz=other.state.position.z-s.position.z,forward=dx*Math.sin(s.yaw)+dz*Math.cos(s.yaw),side=dx*Math.cos(s.yaw)-dz*Math.sin(s.yaw);
       if(forward>0&&forward<65&&Math.abs(side)<(vehicle.definition.width+other.definition.width)/2+.35&&Math.abs(s.position.y-other.state.position.y)<2.5){const gap=forward-(vehicle.definition.length+other.definition.length)/2-3;targetSpeed=Math.min(targetSpeed,Math.sqrt(Math.max(0,other.state.speed)**2+2*PIT_POLICY.braking*Math.max(0,gap)));if(gap<.5)targetSpeed=0;}
     }
