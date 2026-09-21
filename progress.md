@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Wet-night driving interaction matrix — September 21 (verified checkpoint)
+
+- Added `scripts/verify-wet-night-driving.mjs`, an installed-Edge/WebGL2 integration path through real streamed Westbrook traffic in Rain at 22:00 and 85% wetness. It verifies the 500-vertex rain system, two 650-intensity player spotlights, headlight off/on without material/texture/light allocation, two active pooled streetlights, 24 retained traffic actors, no failed cells, all five cameras and pause/resume.
+- Actual keyboard acceleration, a brief wet turn and straight braking reach 20.997m/s then slow to 9.541m/s. All 79 retained 100ms samples keep four contacts; maximum sideslip is 2.768deg and damage remains zero. Camera distances are finite and under15m. Page errors, warnings, failed requests and external requests are empty.
+- Visual review rejected two early headlight screenshots that drew the spring camera only once after a developer teleport. The final verifier advances twenty rendered 250ms increments, waits for the newly requested visual cells, and compares headlight on/off from the hood camera; all five final camera screenshots and the wet braking view were opened. The beam, city windows, traffic lights, streetlight pools, rain and HUD remain readable.
+- No runtime source changed in this checkpoint. It closes a selected rainy-night interaction/visibility gap on the development PC, not every wet route, target-laptop FPS, a long traffic endurance run or authorized HTTPS validation.
+- NEXT: preserve the wet-night, model, handling, streaming and endurance evidence. Continue remaining world/material realism and final interaction/fault coverage. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Layered exterior coachwork and rebuilt enclosed fleet — September 21 (verified checkpoint)
 
 - Upgraded all five enclosed original cars with recessed dark wheel-opening liners, revised rolled lips, class-specific shoulder creases, bonnet and rear-deck shutlines, fuel-filler seams, front wheel-air curtains and lower rear reflectors. The details are sampled from each car's actual curved body/fascia surfaces and merge into existing paint/trim/lamp material batches; physical dimensions, wheel pivots, camera mounts, handling and collisions are unchanged. Apex retains its already more complete open-wheel model.

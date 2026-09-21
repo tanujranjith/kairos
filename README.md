@@ -92,6 +92,7 @@ node scripts/verify-scenery.mjs
 node scripts/verify-streetscape.mjs
 node scripts/verify-streetscape.mjs --renderer=auto --output=output/streetscape-webgpu
 node scripts/verify-graphics-streaming.mjs
+node scripts/verify-wet-night-driving.mjs
 node scripts/verify-freedrive-stress.mjs
 node scripts/verify-worker-recovery.mjs
 node scripts/inspect-handling.mjs

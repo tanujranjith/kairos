@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Wet-night interaction coverage — September 21 (verified checkpoint)
+
+The dedicated rainy-city browser path now covers real keyboard acceleration, wet steering and braking, player headlight off/on, five cameras, pause/resume, physical+distant traffic retention, pooled streetlights, streamed-cell health and screenshot readability in one stateful sequence. It retains four contacts in every sampled step, brakes from 20.997m/s to 9.541m/s with 2.768deg maximum sideslip, keeps all 24 traffic actors and records no damage, browser warning/error, failed request or external request.
+
+The on/off pair uses the hood view so the 650-intensity forward pool is visibly distinguishable; chase, close chase, cockpit, hood and bumper captures were also opened. This verifies the existing weather/lighting/handling integration without changing runtime behavior. It is a selected development-host night/rain scenario, not exhaustive wet-route endurance or target-laptop certification.
+
 ## Layered enclosed-car exterior detail — September 21 (verified checkpoint)
 
 The five enclosed original cars now separate their largest visible surfaces with modeled bonnet/deck boundaries, class-specific shoulder creases, fuel-filler seams, recessed wheel-opening liners, revised rolled lips, front air curtains and lower rear reflectors. Each feature conforms to the existing curved skin or bumper rather than floating as a generic decal. It reuses the established paint, carbon and lamp batches, adds no runtime asset host, and does not change physical dimensions, tire behavior, suspension, assists, camera mounts or wheel pivots. Apex retains its distinct open-wheel aero and cockpit treatment from the preceding fleet pass.

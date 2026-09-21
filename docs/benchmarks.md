@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Wet-night driving interactions — September 21
+
+- `scripts/verify-wet-night-driving.mjs` runs installed Edge/WebGL2 in streamed Westbrook at 22:00, Rain and 85% wetness. It checks both 650-intensity player headlights, the 500-vertex rain system, headlight off/on resource stability, two enabled pooled streetlights, all 24 traffic actors, five cameras, pause/resume and zero streaming failures.
+- The retained keyboard trace accelerates and turns on wet asphalt, reaches **20.997m/s**, and brakes to **9.541m/s**. All **79** 100ms samples retain four contacts; maximum sideslip is **2.768deg** and damage remains zero. Physical/distant traffic ends at 12/12. Page errors, console warnings, failed requests and external requests are empty.
+- `output/wet-night-driving` contains the report and eight opened images: a hood-camera headlight on/off pair, wet braking, and chase/close/cockpit/hood/bumper views. Two earlier runs exposed invalid verifier assumptions (tier migration is normal and a single four-second render delta does not settle a spring camera); neither was counted. The final test advances visible frames and waits for current streamed cells before comparison.
+- This is a selected rainy-city interaction trace on the development PC. It does not prove all roads/vehicles, target-laptop frame pacing, extended wet traffic endurance or HTTPS delivery. No runtime code changed.
+
 ## Layered exterior coachwork — September 21
 
 - `road-model.test.ts` now verifies finite generated geometry for four recessed wheel liners, two shoulder creases, two air curtains, two rear reflectors, bonnet/deck boundaries and the full-detail fuel flap on every enclosed car. The complete suite passes **222 tests / 33 files in 36.76s**; strict TypeScript and the KTX2 integrity gate pass in the production build.
