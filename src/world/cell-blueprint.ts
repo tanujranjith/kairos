@@ -16,9 +16,10 @@ import {buildCircuitSetting} from './circuit-setting';
 import {buildPitForecourt} from './pit-forecourt';
 import {buildStreetscape} from './streetscape';
 import {ruralDressing} from './rural-dressing';
+import {buildRuralInfrastructure} from './rural-infrastructure';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
-export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass';
+export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
 export interface CellInstance {kind:'pine'|'oak'|'trunk'|'oakTrunk'|'rock'|'grass';position:V3;scale:V3;yaw:number}
 export interface CellSign {id:string;name:string;position:V3;yaw:number;width?:number;height?:number;mounted?:boolean}
@@ -33,7 +34,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   const add=(name:string,g:MeshDataBuilder,material:CellMaterial,collision=false,contactSurface?:ContactSurface,contactRanges?:ContactRange[])=>{if(!g.positions.length)return;const data=g.finish();if(material==='terrain'){applyGroundChannels(data);smoothGroundNormals(data);}meshes.push({name:`${name}-${key}`,material,collision,data,contactSurface:contactSurface??(collision?{surface:'Concrete',layer:'structure'}:undefined),contactRanges});};
   const terrain=buildTerrainMesh(cx,cz);
   add('terrain',terrain,'terrain',true,{surface:'Grass',layer:'terrain'});
-  const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder();
+  const asphalt=new MeshDataBuilder(),verge=new MeshDataBuilder(),white=new MeshDataBuilder(),yellow=new MeshDataBuilder(),curbs=new MeshDataBuilder(),rails=new MeshDataBuilder(),buildings=new MeshDataBuilder(),roofs=new MeshDataBuilder(),windows=new MeshDataBuilder(),pavement=new MeshDataBuilder(),rural=new MeshDataBuilder();
   const roadContacts:ContactRange[]=[],vergeContacts:ContactRange[]=[];
   // Paint comes from the same authored finish/grid positions as session spawns.
   const finish=pointAt(CIRCUIT,0);
@@ -123,7 +124,8 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   }
   if(cx===3&&cz===-6)signs.push({id:'aster-control',name:'ASTER   /   RACE CONTROL',position:{x:768,y:34.12,z:-1443.94},yaw:0,width:14.5,height:.38,mounted:true});
   buildStreetscape(cx,cz,{wall:buildings,roof:roofs,glass:windows},instances);
-  add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');
+  buildRuralInfrastructure(cx,cz,{wall:buildings,roof:roofs,glass:windows},rural);
+  add('structures',buildings,'wall',true);add('roofs',roofs,'roof',true);add('windows',windows,'glass');add('city-pavement',pavement,'wall');add('rural-infrastructure',rural,'trunk');
   return {manifest,meshes,instances,signs,bytes:meshes.reduce((sum,m)=>sum+meshBytes(m.data),0)};
 }
 export function blueprintTransfers(blueprint:CellBlueprint):ArrayBuffer[]{return blueprint.meshes.flatMap(m=>[m.data.positions.buffer,m.data.indices.buffer,m.data.uvs.buffer,m.data.normals.buffer,...(m.data.colors?[m.data.colors.buffer]:[])] as ArrayBuffer[]);}

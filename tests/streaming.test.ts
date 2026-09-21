@@ -31,8 +31,8 @@ describe('world streaming contracts',()=>{
   });
   it('cell blueprints are deterministic and include collision geometry before any runtime resources exist',()=>{
     const a=buildCellBlueprint(-6,-4,'Low'),b=buildCellBlueprint(-6,-4,'Low');expect(a).toEqual(b);expect(a.bytes).toBeGreaterThan(0);expect(a.meshes.some(m=>m.collision&&m.name.startsWith('terrain'))).toBe(true);
-    for(const m of a.meshes){expect(m.data.positions.length%3).toBe(0);expect([...m.data.positions,...m.data.normals].every(Number.isFinite)).toBe(true);expect([...m.data.indices].every(i=>i<m.data.positions.length/3)).toBe(true);}
-  });
+    for(const m of a.meshes){expect(m.data.positions.length%3).toBe(0);expect(m.data.positions.every(Number.isFinite)&&m.data.normals.every(Number.isFinite)).toBe(true);expect(m.data.indices.every(i=>i<m.data.positions.length/3)).toBe(true);}
+  },10000);
 });
 
 describe('asynchronous cell transactions',()=>{

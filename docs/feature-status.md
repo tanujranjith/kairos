@@ -1,5 +1,13 @@
 # Feature status — working build, not acceptance certification
 
+## Rural infrastructure and farm backdrop — September 21 (verified checkpoint)
+
+Four authored rural utility corridors, four field-fence corridors and five farm sites now add road-following scale to Lakeshore, Orchard Way, lower Ridgeway and Pinecrest. Timber poles, crossarms, insulators, short three-wire spans, field rails, gate gaps, detailed houses and agricultural sheds replace several uninterrupted empty-field sightlines. Everything is original Kairos geometry generated from road progress and existing architecture modules.
+
+Each visual primitive has one streamed 256m owner and merges into one shared-material detail buffer per occupied cell. Lake and junction sightline exclusions are verified. Utility/fence detail is nonphysical; distant farm structures use the existing structure collider batch and stay more than 70m from roads. No terrain, road, shoulder, tire, input, traffic or race parameter changed.
+
+Native browser visual/input checks, repeated region/race disposal, 222 tests, strict TypeScript, exact production build and cold delivery smoke pass. Low audits stay inside the 300-draw / ~500k-triangle targets, including forest traffic and both eight-car grids. The new layer materially improves background composition but does not add pedestrians, animals, farm vehicles, cable sag simulation or photoreal assets; further world and vehicle-art work remains.
+
 ## Animated steering controls and rebuilt fleet assets — September 21 (verified checkpoint)
 
 All six original vehicle models now export an animation-ready steering assembly. The enclosed cars add a clearer wheel rim, centre badge, top marker and paddles; Apex's yoke, display and buttons rotate together. Both generated fallback models and all twelve GLBs expose a named steering pivot, and the runtime derives its bounded visual rotation from the same physical steer state used by the front wheels. It does not alter tire grip, suspension, assists, input smoothing or AI.

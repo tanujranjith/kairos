@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Rural utility and field-edge composition — September 21
+
+Lakeshore, Orchard Way, lower Ridgeway and Pinecrest now use four authored utility corridors, four field-boundary corridors and five farm sites. Road progress generates timber poles, crossarms, small insulators and short three-wire spans that follow curves rather than cutting across the valley. Two-rail fences include periodic gate gaps. Detailed house modules and larger shed forms establish distant farm clusters, breaking up the previous uninterrupted lawns while preserving the road, mountain and lake silhouettes.
+
+The worker assigns each item to one 256m cell. Pole, wire and fence boxes share one bark-material detail buffer per occupied cell; farms reuse existing wall, roof and glass batches. There is no per-prop scene mesh/material/texture and no new runtime asset. Utility/fence detail has no collision; farm structures use the normal distant structure collider and stay more than 70m from the road. This is a bounded composition layer, not cable physics, a farming simulation, populated settlements or final photoreal art. See [implementation and measured checks](rural-infrastructure.md).
+
 ## Animated steering assemblies — September 21
 
 Every original car now has a steering control grouped beneath a named `steering-pivot` in both generated fallback geometry and exported GLBs. The five enclosed cars use a denser wheel rim plus a centre badge, top marker and paddles at full detail. Apex groups its yoke, centre, instrument screen and buttons. Road controls rotate around the authored raked column axis; Formula rotates directly around its short column. The visual ratio is deliberately bounded and always derived from `VehicleState.steer`, so it cannot change the physical rack angle or add grip.
