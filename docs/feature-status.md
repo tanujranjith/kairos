@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Layered enclosed-car exterior detail — September 21 (verified checkpoint)
+
+The five enclosed original cars now separate their largest visible surfaces with modeled bonnet/deck boundaries, class-specific shoulder creases, fuel-filler seams, recessed wheel-opening liners, revised rolled lips, front air curtains and lower rear reflectors. Each feature conforms to the existing curved skin or bumper rather than floating as a generic decal. It reuses the established paint, carbon and lamp batches, adds no runtime asset host, and does not change physical dimensions, tire behavior, suspension, assists, camera mounts or wheel pivots. Apex retains its distinct open-wheel aero and cockpit treatment from the preceding fleet pass.
+
+All twelve GLBs were regenerated from the same fallback source. Imported/fallback vehicle matrices, fixed close captures, real keyboard input, the full 222-test suite, strict build, Low render audit and production smoke pass. The GT grid remains at 298 draw calls / 487,166 triangles and the largest enclosed player model remains below 40k triangles. This makes the cars more layered and automotive at showroom/chase distances, but they remain original stylized procedural models rather than photoreal scans; small-scale material texture and further silhouette refinement remain art work.
+
 ## Rural infrastructure and farm backdrop — September 21 (verified checkpoint)
 
 Four authored rural utility corridors, four field-fence corridors and five farm sites now add road-following scale to Lakeshore, Orchard Way, lower Ridgeway and Pinecrest. Timber poles, crossarms, insulators, short three-wire spans, field rails, gate gaps, detailed houses and agricultural sheds replace several uninterrupted empty-field sightlines. Everything is original Kairos geometry generated from road progress and existing architecture modules.

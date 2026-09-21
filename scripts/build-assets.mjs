@@ -11,4 +11,4 @@ for(const id of ['aeris','velara','crest','nova','gtx','apex'])for(const lod of 
   },{id,lod});
   const file=`${id}-lod${lod}.glb`;files.push({file,bytes});inventory.push({id,lod,file,bytes:bytes.length});console.log(file,bytes.length);
 }
-await browser.close();for(const {file,bytes}of files)await fs.writeFile(`public/models/${file}`,Buffer.from(bytes));await fs.writeFile('public/models/manifest.json',JSON.stringify({version:2,license:'Original Kairos content',features:['named wheel pivots','camera mounts','animated steering pivot'],models:inventory},null,2));
+await browser.close();for(const {file,bytes}of files)await fs.writeFile(`public/models/${file}`,Buffer.from(bytes));await fs.writeFile('public/models/manifest.json',JSON.stringify({version:3,license:'Original Kairos content',features:['named wheel pivots','camera mounts','animated steering pivot','layered wheel openings','authored exterior panel detail'],models:inventory},null,2));

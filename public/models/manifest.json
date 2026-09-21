@@ -1,71 +1,73 @@
 {
-  "version": 2,
+  "version": 3,
   "license": "Original Kairos content",
   "features": [
     "named wheel pivots",
     "camera mounts",
-    "animated steering pivot"
+    "animated steering pivot",
+    "layered wheel openings",
+    "authored exterior panel detail"
   ],
   "models": [
     {
       "id": "aeris",
       "lod": 0,
       "file": "aeris-lod0.glb",
-      "bytes": 328916
+      "bytes": 335964
     },
     {
       "id": "aeris",
       "lod": 1,
       "file": "aeris-lod1.glb",
-      "bytes": 124352
+      "bytes": 125896
     },
     {
       "id": "velara",
       "lod": 0,
       "file": "velara-lod0.glb",
-      "bytes": 341760
+      "bytes": 348776
     },
     {
       "id": "velara",
       "lod": 1,
       "file": "velara-lod1.glb",
-      "bytes": 130900
+      "bytes": 132408
     },
     {
       "id": "crest",
       "lod": 0,
       "file": "crest-lod0.glb",
-      "bytes": 335652
+      "bytes": 342696
     },
     {
       "id": "crest",
       "lod": 1,
       "file": "crest-lod1.glb",
-      "bytes": 125160
+      "bytes": 126656
     },
     {
       "id": "nova",
       "lod": 0,
       "file": "nova-lod0.glb",
-      "bytes": 350048
+      "bytes": 357044
     },
     {
       "id": "nova",
       "lod": 1,
       "file": "nova-lod1.glb",
-      "bytes": 133988
+      "bytes": 135500
     },
     {
       "id": "gtx",
       "lod": 0,
       "file": "gtx-lod0.glb",
-      "bytes": 326108
+      "bytes": 332920
     },
     {
       "id": "gtx",
       "lod": 1,
       "file": "gtx-lod1.glb",
-      "bytes": 135276
+      "bytes": 136816
     },
     {
       "id": "apex",

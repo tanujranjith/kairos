@@ -52,6 +52,16 @@ describe('distinct original vehicle models',()=>{
       expect(car.parts.filter(p=>p.name==='headlamp-projector-bezel')).toHaveLength(2);
       expect(car.parts.filter(p=>p.name==='headlamp-clear-lens')).toHaveLength(2);
       expect(car.parts.filter(p=>p.name==='rear-lamp-separator')).toHaveLength(lite?0:6);
+      expect(car.parts.filter(p=>p.name==='wheel-arch-liner')).toHaveLength(4);
+      expect(car.parts.filter(p=>p.name==='sculpted-shoulder-crease')).toHaveLength(2);
+      expect(car.parts.filter(p=>p.name==='front-wheel-air-curtain')).toHaveLength(2);
+      expect(car.parts.filter(p=>p.name==='rear-bumper-reflector')).toHaveLength(2);
+      expect(car.parts.filter(p=>p.name==='bonnet-shutline')).toHaveLength(1);
+      expect(car.parts.filter(p=>p.name==='decklid-shutline')).toHaveLength(1);
+      expect(car.parts.filter(p=>p.name==='fuel-filler-shutline')).toHaveLength(lite?0:1);
+      for(const detail of car.parts.filter(p=>['wheel-arch-liner','sculpted-shoulder-crease','front-wheel-air-curtain','rear-bumper-reflector','bonnet-shutline','decklid-shutline','fuel-filler-shutline'].includes(p.name))){
+        expect(detail.getTotalIndices()).toBeGreaterThan(0);expect(detail.getVerticesData('position')!.every(Number.isFinite)).toBe(true);
+      }
       expect(car.parts.filter(p=>p.metadata?.kairosAnimated==='steering')).toHaveLength(lite?5:9);
       const steering=car.parts.find(p=>p.name==='steering-wheel')!;steering.computeWorldMatrix(true);expect(steering.getBoundingInfo().boundingBox.maximumWorld.y).toBeLessThan(car.roofHeight-.03);
       const boss=car.parts.find(p=>p.name==='steering-boss')!,display=car.parts.find(p=>p.name==='driver-instruments')!,eye=cameraMounts(d).cockpit;boss.computeWorldMatrix(true);display.computeWorldMatrix(true);

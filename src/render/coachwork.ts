@@ -71,16 +71,31 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
   });
   const body=sheet('sculpted-coachwork',rows,m.paint,skinNormals);
   const onSkin=(points:Point[],offset=.004):Point[]=>points.map(([x,,z])=>[x,(panelHeight(body,x,z)??0)+offset,z]);
+  const onSide=(side:number,points:Point[],offset=.004):Point[]=>points.map(([,y,z])=>[(panelSide(body,y,z,side)??side*W)+side*offset,y,z]);
   const rear=fascia(scene,d,rows[0],false,lite,m.paint,m.dark),front=fascia(scene,d,rows.at(-1)!,true,lite,m.paint,m.dark);
   parts.push(...rear.parts,...front.parts);
   const rearTrim=(x:number,y:number,offset=.007):Point=>[x,y,(fasciaDepth(rear.panel,x,y,-1)??-L)-offset];
+  const frontTrim=(x:number,y:number,offset=.007):Point=>[x,y,(fasciaDepth(front.panel,x,y,1)??L)+offset];
   box('undertray',d.width*.82,.045,d.length*.85,0,-.42,0,m.dark);
 
   const cabin=roadCabin(scene,d,m,lite,body),roofPanel=cabin.roofPanel;parts.push(...cabin.parts);
   for(const side of [-1,1]){
-    // Fender lips follow the tire aperture and leave the suspension clearance open.
-    for(const zc of [-d.wheelbase/2,d.wheelbase/2]){const points:Point[]=[];for(let k=0;k<=20;k++){const a=k/20*Math.PI,y=-.32+Math.sin(a)*(d.wheelRadius+.051),z=zc+Math.cos(a)*(d.wheelRadius+.051);points.push([side*(profiles[0].at(z)*.98+.003),y,z]);}tube('rolled-fender-lip',points,.010,m.paint);}
+    // A painted rolled lip and a recessed dark annulus make each aperture read
+    // as layered coachwork instead of a wheel intersecting one smooth shell.
+    for(const zc of [-d.wheelbase/2,d.wheelbase/2]){
+      const points:Point[]=[],liner:Point[][]=[],segments=lite?10:20,outerRadius=d.wheelRadius+.054,innerRadius=d.wheelRadius-.014;
+      for(let k=0;k<=segments;k++){
+        const a=k/segments*Math.PI,y=-.32+Math.sin(a)*outerRadius,z=zc+Math.cos(a)*outerRadius,x=(panelSide(body,y,z,side)??side*W)-side*.012;
+        points.push([x+side*.015,y,z]);
+        const outer:[number,number,number]=[x,y,z],inner:[number,number,number]=[x,-.32+Math.sin(a)*innerRadius,zc+Math.cos(a)*innerRadius];
+        liner.push(side>0?[outer,inner]:[inner,outer]);
+      }
+      tube('rolled-fender-lip',points,.010,m.paint);sheet('wheel-arch-liner',liner,m.dark);
+    }
     tube('rocker-sill',[[side*W*.97,-.385,-d.wheelbase/2+.38],[side*W*.94,-.40,0],[side*W*.98,-.385,d.wheelbase/2-.38]],gt?.045:.027,m.dark);
+    const creaseStart=-d.wheelbase/2+d.wheelRadius+.10,creaseEnd=d.wheelbase/2-d.wheelRadius-.08,creaseMid=mix(creaseStart,creaseEnd,.52);
+    const creaseY=d.id==='crest'?.12:d.id==='nova'?.055:d.id==='aeris'?.02:.085;
+    tube('sculpted-shoulder-crease',onSide(side,[[0,creaseY-.025,creaseStart],[0,creaseY,creaseMid],[0,creaseY+(d.id==='nova'?.025:-.012),creaseEnd]],.007),d.class==='GT'?.007:.0055,m.paint);
     const seam:Point[]=[],outline=[[.205,.66],[-.31,.54],[-.34,-.74],[.21,-.84]];
     for(let edge=0;edge<outline.length-1;edge++)for(let i=0;i<=8;i++){const t=i/8,y=mix(outline[edge][0],outline[edge+1][0],t),z=mix(outline[edge][1],outline[edge+1][1],t);seam.push([(panelSide(body,y,z,side)??side*W)+side*.002,y,z]);}
     tube('door-shutline',seam,.0021,m.dark);
@@ -117,10 +132,26 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
     if(d.id==='crest')tube('rear-lamp-hook',[rearTrim(side*lampEnd,rearY,.032),rearTrim(side*lampEnd,rearY-.080,.032)],.010,m.tail);
     const exhaust=MeshBuilder.CreateTorus('exhaust-tip',{diameter:.105,thickness:.010,tessellation:lite?12:24},scene);exhaust.rotation.x=Math.PI/2;exhaust.position.set(side*rear.openingW*.79,-.30,-L+.015);add(exhaust,m.chrome);
   }
+  // Major panel boundaries survive showroom lighting and chase-camera distance.
+  // They sit on the sampled skin and therefore cannot float over different bodies.
+  const bonnetW=W*(d.id==='aeris'?.54:d.id==='nova'?.61:.64),bonnetRear=frontBase+.055,bonnetNose=L-.36;
+  tube('bonnet-shutline',onSkin([[-bonnetW,0,bonnetRear],[-bonnetW*.88,0,bonnetNose],[bonnetW*.88,0,bonnetNose],[bonnetW,0,bonnetRear]],.008),.0022,m.dark);
+  const deckW=W*(d.id==='crest'?.49:.58),deckRear=-L+.31,deckFront=cabinRear-.055;
+  tube('decklid-shutline',onSkin([[-deckW*.82,0,deckRear],[-deckW,0,deckFront],[deckW,0,deckFront],[deckW*.82,0,deckRear]],.008),.0022,m.dark);
+  if(!lite){
+    const fillerSide=1,fillerY=.075,fillerZ=-d.wheelbase/2-.39,filler:Point[]=[];
+    for(let k=0;k<=20;k++){const a=k/20*Math.PI*2,y=fillerY+Math.sin(a)*.072,z=fillerZ+Math.cos(a)*.072;filler.push(onSide(fillerSide,[[0,y,z]],.006)[0]);}
+    tube('fuel-filler-shutline',filler,.0022,m.dark);
+  }
   // Recessed vanes leave the painted bumper visible around the intake.
   const grille=design.grille;
   if(d.id==='nova'){for(let i=-7;i<=7;i++)box('tourer-grille-fin',.006,.175,.018,i*grille/8,-.205,L-.028,m.chrome);}
   else for(let i=0;i<(lite?2:4);i++)box('grille-louvre',grille*1.75,.006,.018,0,-.14-i*(lite?.115:.038),L-.028,m.dark);
+  for(const side of [-1,1]){
+    const curtainX=side*W*(gt?.73:.77),height=gt?.17:.12;
+    tube('front-wheel-air-curtain',[frontTrim(curtainX,-.30),frontTrim(curtainX+side*.022,-.30+height)],gt?.014:.011,m.dark);
+    tube('rear-bumper-reflector',[rearTrim(side*W*.68,-.255,.016),rearTrim(side*W*.83,-.245,.016)],.009,m.tail);
+  }
   tube('front-splitter',[[-W*.87,-.395,L-.13],[-W*.70,-.405,L+.045],[0,-.405,L+.095],[W*.70,-.405,L+.045],[W*.87,-.395,L-.13]],gt?.045:.021,m.dark);
   sheet('shaped-diffuser-ramp',[[[-rear.openingW,-.425,-L+.24],[0,-.425,-L+.27],[rear.openingW,-.425,-L+.24]],[[-rear.openingW*.87,-.365,-L+.015],[0,-.375,-L],[rear.openingW*.87,-.365,-L+.015]]],m.dark);
   for(let i=-2;i<=2;i++)box('diffuser-fin',.008,.055,.19,i*.16,-.406,-L+.065,m.dark);
