@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Free Drive activities — September 21 (verified checkpoint)
+
+The complete planned activity set is live: four speed traps, three point-to-point trials, two drift zones and three scenic destinations. Speed traps now arm while stationary, measure a moving crossing, preserve the fastest result, report target/personal-best status and reset their runtime debounce between drives. Map details expose persistent personal bests and discovery state; speed/drift HUDs use activity-appropriate status rather than a generic timer.
+
+All twelve activities complete through the live action path in a controlled browser verifier, and every scored record/visit survives IndexedDB reload. Pure counts/record tests, 246-test full suite, strict TypeScript, texture integrity, production build, supplied keyboard input and rebuilt production WebGL2 smoke pass. Controlled endpoint placement proves activity state/persistence but not twelve uninterrupted player-driven runs; actual-laptop and hosted HTTPS acceptance remain outstanding. See [implementation and evidence](free-drive-activities.md).
+
 ## Local release handoff — September 21 (verified checkpoint)
 
 The current production bundle completes the local menu → Free Drive → Northstar → eight-car GT launch → menu flow under cold-cache 25Mbps/40ms emulation with third-party hosts blocked. Forced WebGL2 and the automatic SwiftShader fallback record no page errors, failed requests, external requests or development hooks; final showroom, driving and race captures were opened. This is a stable local handoff, not target-laptop or hosted-release certification. Actual 8GB-laptop performance/endurance and an authorized HTTPS deployment remain outstanding.

@@ -2,6 +2,14 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Free Drive activities — September 21
+
+- The authored set is exactly **4 speed traps / 3 point-to-points / 2 drift zones / 3 scenic destinations**. Focused pure tests cover fastest-speed records, target comparison and map labels.
+- `scripts/verify-activities.mjs` starts all twelve through the live action path, loads every destination, and verifies four target-beating speed records, three completed timed records, two positive drift records and all three scenic visits. It restarts Free Drive and immediately re-crosses the first trap at a higher speed, proving runtime debounce reset while preserving the older record. IndexedDB reload retains all nine scored records and seven scored/discovery visits.
+- Opened captures show `PERSONAL BEST · 165 KM/H` on the map and the correct in-world `ARMED` trap state. This controlled-placement test isolates state transitions; it is not a claim of twelve uninterrupted physical route runs.
+- The complete suite passes **246 tests / 38 files**. Strict TypeScript, KTX2 integrity and production build pass (`index-CBYkiIlZ.js`, `cell-worker-D1LLTGra.js`). The supplied input client reaches **10.933m/s**, four contacts, zero damage, 24 traffic actors and no failed stream; its screenshot/state were opened.
+- Exact rebuilt production WebGL2 under cold-cache 25Mbps/40ms emulation reaches the menu in **6.303s**, transfers **10,519,923 bytes**, and completes Free Drive plus Northstar. Page errors, failed requests and external requests are empty. The immediately preceding activity bundle also completed a clean eight-car GT launch/home before the final non-activity map-label guard. These are localhost/SwiftShader observations, not target-laptop or HTTPS certification.
+
 ## Local release handoff — September 21
 
 - `scripts/verify-startup.mjs --race` passed the current production bundle through menu, keyboard-driven Free Drive, Northstar, clean eight-car GT countdown/launch and return-to-menu, with third-party hosts blocked and development hooks absent.

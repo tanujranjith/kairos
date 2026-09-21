@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Free Drive activity completion — September 21 (verified checkpoint)
+
+- Closed the selected-speed-trap path that previously replaced its measured result with a generic discovery toast. A trap now arms while stationary, records only a moving crossing, retains the fastest km/h result, reports personal-best/target status, and resets its runtime debounce when a new drive begins without erasing persistent records.
+- Map detail now exposes saved speed, time-trial and drift records plus scenic discovery state. The driving HUD shows `ARMED` for a speed trap and points for a drift zone instead of incorrectly presenting both as stopwatches.
+- Added pure activity contracts and a complete authored-content count: four speed traps, three point-to-points, two drift zones and three scenic destinations. The browser verifier starts and completes all twelve, verifies positive drift scores, target-beating trap results, trial route cleanup, discovery visits and IndexedDB reload. Opened map-record and armed-trap screenshots are correct.
+- Full suite: 246 tests / 38 files. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-CBYkiIlZ.js`, worker `cell-worker-D1LLTGra.js`). The supplied skill client reaches 10.933m/s with four contacts, zero damage, 24 traffic actors and no streaming errors; its screenshot/state were opened.
+- Exact rebuilt production WebGL2 smoke passes menu, keyboard Free Drive and Northstar: 6.303s menu readiness, 10,519,923 bytes, no page/failed/external requests. The immediately preceding activity bundle also passed a clean eight-car GT launch/home before the final non-activity map-label guard. Controlled placement validates activity transitions but is not twelve uninterrupted player-driven routes; target-laptop and hosted HTTPS acceptance remain open.
+
 ## Local release handoff — September 21 (verified checkpoint)
 
 - Honored the request to wrap the current pass instead of starting another art feature. The production bundle passed cold-cache 25Mbps/40ms localhost startup, keyboard-driven Free Drive, Northstar driving, a clean eight-car GT countdown/launch and return to the menu.
