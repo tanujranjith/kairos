@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Procedural urban parcel grounding — September 21
+
+Procedural Westbrook buildings now sit on a narrow concrete apron that rotates with the footprint and follows the underlying terrain sample at every grid vertex. The visible pad is also part of the existing physical structure batch; it is not a decal or a nonphysical mask over grass. The two-metre edge is intentionally smaller than the authored block plazas and preserves road clearance.
+
+The treatment reuses one existing material/mesh/draw path. Opened WebGL2 and WebGPU captures show clean building bases without grass bleed or depth fighting. It adds 2,544 triangles to the measured city scene while retaining the same draw count and the earlier architecture optimization headroom. Broad lawns, sidewalk continuity, parking articulation and populated street life remain unfinished. See [implementation and measured checks](urban-parcels.md).
+
 ## Single-surface repeated windows — September 21
 
 The detailed modular building family no longer models every upper-story window as a complete shallow box. One explicitly wound exterior quad now carries the same tint and occupied/unoccupied emission slot inside the existing proud frame. Front, rear, left and right elevations remain visible under normal back-face culling, while hidden inner and edge faces no longer consume the Low geometry budget.

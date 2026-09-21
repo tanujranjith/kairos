@@ -2,6 +2,14 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Procedural urban parcel aprons — September 21
+
+- `tests/urban-parcel.test.ts` checks finite terrain-following geometry, rotated two-metre margins, bounded triangle count and integration into the collision-bearing `Concrete/structure` batch.
+- Forced WebGL2 and actual WebGPU pass all four Westbrook sites and normal keyboard driving; opened overview/drive captures show no grass bleed, z-fighting or road/plaza damage.
+- The Low city sample is **218 draws / 430,869 triangles** and wet night is **219 / 431,036**, an increase of 2,544 triangles and zero draws from the pane checkpoint. Showroom **187/176,416**, Lakeshore **240/292,546**, GT **298/487,166**, pit **121/308,204**, circuit **146/238,909** and Formula **281/484,764** remain inside budget.
+- The supplied loader-aware input reaches **10.933m/s**, four mixed contacts, zero damage, 12+12 traffic and no failed cell. Three region loops stay exactly **496/74/44**, **368/75/45** and **318/74/44**; three race/home cycles return to **138/73/43** and zero cells.
+- The complete suite passes **234 tests / 37 files**. Strict TypeScript, nineteen KTX2 files and production build pass (`index-wea1ar_Z.js`, `cell-worker-CxwQoy_V.js`). Cold25Mbps/40ms production reaches menu in **6.371s forced WebGL2 / 5.728s automatic request**, transfers **12,977,924 bytes**, enters Free Drive/Northstar and has no page, failed or external requests. Final renderer, input and production images were opened. These remain local development-host checks.
+
 ## Single-surface architectural panes — September 21
 
 - Repeated upper-story panes in `buildArchitecture` now use one outward-facing quad rather than a six-faced shallow box. Focused coverage caps the representative office glass at fewer than 500 triangles and requires finite positions/normals plus both occupied/unoccupied UV slots. Frames, ground-floor openings and the shared material remain unchanged.

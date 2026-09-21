@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Procedural urban parcel aprons — September 21 (verified checkpoint)
+
+- Added narrow rotated terrain-following concrete aprons to every procedural Westbrook building. They join the existing collision-bearing structure batch, so visible hardscape and `Concrete` contact are the same surface; no new material, texture, light, draw call or request is introduced.
+- Forced WebGL2 and actual WebGPU views were opened and show clean edges without grass bleed or z-fighting. Normal renderer checks and the supplied keyboard sequence pass at 10.933m/s, four grounded contacts, zero damage, 12+12 traffic and no failed cell.
+- Low city is 218/430,869 and wet night 219/431,036 draws/triangles, only 2,544 triangles above the preceding checkpoint. Three region loops and three race/home cycles retain exact resource counts.
+- Complete suite passes 234 tests / 37 files; strict TypeScript, nineteen KTX2 assets and production build pass (`index-wea1ar_Z.js`, worker `cell-worker-CxwQoy_V.js`). Cold25Mbps/40ms exact production reaches menu in 6.371s WebGL2 / 5.728s automatic request, transfers 12,977,924 bytes and has no page, failed or external requests. Final renderer, input and production captures were opened.
+- NEXT: preserve the architecture headroom and continue visible city/background ambience with cost-controlled sidewalk/street-edge detail or another broad interaction gap. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Bounded pane tint for negative seeds — September 21 (verified follow-up)
 
 - Fixed a signed-remainder bug that allowed negative deterministic building seeds to push the intended 0.70–0.97 pane tint multiplier toward 0.43. A new negative-seed test bounds every generated pane colour.

@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Procedural urban parcel aprons — September 21 (verified checkpoint)
+
+Every procedural Westbrook building now receives a narrow, rotated, terrain-following concrete apron. The hardscape joins the existing collision-bearing structure mesh and carries `Concrete/structure` contact identity, so it is not a visual-only surface laid over grass. It allocates no independent mesh, material, texture, light, draw call or request.
+
+Forced WebGL2 and actual WebGPU views show clean edges without grass bleed or z-fighting. The complete 234-test / 37-file suite, strict TypeScript, nineteen KTX2 assets, supplied keyboard input, repeated streaming/race cleanup and exact production smoke all pass. Low city remains under budget at 218 draws / 430,869 triangles and wet night at 219 / 431,036. This improves building-to-ground integration but is not a complete sidewalk network, parking treatment, populated city, photoreal environment, target-laptop certification or hosted HTTPS acceptance. See [implementation and evidence](urban-parcels.md).
+
 ## Single-surface architectural panes — September 21 (verified checkpoint)
 
 Repeated upper-story windows in the detailed modular building family now use one correctly wound exterior quad instead of a shallow six-faced box. Proud frames, sills, deterministic colour/occupancy, all four elevations and the shared glass material remain unchanged. Native WebGL2/WebGPU inspection shows no missing façades or culling holes, and the ordinary physical surfaces are untouched.

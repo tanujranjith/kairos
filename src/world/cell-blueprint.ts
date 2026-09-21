@@ -20,6 +20,7 @@ import {buildRuralInfrastructure} from './rural-infrastructure';
 import {roadsideGuidance} from './roadside-guidance';
 import {buildIndustrialSetting,industrialReserved} from './industrial-setting';
 import {buildUrbanSetting,urbanReserved} from './urban-setting';
+import {buildUrbanParcel} from './urban-parcel';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk';
@@ -134,6 +135,7 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       const style:BuildingStyle=industrial?'factory':z< -1280?'house':(['brick','limestone','office'] as const)[i%3];
       const specification={x,y,z,width:w,depth:l,height:h,yaw:near.point.yaw,style,seed:hash(cx+i,cz)};
       if(city&&style==='office'&&Math.abs(specification.seed)%3===0)buildBandArchitecture({wall:buildings,roof:roofs,glass:windows},specification);else buildArchitecture({wall:buildings,roof:roofs,glass:windows},specification);
+      if(city)buildUrbanParcel(buildings,specification);
     }
     else if(!circuit&&!industrial){
       // Preserve RNG consumption and every urban building/plant placement.
