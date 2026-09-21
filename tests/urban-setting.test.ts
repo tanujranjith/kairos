@@ -1,7 +1,7 @@
 import {describe,expect,it} from 'vitest';
 import {JUNCTIONS,ROADS,junctionRadius,nearestRoad,terrainHeight} from '../src/content/world';
 import {MeshDataBuilder} from '../src/world/mesh-data';
-import {buildUrbanSetting,URBAN_SITES,urbanReserved} from '../src/world/urban-setting';
+import {buildUrbanPark,buildUrbanSetting,URBAN_PARKS,URBAN_SITES,urbanReserved} from '../src/world/urban-setting';
 
 describe('authored urban blocks',()=>{
   it('places four unique, road-clear and uniquely owned sites inside Westbrook',()=>{
@@ -31,5 +31,20 @@ describe('authored urban blocks',()=>{
       expect(paint.indices.length).toBeGreaterThanOrEqual(108);
     }
     expect(total,JSON.stringify(rows)).toBeLessThan(42000);
+  });
+
+  it('owns a road-clear streamed civic park with physical paths and reused planting',()=>{
+    expect(URBAN_PARKS).toHaveLength(1);const park=URBAN_PARKS[0];
+    expect(park.cell).toBe(`${Math.floor(park.x/256)},${Math.floor(park.z/256)}`);expect(urbanReserved(park.x,park.z)).toBe(true);
+    for(const across of [-park.width/2,park.width/2])for(const forward of [-park.depth/2,park.depth/2]){
+      const c=Math.cos(park.yaw),s=Math.sin(park.yaw),x=park.x+across*c+forward*s,z=park.z-across*s+forward*c,n=nearestRoad(x,z);
+      expect(n.distance-n.road.width/2).toBeGreaterThan(28);expect(JUNCTIONS.every(j=>Math.hypot(x-j.x,z-j.z)>junctionRadius(j)+45)).toBe(true);
+    }
+    const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},paint=new MeshDataBuilder(),instances=[] as Parameters<typeof buildUrbanSetting>[4];
+    buildUrbanPark(park,b,instances);
+    const data=Object.values(b).map(builder=>builder.finish()),triangles=data.reduce((sum,mesh)=>sum+mesh.indices.length/3,0);
+    expect(triangles).toBeGreaterThan(800);expect(triangles).toBeLessThan(3500);expect(instances.filter(instance=>instance.kind==='oak')).toHaveLength(10);expect(instances.filter(instance=>instance.kind==='grass')).toHaveLength(12);
+    expect(data.every(mesh=>[...mesh.positions,...mesh.normals,...(mesh.colors??[])].every(Number.isFinite))).toBe(true);
+    expect(b.glass.positions.length).toBeGreaterThan(16*3);expect(urbanReserved(park.x-park.width,park.z)).toBe(false);
   });
 });

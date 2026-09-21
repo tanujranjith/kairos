@@ -29,6 +29,8 @@ City corridors now have original lamp standards, benches, bins, planted beds and
 
 Westbrook's signalized approaches now add [lane-derived zebra crossings and correctly ordered stop bars](docs/urban-crosswalks.md) to the existing shared white-paint batch. They improve junction scale and legibility without a new material, draw call, collider or handling change.
 
+[Westbrook Commons](docs/westbrook-commons.md) replaces one large downtown lawn with a streamed civic park: terrain-following physical walks, a fountain, benches, path lamps, planted beds and reused mature trees. It shares existing cell materials and vegetation libraries and stays inside the Low submission budget. This is one composed public space, not pedestrians or a complete city-park network.
+
 Ground materials blend meadow, dry grass, woodland soil, shore sediment and exposed rock in world coordinates. Clipped terrain now shares boundary vertices across polygons and streamed cells, repairing a measured height-gap defect in the actual collision mesh. Authored road/shoulder surfaces and vehicle handling are unchanged. See [terrain continuity and off-road limits](docs/terrain-continuity.md). Scenery density, broader terrain shape and visual polish remain unfinished.
 
 The [directional sky](docs/atmosphere.md) now has layered clouds, sunward dusk haze, a small cloud-obscured sun, and a readable night gradient with stars and moon. It uses one shared cloud atlas and native shaders on both renderers, not a low-resolution coloured sky repainted every time the clock changes. This does not change driving physics or complete the wider scenery upgrade.
@@ -96,6 +98,7 @@ node scripts/verify-streetscape.mjs --renderer=auto --output=output/streetscape-
 node scripts/verify-agricultural-fields.mjs --output=output/agricultural-fields
 node scripts/verify-industrial-setting.mjs --output=output/industrial-setting
 node scripts/verify-urban-setting.mjs --output=output/urban-setting
+node scripts/verify-urban-park.mjs --output=output/urban-park
 node scripts/verify-reused-parked-cars.mjs --output=output/reused-parked-cars
 node scripts/verify-roadside-guidance.mjs
 node scripts/verify-graphics-streaming.mjs

@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Westbrook Commons — September 21 (verified checkpoint)
+
+- Replaced one broad downtown lawn with a single-cell 38 × 64m civic park: terrain-following physical walks, fountain, benches, path lamps, planted beds, ten reused oak pairs and twelve grass shrubs. The first 80 × 60m outlying trial was visually isolated and rejected at 599,155 Low triangles; the final site integrates with existing city blocks at 190/454,013.
+- Forced WebGL2 and actual WebGPU captures were opened and match. The paths return four `Concrete` contacts; normal keyboard driving reaches 19.32m/s with zero damage. Sixteen real-road bridge/gravel/grass/braking scenarios also pass, correcting the stale road-layer documentation without changing handling.
+- Low city/wet-night are 262/494,803 and 263/494,970; both shared-car grids remain 291/496,870. Region loops repeat at 907/84/44, 368/85/45 and 319/84/44; race/home returns to 138/83/43 and zero cells.
+- Complete suite passes 239 tests / 37 files. Strict TypeScript, nineteen KTX2 files and production build pass (`index-ChHdNbeg.js`, worker `cell-worker-DRkSRaY7.js`). Cold25Mbps/40ms production reaches menu in 5.502s WebGL2 / 4.942s automatic, 10,517,845 bytes, with no page/failed/external requests.
+- Both generic input clients remained live without artifacts and were terminated; the dedicated stateful browser verifier covers the changed visuals, contacts and normal input. NEXT: preserve the narrow ~3.1k race-grid and ~5k city headroom. Continue a broader gameplay/visual/acceptance gap; actual 8GB laptop and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Shared live Velara model — September 21 (verified checkpoint)
 
 - Implemented the user's explicit direction to use the same car/model throughout. Player, showroom, traffic, seven race opponents and 17 parked cars now reuse only Velara LOD0/LOD1; the six choices remain handling/physics profiles. Garage copy and thumbnails make this explicit.

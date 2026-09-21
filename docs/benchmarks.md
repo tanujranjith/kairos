@@ -2,6 +2,16 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Westbrook Commons — September 21
+
+- Pure coverage verifies one single-cell, finite, road/junction-clear park, reserved procedural footprint, **980 authored triangles**, **10 oak pairs**, **12 grass shrubs** and open physical paths. The complete suite passes **239 tests / 37 files**.
+- Forced WebGL2 and actual WebGPU each load the park cell, render matching overview/detail captures and return four `Concrete` contacts on the path. Normal Cedar Street keyboard driving reaches **19.32m/s** with four contacts, zero damage, no page error or external request. Opened both renderer comparisons and the gameplay capture.
+- The rejected outlying trial submitted **599,155 triangles** on Low. Final Low cost is showroom **188/176,908**, Lakeshore **240/293,364**, city **262/494,803**, Commons **190/454,013**, wet night **263/494,970**, either eight-car grid **291/496,870**, pit **121/315,224** and circuit **146/245,929** (draws/triangles).
+- The real-road surface matrix passes **16 Velara/GTX bridge, gravel/grass transition and 70mph braking cases** with zero damage, no recovery teleport, final speed below 0.6m/s and peak braking sideslip below 1°. The visible shoulder is a physical `Gravel` or `Concrete` strip; terrain beyond reports `Grass`.
+- Three city/forest/lake loops repeat at **907/84/44**, **368/85/45** and **319/84/44** resources. Three race/home cycles return to **138/83/43** and zero cells. Delay, failure/retry, race reservation and no-external-request assertions pass.
+- Strict TypeScript, nineteen KTX2 assets and production build pass (`index-ChHdNbeg.js`, worker `cell-worker-DRkSRaY7.js`). Cold25Mbps/40ms production reaches menu in **5.502s WebGL2 / 4.942s automatic**, transfers **10,517,845 bytes**, enters Free Drive/Northstar and records no page, failed or external request.
+- The upstream skill client and loader-aware copy each remained live without output/artifacts and were terminated; neither is counted as a pass. The dedicated stateful verifier covers the changed visuals, contacts, normal keyboard driving and browser errors. Target-laptop performance and hosted HTTPS remain external acceptance work.
+
 ## Shared Velara body — September 21
 
 - Forced WebGL2 and actual WebGPU each resolve all six handling profiles to `velara`; every loaded profile reports **29 parts / 37,936 triangles / 4 wheel pivots** while retaining its own profile ID. Only `velara-lod0.glb` and `velara-lod1.glb` are requested.

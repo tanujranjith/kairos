@@ -14,6 +14,8 @@ try{
     }
   }
   await page.evaluate(async()=>{const g=window.kairos;g.teleport(-1340,-980,'city3');await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);});await sample('city-traffic');
+  await page.evaluate(async()=>{const g=window.kairos;g.teleport(-1250,-1065,'city3');await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);});await sample('westbrook-commons');
+  await page.evaluate(async()=>{const g=window.kairos;g.teleport(-1340,-980,'city3');await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);});
   await page.evaluate(async()=>{const g=window.kairos;g.save.settings.time=22;g.save.settings.weather='Rain';g.wetness=.8;await g.advanceTime(1000);});await sample('wet-night');
   await page.evaluate(async()=>{const g=window.kairos;await g.action('home');g.save.settings.time=17.4;g.save.settings.weather='Clear';g.wetness=0;g.raceConfig.entrants=8;await g.startRace();await g.advanceTime(1000);});await sample('eight-car-grid');
   await page.evaluate(async()=>{const g=window.kairos;g.teleport(800,-1460,'pit');await g.advanceTime(1000);await g.world.streamer.waitFor([...g.world.streamer.records.keys()]);});await sample('pit-paddock');

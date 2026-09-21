@@ -26,6 +26,8 @@ Coordinates are meters, Y up, +Z forward at yaw zero, +X right. Time is seconds 
 
 Deep forecourts can additionally emit a sparse `ParkedCarPlacement`. `WorldRenderer` resolves that pure worker result into an instance of the already loaded Velara LOD1 container plus one hidden static box. `instantiateStaticCarAsset` does not clone materials and permits Babylon hardware instances, so repeated scenery shares the authored vehicle geometry/materials. Instance, collider and Havok shape are cell-owned; the source model cache is scene-owned and intentionally remains available after streaming. See [parked-model evidence](parked-model-reuse.md).
 
+`src/content/urban-setting.ts` also owns the compact Westbrook Commons footprint. `src/world/urban-setting.ts` emits its paths, fountain, furniture and planting into the same cell buffers and thin-instance libraries as surrounding blocks. The footprint participates in `urbanReserved`, preventing procedural overlap, and all hardscape remains part of the structure collider with `Concrete/structure` identity. It adds no independent scene resource; see [Commons evidence](westbrook-commons.md).
+
 ## Production startup
 
 Vite groups Babylon/core and glTF loader modules into one hashed engine chunk; Kairos code remains separate. This avoids hundreds of tiny preload requests (particularly costly on HTTP/1.1) without removing shader helpers or lowering rendering quality. The engine chunk remains large; download, parse, device initialization and first-drive streaming still require independent measurement. All helper URLs stay local.

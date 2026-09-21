@@ -1,5 +1,9 @@
 # Original graphics upgrade — first substantial art pass
 
+## Westbrook Commons — September 21
+
+A compact authored civic park now occupies a formerly uninterrupted downtown lawn. Terrain-following paths, a shallow fountain, benches, path lamps, planted beds and mature reused trees join existing streamed batches and instance libraries. The first larger isolated trial was rejected at 599,155 Low triangles; the final downtown composition measures 190 draws / 454,013 triangles at the park, while city traffic remains under target at 262 / 494,803. Native WebGL2 and WebGPU captures match and the paths return four physical `Concrete` contacts. See [implementation and evidence](westbrook-commons.md).
+
 ## One shared live car body — September 21
 
 The runtime now resolves every handling profile to the same authored Velara S LOD0/LOD1 pair. Player, traffic, race opponents, showroom background and parked cars all reuse that body; only paint/accent and physical profile differ. The garage explicitly presents six tuning profiles and uses one consistent silhouette. The local procedural fallback follows the same mapping when GLBs are blocked.

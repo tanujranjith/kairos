@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Westbrook Commons — September 21 (verified checkpoint)
+
+One empty downtown block now contains a deterministic 38 × 64 m civic park with physical terrain-following walks, a fountain, benches, four path lamps, four planted beds, ten reused oak/trunk pairs and twelve grass-card shrubs. It is reserved against procedural overlap, owned by one stream cell and merged into existing material/collision batches.
+
+The first larger outlying version was rejected after the neighborhood reached 599,155 Low triangles. The final site passes forced WebGL2 and actual WebGPU visual inspection, four `Concrete` contacts, normal keyboard driving, real-road shoulder/braking checks, repeated region/race cleanup, 239 tests / 37 files, strict TypeScript, production build and cold delivery. Final Low costs are 190/454,013 at the park, 262/494,803 city, 263/494,970 wet night and 291/496,870 at either eight-car grid. This improves one broad lawn but does not add pedestrians, complete every city block, certify the target laptop or provide hosted HTTPS acceptance. See [implementation and evidence](westbrook-commons.md).
+
 ## Shared Velara body — September 21 (verified checkpoint)
 
 The player, showroom background, physical traffic, race opponents and parked-city cars now resolve to one authored Velara S LOD0/LOD1 pair. The garage calls the six choices tuning profiles and gives every card the same silhouette. Their independent FWD/RWD/AWD, GT and Formula-class physics, setup values and race rules remain; paint, wheel and accent customization remain per profile. Asset failure also falls back to one procedural Velara body.
