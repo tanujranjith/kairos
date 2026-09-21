@@ -30,12 +30,12 @@ export function pitMergeBlocker(self:VehicleState,others:VehicleState[]):string|
 }
 
 export class PitDriver {
-  phase:PitPhase='circuit';reason='';serviceElapsed=0;stops=0;waitingFor:string|null=null;routeProgress=0;
+  phase:PitPhase='circuit';reason='';serviceElapsed=0;stops=0;missedStops=0;retryPending=false;waitingFor:string|null=null;routeProgress=0;
   private clearTime=0;private previousFuel?:number;private previousDistance?:number;private measuredFuel=0;private measuredDistance=0;private fuelRate:number=PIT_POLICY.initialFuelPerMetre;
   constructor(readonly index:number){}
   get active(){return !['circuit','requested'].includes(this.phase);}
   reset(){this.phase='circuit';this.reason='';this.serviceElapsed=0;this.clearTime=0;this.waitingFor=null;}
-  snapshot(){const box=pitServiceBox(this.index);return {phase:this.phase,reason:this.reason,box:box.progress,serviceBox:{index:box.index,progress:box.progress,lateral:box.lateral,position:box.position},serviceElapsed:this.serviceElapsed,stops:this.stops,waitingFor:this.waitingFor,routeProgress:this.routeProgress,fuelPerLap:this.fuelRate*CIRCUIT.length};}
+  snapshot(){const box=pitServiceBox(this.index);return {phase:this.phase,reason:this.reason,box:box.progress,serviceBox:{index:box.index,progress:box.progress,lateral:box.lateral,position:box.position},serviceElapsed:this.serviceElapsed,stops:this.stops,missedStops:this.missedStops,retryPending:this.retryPending,waitingFor:this.waitingFor,routeProgress:this.routeProgress,fuelPerLap:this.fuelRate*CIRCUIT.length};}
   update(dt:number,vehicle:Vehicle,others:Vehicle[],race:RaceState,wetness:number):{input:InputFrame;serviceComplete:boolean}{
     const s=vehicle.state,track=nearestRoad(s.position.x,s.position.z,r=>r.id===CIRCUIT.id),r=race.entrants.find(r=>r.id===s.id);
     // Learn consumption from normal travel only. Refueling/reset and injected
@@ -44,6 +44,7 @@ export class PitDriver {
     this.previousFuel=s.fuel;this.previousDistance=s.distance;
     if(!this.active){
       this.reason=serviceReason(s,vehicle.definition,r,race,this.fuelRate);this.phase=this.reason?'requested':'circuit';
+      if(this.retryPending&&!this.reason)this.retryPending=false;
       const ahead=(PIT_VISIT.start-track.progress+CIRCUIT.length)%CIRCUIT.length;
       // Commit only at the entrance on a valid driving lap, never from the grid
       // or by turning back after missing the approach.
@@ -56,11 +57,18 @@ export class PitDriver {
     }
     const n=projectPath(PIT_VISIT.road,s.position,true),pit=nearestRoad(s.position.x,s.position.z,r=>r.id===PIT.id),box=pitServiceBox(this.index);this.routeProgress=n.progress;
     const boxDistance=Math.hypot(s.position.x-box.position.x,s.position.z-box.position.z),atBox=boxDistance<PIT_POLICY.stopTolerance&&Math.abs(pit.progress-box.progress)<PIT_POLICY.stopTolerance&&Math.abs(s.position.y-box.position.y)<2.5&&s.grounded&&Math.abs(s.speed)<PIT_POLICY.stoppedSpeed;
+    // Once the car's centre has passed the legal stopping tolerance, reaching
+    // the box would require reversing against pit-lane traffic. Continue
+    // forward through the normal exit/rejoin instead and request service again
+    // on the next lap while the original fuel/wear condition still exists.
+    if(this.phase==='approach'&&!atBox&&pit.distance<16&&pit.progress>box.progress+PIT_POLICY.stopTolerance){
+      this.phase='exit';this.serviceElapsed=0;this.missedStops++;this.retryPending=true;
+    }
     if(this.phase==='approach'&&atBox)this.phase='service';
     if(this.phase==='service'){
       this.serviceElapsed=atBox?this.serviceElapsed+dt:0;
       if(!atBox){this.phase='approach';}
-      else if(this.serviceElapsed>=PIT_POLICY.serviceSeconds){this.phase='exit';this.stops++;this.serviceElapsed=0;return {input:{...neutralInput(),brake:1},serviceComplete:true};}
+      else if(this.serviceElapsed>=PIT_POLICY.serviceSeconds){this.phase='exit';this.stops++;this.retryPending=false;this.serviceElapsed=0;return {input:{...neutralInput(),brake:1},serviceComplete:true};}
       else return {input:{...neutralInput(),brake:1},serviceComplete:false};
     }
     if(this.phase==='rejoin'&&n.progress>PIT_VISIT.road.length-4){this.reset();return {input:racingInput(vehicle,others,race.session.difficulty,wetness,this.index,CIRCUIT,dt),serviceComplete:false};}

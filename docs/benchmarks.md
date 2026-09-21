@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Forward pit-overshoot recovery — September 21
+
+- The pure controller regression detects one car 12m beyond its assigned stop, records exactly one miss, commands finite forward throttle/steering, never completes service, rejoins, and recommits at the next entrance while the low-fuel condition remains.
+- `verify-pit-overshoot.mjs` injects a moving GT opponent 7m beyond its box, then makes no further position or velocity correction. Installed Edge/WebGL2 reaches a renewed `requested` state after **79.1s** through observed `exit`, `yield` and `rejoin` phases. It records **1 miss / 0 services / 0 resets / 0 damage**, stays grounded at completion, never requests reverse, and emits no page or failed-request error. `forward-exit.png` and `rejoined-request.png` were opened.
+- The existing eight-car GT and Formula worn-tire regression still completes one ordinary physical stop in each class, all 24 pit gates, restored fuel/tires, merge/rejoin and return to circuit with zero sampled warnings, penalties or damage. Service and rejoin screenshots were opened.
+- The complete suite passes **239 tests / 37 files**. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-BGiIJisD.js`, worker `cell-worker-DRkSRaY7.js`), and the refreshed local preview serves that bundle. Both required generic input clients were attempted after the change, remained live without output/artifacts for more than a minute, and were terminated; neither is counted as evidence. The dedicated physical verifier supplies the changed-behavior/browser/screenshot evidence. This is one controlled overshoot, not every box, approach speed, weather or dense-field conflict.
+
 ## Westbrook Commons — September 21
 
 - Pure coverage verifies one single-cell, finite, road/junction-clear park, reserved procedural footprint, **980 authored triangles**, **10 oak pairs**, **12 grass shrubs** and open physical paths. The complete suite passes **239 tests / 37 files**.

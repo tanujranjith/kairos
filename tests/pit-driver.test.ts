@@ -71,10 +71,16 @@ describe('AI pit strategy and physical route',()=>{
     const through=state('through',PIT,(pitBox(0)+pitBox(1))/2,8),throughVehicle={state:through,definition:vehicleById('gtx')} as Vehicle,throughDriver=new PitDriver(5);throughDriver.phase='exit';
     expect(throughDriver.update(.1,throughVehicle,[throughVehicle,...vehicles],race.state,0).input.brake).toBeLessThan(.2);
   });
-  it('does not turn back into a missed pit approach or service from a wrong position',()=>{
+  it('continues forward after a missed box, rejoins, and retries on the next lap',()=>{
     const race=session(),s=state('racer-1',CIRCUIT,PIT_VISIT.start+80,20),driver=new PitDriver(0),v={state:s,definition:vehicleById('gtx')} as Vehicle;
     race.state.entrants[1].lap=1;s.fuel=3;driver.update(.1,v,[v],race.state,0);expect(driver.phase).toBe('requested');
-    s.position=pointAt(PIT,pitBox(0)+12);s.speed=0;driver.phase='approach';for(let i=0;i<80;i++)expect(driver.update(.1,v,[v],race.state,0).serviceComplete).toBe(false);expect(driver.stops).toBe(0);
-    driver.reset();expect(driver.active).toBe(false);expect(driver.waitingFor).toBeNull();
+    const missedPoint=pointAt(PIT,pitBox(0)+12);s.position=missedPoint;s.yaw=missedPoint.yaw;s.speed=0;driver.phase='approach';const missed=driver.update(.1,v,[v],race.state,0);
+    expect(missed.serviceComplete).toBe(false);expect(missed.input.throttle).toBeGreaterThan(0);expect(Number.isFinite(missed.input.steer)).toBe(true);expect(driver.phase).toBe('exit');expect(driver.missedStops).toBe(1);expect(driver.retryPending).toBe(true);
+    for(let i=0;i<80;i++)expect(driver.update(.1,v,[v],race.state,0).serviceComplete).toBe(false);
+    expect(driver.phase).toBe('exit');expect(driver.stops).toBe(0);expect(driver.missedStops).toBe(1);
+    const routeEnd=PIT_VISIT.road.points.at(-1)!;s.position={...routeEnd};s.yaw=routeEnd.yaw;driver.phase='rejoin';driver.update(.1,v,[v],race.state,0);
+    expect(driver.phase).toBe('circuit');expect(driver.active).toBe(false);expect(driver.retryPending).toBe(true);expect(driver.waitingFor).toBeNull();
+    const nextAttempt=pointAt(CIRCUIT,PIT_VISIT.start+5);s.position=nextAttempt;s.yaw=nextAttempt.yaw;s.speed=20;driver.update(.1,v,[v],race.state,0);
+    expect(driver.phase).toBe('approach');expect(driver.reason).toBe('fuel');expect(driver.missedStops).toBe(1);
   });
 });

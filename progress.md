@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Forward pit-overshoot recovery — September 21 (verified checkpoint)
+
+- Previous turn only confirmed the already-implemented shared-model policy, so it made no new progress. Continued the full objective with the explicit remaining AI pit overshoot gap.
+- Once a car passes its assigned stopping tolerance, `PitDriver` records one miss and a pending retry, follows the existing forward exit/yield/rejoin path and naturally requests service again next lap while fuel/wear still requires it. Successful service clears the retry. It never reverses or teleports toward the box; tire, grip, power, timing and player controls are unchanged.
+- Focused pure coverage verifies detection, one-shot accounting, finite forward input, no false service, route completion and next-lap recommit. Installed Edge/WebGL2 physically drives an injected moving GT opponent through exit/yield/rejoin in 79.1s: one miss, no service/reset/reverse/damage, then `requested` again. Opened forward-exit and rejoined-request images.
+- Ordinary eight-car GT and Formula tire-stop regressions still pass all24 gates, service/restoration, merge/rejoin and return to circuit with zero sampled warning/penalty/damage. Opened service and rejoin captures. Complete suite remains239tests/37files; strict TypeScript and production build pass (`index-BGiIJisD.js`, worker `cell-worker-DRkSRaY7.js`), and refreshed preview5192 serves that bundle.
+- Both generic skill input clients remained live without output/artifacts for more than a minute and were terminated, so neither is counted. The dedicated stateful verifier supplies changed behavior, browser/error and screenshot evidence. NEXT: preserve this recovery and shared-model/handling/art work; continue a broad unfinished interaction/fault or world-realism gap. Actual8GB laptop and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Westbrook Commons — September 21 (verified checkpoint)
 
 - Replaced one broad downtown lawn with a single-cell 38 × 64m civic park: terrain-following physical walks, fountain, benches, path lamps, planted beds, ten reused oak pairs and twelve grass shrubs. The first 80 × 60m outlying trial was visually isolated and rejected at 599,155 Low triangles; the final site integrates with existing city blocks at 190/454,013.
