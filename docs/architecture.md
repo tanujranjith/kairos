@@ -14,6 +14,10 @@
 
 Coordinates are meters, Y up, +Z forward at yaw zero, +X right. Time is seconds and angles are radians. Vehicle data uses kg, Nm, meters and SI simulation values; display converts speeds to mph/km/h. Catalog horsepower and claimed top-speed labels are tuning intent, not certified measured performance.
 
+## Shared architecture primitives
+
+`src/world/architecture.ts` owns both the detailed modular building path and the lower-cost continuous-band path. Authored Westbrook wings and a seeded one-third of procedural offices call the same band builder, preventing the two representations from drifting. Both append to cell-owned wall/roof/glass buffers and inherit normal worker cancellation, transfer and disposal. The band path deliberately keeps glazing proud of the shell for renderer parity and uses occupancy UVs in the existing shared glass material; it allocates no independent scene resource. Selection stays in `cell-blueprint.ts`, while fixed authored layouts stay in `urban-setting.ts`. See [background-office evidence](background-offices.md).
+
 ## Production startup
 
 Vite groups Babylon/core and glTF loader modules into one hashed engine chunk; Kairos code remains separate. This avoids hundreds of tiny preload requests (particularly costly on HTTP/1.1) without removing shader helpers or lowering rendering quality. The engine chunk remains large; download, parse, device initialization and first-drive streaming still require independent measurement. All helper URLs stay local.

@@ -1,6 +1,6 @@
 import {CELL_SIZE,terrainHeight} from '../content/world';
 import {URBAN_SITE_DEFINITIONS,type UrbanSiteKind} from '../content/urban-setting';
-import {buildArchitecture,type ArchitectureBuffers} from './architecture';
+import {buildArchitecture,buildBandArchitecture,type ArchitectureBuffers} from './architecture';
 import type {CellInstance} from './cell-blueprint';
 import type {MeshDataBuilder} from './mesh-data';
 
@@ -54,22 +54,7 @@ function architecture(b:ArchitectureBuffers,site:UrbanSite,across:number,forward
 }
 
 function simpleBuilding(b:ArchitectureBuffers,site:UrbanSite,across:number,forward:number,width:number,depth:number,height:number,style:'brick'|'limestone'|'office',seed:number){
-  const wall=style==='brick'?[.58,.29,.19,1]:style==='limestone'?[.86,.82,.69,1]:[.64,.70,.72,1],trim=[.78,.78,.72,1],metal=[.28,.33,.34,1],glass=[.34,.56,.65,1];
-  tintBox(b.wall,site,across,.095,forward,width,height,depth,wall);
-  tintBox(b.wall,site,across,.095,forward,width+.45,.55,depth+.45,[.43,.43,.40,1]);
-  tintBox(b.wall,site,across,height-.35,forward,width+.55,.42,depth+.55,trim);
-  tintBox(b.roof,site,across,height+.07,forward,width-.35,.14,depth-.35,metal);
-  tintBox(b.roof,site,across-width*.18,height+.20,forward+depth*.12,2.6,.85,2.1,[.50,.54,.53,1]);
-  const glassBox=(a:number,rise:number,f:number,w:number,h:number,d:number)=>{const first=b.glass.positions.length/3;tintBox(b.glass,site,across+a,rise,forward+f,w,h,d,glass);const occupied=(Math.abs(Math.round(a*13+f*7+rise*5)+seed)%4)<2;for(let i=first*2;i<b.glass.uvs.length;i+=2){b.glass.uvs[i]=occupied?.75:.25;b.glass.uvs[i+1]=.5;}};
-  for(let level=4.1;level+1.55<height-.6;level+=3.55){
-    // Keep both faces clear of the opaque wall. Exact coplanarity was stable in
-    // WebGL2 but produced severe depth streaks on the native WebGPU path.
-    for(const side of [-1,1]){glassBox(0,level,side*(depth/2+.065),width-2.0,1.55,.06);glassBox(side*(width/2+.065),level,0,.06,1.55,depth-2.0);}
-    tintBox(b.wall,site,across,level-.16,forward,width+.12,.12,depth+.12,trim);
-  }
-  // Sparse proud mullions retain a readable scale without rebuilding every pane.
-  for(const side of [-1,1])for(const offset of [-width*.28,0,width*.28])tintBox(b.roof,site,across+offset,3.75,forward+side*(depth/2+.08),.10,Math.max(2,height-4.2),.12,metal);
-  tintBox(b.roof,site,across,3.22,forward-depth/2-.54,width*.58,.15,1.15,style==='brick'?[.31,.52,.46,1]:metal);
+  const p=local(site,across,forward);buildBandArchitecture(b,{x:p.x,y:p.y+.095,z:p.z,width,depth,height,yaw:site.yaw,style,seed});
 }
 
 function tree(instances:CellInstance[],site:UrbanSite,across:number,forward:number,scale=.34){

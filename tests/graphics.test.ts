@@ -7,7 +7,7 @@ import { buildCellBlueprint,blueprintTransfers } from '../src/world/cell-bluepri
 import { roadCoachwork } from '../src/render/coachwork';
 import { cameraMounts } from '../src/render/camera-mounts';
 import { mountainMesh,mountainHeight,meadowColor } from '../src/world/landscape';
-import { buildArchitecture,type BuildingStyle } from '../src/world/architecture';
+import { buildArchitecture,buildBandArchitecture,type BuildingStyle } from '../src/world/architecture';
 import { MeshDataBuilder } from '../src/world/mesh-data';
 import { solarLighting,windowLighting } from '../src/render/atmosphere';
 import { buildServicePavilion } from '../src/world/service-pavilion';
@@ -67,5 +67,9 @@ describe('original graphics assets',()=>{
   });
   it('batches lit and unlit panes in one glass material and fades occupancy lighting at dusk',()=>{
     const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()};buildArchitecture(b,{x:0,y:0,z:0,width:21,depth:16,height:24,yaw:0,style:'office',seed:5});const slots=new Set(b.glass.uvs.filter((_,i)=>i%2===0));expect(slots).toEqual(new Set([.25,.75]));expect(windowLighting(12)).toBe(0);expect(windowLighting(22)).toBe(1);expect(windowLighting(18)).toBeCloseTo(.5);expect(windowLighting(24)).toEqual(windowLighting(0));
+  });
+  it('builds finite low-cost band-window office massing with lit and unlit glazing',()=>{
+    const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},result=buildBandArchitecture(b,{x:10,y:12,z:10,width:24,depth:18,height:30,yaw:.4,style:'office',seed:9}),data=Object.values(b).map(builder=>builder.finish()),triangles=data.reduce((sum,mesh)=>sum+mesh.indices.length/3,0);
+    expect(triangles).toBeGreaterThan(200);expect(triangles).toBeLessThan(1800);expect(result.height).toBeLessThan(32);expect(data.every(mesh=>[...mesh.positions,...mesh.normals,...(mesh.colors??[])].every(Number.isFinite))).toBe(true);expect(new Set(b.glass.uvs.filter((_,index)=>index%2===0))).toEqual(new Set([.25,.75]));
   });
 });

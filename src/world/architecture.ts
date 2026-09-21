@@ -64,3 +64,23 @@ export function buildArchitecture(b:ArchitectureBuffers,s:BuildingSpec){
   }
   return {height:h+(house?3.7:factory?3.1:1.25),style};
 }
+
+/** Lower-cost modern massing for background offices and authored secondary
+ * wings. Continuous bands avoid thousands of tiny distant pane faces while
+ * retaining real glazing, mullions, cornices, a canopy and roof machinery. */
+export function buildBandArchitecture(b:ArchitectureBuffers,s:BuildingSpec){
+  const {x,y,z,width:w,depth:d,height:h,yaw,style,seed}=s,cos=Math.cos(yaw),sin=Math.sin(yaw),point=(px:number,py:number,pz:number):V3=>({x:x+px*cos+pz*sin,y:y+py,z:z-px*sin+pz*cos});
+  const box=(g:MeshDataBuilder,px:number,py:number,pz:number,width:number,height:number,depth:number,color:readonly number[])=>{const first=g.positions.length/3,p=point(px,py,pz);g.box(p.x,p.y,p.z,width,height,depth,yaw);g.tintSince(first,color);return first;};
+  const wall=style==='brick'?[.58,.29,.19,1]:style==='limestone'?[.86,.82,.69,1]:[.58,.64,.65,1],trim=[.74,.75,.71,1],metal=[.28,.33,.34,1],glass=[.62,.76,.82,1];
+  box(b.wall,0,0,0,w,h,d,wall);box(b.wall,0,0,0,w+.45,.55,d+.45,[.43,.43,.40,1]);box(b.wall,0,h-.45,0,w+.55,.42,d+.55,trim);
+  box(b.roof,0,h-.02,0,w-.35,.14,d-.35,metal);box(b.roof,-w*.18,h+.11,d*.12,2.6,.85,2.1,[.50,.54,.53,1]);
+  const glassBox=(px:number,py:number,pz:number,width:number,height:number,depth:number)=>{const first=box(b.glass,px,py,pz,width,height,depth,glass),occupied=(Math.abs(Math.round(px*13+pz*7+py*5)+seed)%4)<2;for(let i=first*2;i<b.glass.uvs.length;i+=2){b.glass.uvs[i]=occupied?.75:.25;b.glass.uvs[i+1]=.5;}};
+  for(let level=4.1;level+1.55<h-.6;level+=3.55){
+    // Both faces remain clear of the opaque shell on WebGL2 and WebGPU.
+    for(const side of [-1,1]){glassBox(0,level,side*(d/2+.065),w-2,1.55,.06);glassBox(side*(w/2+.065),level,0,.06,1.55,d-2);}
+    box(b.wall,0,level-.16,0,w+.12,.12,d+.12,trim);
+  }
+  for(const side of [-1,1])for(const offset of [-w*.28,0,w*.28])box(b.roof,offset,3.75,side*(d/2+.08),.10,Math.max(2,h-4.2),.12,metal);
+  box(b.roof,0,3.22,-d/2-.54,w*.58,.15,1.15,style==='brick'?[.31,.52,.46,1]:metal);
+  return {height:h+.96,style};
+}

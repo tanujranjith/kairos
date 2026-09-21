@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Shared background offices — September 21
+
+The continuous-band secondary-wing design is now a shared architecture primitive and appears in a deterministic one-third of procedural Westbrook offices. The form retains a plinth, cornice, roof/equipment silhouette, four-sided glazing, sparse proud mullions and a canopy while continuing to mix with brick, limestone and individual-pane buildings. Screenshot review rejected all-office and half-office distributions as too repetitive; the final mix reads as a distinct modern background family rather than the whole skyline.
+
+The new bands sit 0.065m outside the opaque shell and render without the coplanar WebGPU streaks found in the first authored-block attempt. They reuse existing streamed buffers and add no material, texture, light, collision owner or runtime request. The live Low city sample drops to 210 draws / 464,507 triangles, recovering about 26,892 triangles from the previous block checkpoint. Existing pane-grid towers retain their stylized WebGPU reflection speckling; broader material/façade realism remains unfinished. See [implementation and measured checks](background-offices.md).
+
 ## Westbrook block composition — September 21
 
 Four authored Westbrook parcels now combine differentiated building massing with paved courtyards, planted beds, trees, rooftop equipment and restrained surface inlays. Cedar Square, Market Court, Harbor Exchange and Westbrook Campus each retain one full modular hero building; secondary wings use original continuous window bands and sparse mullions to avoid repeating thousands of individual panes. Random building/tree scatter is excluded from each footprint.

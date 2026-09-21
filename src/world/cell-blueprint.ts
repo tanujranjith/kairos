@@ -8,7 +8,7 @@ import { roadSpanAt,roadLayerAt } from '../content/road-layers';
 import { MeshDataBuilder,meshBytes,type MeshData } from './mesh-data';
 import { cellManifest,cellKey } from './cell-manifest';
 import { applyGroundChannels,smoothGroundNormals,GRAVEL_TINT } from './ground-cover';
-import { buildArchitecture,type BuildingStyle } from './architecture';
+import { buildArchitecture,buildBandArchitecture,type BuildingStyle } from './architecture';
 import { buildServicePavilion } from './service-pavilion';
 import { buildPitGarage } from './pit-garage';
 import { buildGrandstand } from './grandstand';
@@ -132,7 +132,8 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
       // Set buildings back by their full footprint, not just their centre point.
       if(near.distance<near.road.width/2+Math.hypot(w,l)/2+3||industrialReserved(x,z,Math.hypot(w,l)/2+3)||urbanReserved(x,z,Math.hypot(w,l)/2+3))continue;
       const style:BuildingStyle=industrial?'factory':z< -1280?'house':(['brick','limestone','office'] as const)[i%3];
-      buildArchitecture({wall:buildings,roof:roofs,glass:windows},{x,y,z,width:w,depth:l,height:h,yaw:near.point.yaw,style,seed:hash(cx+i,cz)});
+      const specification={x,y,z,width:w,depth:l,height:h,yaw:near.point.yaw,style,seed:hash(cx+i,cz)};
+      if(city&&style==='office'&&Math.abs(specification.seed)%3===0)buildBandArchitecture({wall:buildings,roof:roofs,glass:windows},specification);else buildArchitecture({wall:buildings,roof:roofs,glass:windows},specification);
     }
     else if(!circuit&&!industrial){
       // Preserve RNG consumption and every urban building/plant placement.

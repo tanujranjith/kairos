@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Shared background-office family — September 21
+
+- `buildBandArchitecture` is now shared by authored secondary wings and a deterministic one-third of procedural office buildings. Focused tests assert finite buffers, mixed occupancy UVs and a 200–1,800 triangle range. The all-office and half-frequency visual trials were rejected as too repetitive before the final one-third mix.
+- `scripts/verify-urban-setting.mjs` passes all four sites on forced WebGL2 and actual WebGPU, with four `Concrete` contacts per plaza, zero damage and normal keyboard road driving at **19.325m/s**. The final screenshots were opened; new bands have no WebGPU depth streaks. Legacy pane-grid reflection speckling is still visible and is not counted as fixed.
+- Low cost improves from the committed city **211/491,399** and wet-night **212/491,566** to **210/464,507** and **211/464,674** draws/triangles. Showroom **187/176,416**, Lakeshore **240/292,546**, GT **298/487,166**, pit **121/308,204**, circuit **146/238,909** and Formula **281/484,764** remain inside budget.
+- The upstream supplied client produced no state, screenshot or error artifact for more than a minute and was terminated. The loader-aware copy completes the same action file at **10.933m/s**, four mixed contacts, zero damage, 12+12 traffic actors and no failed cell; its state and screenshot were opened.
+- Three repeated city/forest/lake loops remain exactly **496/74/44**, **368/75/45** and **318/74/44** meshes/materials/textures. Three race/home cycles return to **138/73/43**, zero cells and no retained race detail. Delay, retry and race-reservation checks pass.
+- The final complete suite passes **231 tests / 36 files**. Strict TypeScript, all nineteen KTX2 files and production build pass (`index-C7MrWYeJ.js`, `cell-worker-B5AXItFC.js`). Cold25Mbps/40ms local production reaches menu in **6.204s forced WebGL2 / 5.768s automatic request**, transfers **12,977,628 bytes**, enters Free Drive/Northstar and records no page, failed or external requests. Opened both drive captures and the automatic-path handling-course capture. These are development-host samples, not target-laptop FPS or authorized HTTPS evidence.
+
 ## Westbrook authored blocks — September 21
 
 - `tests/urban-setting.test.ts` covers four unique authored sites, four block types, single-cell ownership, every road-corner clearance, junction exclusion, terrain-conforming pad vertices, planted courtyards, inlay geometry and bounded finite buffers. The rejected first campus clipped Foundry Avenue; the final northwest site clears every tested road corner by more than 13m beyond its road edge.

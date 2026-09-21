@@ -1,5 +1,15 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Shared background-office family — September 21 (verified checkpoint)
+
+- Promoted the authored continuous-band secondary-wing form into shared `buildBandArchitecture` and applied it to a deterministic one-third of procedural Westbrook offices. Rejected all-office and half-frequency trials as too uniformly striped. The final mix retains brick, limestone and pane-grid variety while adding a cleaner modern background family.
+- New bands sit 0.065m proud of the shell and remain clean in forced WebGL2 and actual WebGPU. Existing legacy pane-grid speckling is unchanged and is not claimed as fixed. All four plazas keep four `Concrete` contacts; normal keyboard road driving reaches 19.325m/s with zero damage.
+- Low city cost improves from 211/491,399 to 210/464,507 draws/triangles; wet night improves to 211/464,674. Every sampled scene remains under 300 draws/~500k triangles, including GT 298/487,166 and Formula 281/484,764.
+- The upstream supplied client again hung without artifacts for more than a minute and was terminated. The loader-aware copy completes the same actions at 10.933m/s, four mixed contacts, zero damage, 12+12 traffic and no failed cell; its screenshot/state were opened.
+- Three city/forest/lake loops repeat exactly at 496/74/44, 368/75/45 and 318/74/44 resources. Three race/home cycles return to 138/73/43 with zero cells. Complete suite passes 231 tests / 36 files; strict TypeScript, nineteen KTX2 files and production build pass (`index-C7MrWYeJ.js`, worker `cell-worker-B5AXItFC.js`).
+- Cold25Mbps/40ms exact production reaches menu in 6.204s forced WebGL2 / 5.768s automatic request, transfers 12,977,628 bytes and enters Free Drive/Northstar with no page, failed or external requests. Final input, city, WebGPU and production images were opened.
+- NEXT: preserve this recovered city headroom and existing handling/model/world evidence. Continue a remaining end-state gap such as legacy façade material cleanup, deeper traffic/race interaction coverage or another cost-neutral world-art pass. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Westbrook authored blocks — September 21 (verified checkpoint)
 
 - Added Cedar Square, Market Court, Harbor Exchange and Westbrook Campus with distinct massing, terrain-following concrete plazas, planted courtyards, rooftop details and inlay/parking articulation. Procedural buildings/trees yield inside their fixed one-cell-owned footprints.

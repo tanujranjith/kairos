@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Shared background-office family — September 21 (verified checkpoint)
+
+Authored secondary wings and a deterministic one-third subset of procedural Westbrook offices now use one shared lower-cost architecture builder. It retains four-sided continuous glazing, sparse mullions, a real plinth/cornice, canopy and rooftop equipment while mixing with the existing brick, limestone and individual-window forms. All-office and half-office trials were rejected as too uniformly striped; the final frequency adds façade variety without replacing the city’s other identities.
+
+The new glazing is clean in forced WebGL2 and actual WebGPU, remains inside existing wall/roof/glass batches, and changes no road, collision, tire, traffic or race behavior. Low city cost falls from 211 draws / 491,399 triangles to 210 / 464,507; wet night falls to 211 / 464,674. Four-site physical checks, normal keyboard input, the supplied loader-aware input, repeated streaming/race cleanup, 231 tests / 36 files, strict build, texture integrity and exact production delivery all pass. This is a targeted background-form/performance improvement, not a global façade rewrite, populated city, photoreal architecture, target-laptop certification or hosted HTTPS acceptance. See [implementation and evidence](background-offices.md).
+
 ## Westbrook authored blocks — September 21 (verified checkpoint)
 
 Cedar Square, Market Court, Harbor Exchange and Westbrook Campus replace four empty/repetitive city parcels with distinct multi-building compositions. Each has one detailed hero building, lower-cost band-window wings, a terrain-following concrete public realm, planted courtyards, trees, rooftop equipment and inlay/parking detail. Procedural scatter yields inside their fixed footprints, so the blocks remain coherent and every object retains one streamed-cell owner.
