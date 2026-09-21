@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Agricultural fields and farm depth — September 21 (verified checkpoint)
+
+- Added five smooth, road-authored cultivated field masks around the existing farms. Green/gold planted-row shading rides the existing terrain vertex channels and native GLSL/WGSL ground material, adding no mesh, texture, draw call, light, collision/contact change or runtime request.
+- Added two faceted capped grain silos, reinforcing bands and eight bales per farm. They merge into existing wall/roof/rural batches; every silo remains more than 50m from a public road. No vehicle, tire, input or traffic parameter changed.
+- Installed Edge passes all five field views on forced WebGL2 and actual WebGPU plus normal keyboard driving at 17.024m/s, four contacts and zero damage. Opened all key farm, drive, supplied-input and production captures. Browser warnings/errors/external requests are empty.
+- Repeated city–forest–lake loops settle exactly at 492/74/44, 368/75/45 and 318/74/44 resources; three race/home cycles restore 138/73/43 and zero cells. Low remains inside budget, including GT 298/487,166 and Formula 281/484,764 draws/triangles.
+- The complete suite passes 226 tests / 34 files; strict TypeScript, KTX2 integrity and production build pass (`index-CDPwHpt9.js`). Cold25Mbps/40ms production reaches menu in 6.385/6.218s, transfers 12,974,788 bytes and completes both renderer paths without failed/external requests.
+- NEXT: preserve fields, delineators, handling, models and resource evidence. Continue remaining world/model realism and broad traffic/race interaction coverage. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Fullscreen and controller-failure interactions — September 21 (verified checkpoint)
 
 - Added focused pure coverage for bounded dual-rumble magnitudes and absent/rejecting actuators, plus `scripts/verify-platform-interactions.mjs` for an installed-Edge/WebGL2 stateful path through real browser fullscreen, live damage feedback, controller loss and keyboard resume.

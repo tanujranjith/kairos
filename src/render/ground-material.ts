@@ -6,6 +6,7 @@ import {LAKE} from '../content/world';
 export const GROUND_PALETTE={
   grass:[.055,.092,.027],dry:[.145,.139,.064],forest:[.029,.046,.018],
   earth:[.135,.099,.057],stone:[.190,.184,.159],shore:[.174,.158,.115],
+  cropGreen:[.052,.112,.025],cropGold:[.178,.137,.041],
 } as const;
 
 export function groundShader(language:ShaderLanguage){
@@ -46,11 +47,13 @@ ${scalar('kgPatch',`kairosGroundNoise(kgP*0.145+${vec2}(21.7,9.2))`)}
 ${scalar('kgFine',`kairosGroundNoise(kgP*0.63)`)}
 ${scalar('kgEdge','24.0')}
 ${scalar('kgForest',`smoothstep(570.0,930.0,kgP.y)*(1.0-smoothstep(500.0,920.0,kgP.x))*smoothstep(-490.0,-270.0,kgP.x)`)}
+${scalar('kgField','0.0')}
 ${scalar('kgDry','smoothstep(0.26,0.80,kgBroad)')}
 #ifndef KAIROS_GROUND_FLOOR
 #ifdef VERTEXCOLOR
 kgEdge=${color}.r*24.0;
 kgForest=${color}.g;
+kgField=${color}.b;
 #endif
 #endif
 ${scalar('kgEarth','1.0-smoothstep(0.15,3.1,kgEdge+(kgPatch-0.5)*2.4)')}
@@ -63,6 +66,9 @@ kgMicro=clamp(dot(albedoTexture.rgb,${vec3}(0.333333))/0.464,0.80,1.20);
 #endif
 ${local(vec3,'kgAlbedo',`mix(${palette('grass')},${palette('dry')},clamp(kgDry*0.85+(kgPatch-0.5)*0.28,0.0,1.0))`)}
 kgAlbedo=mix(kgAlbedo,${palette('forest')}*(0.80+kgBroad*0.35),kgForest*0.68);
+${scalar('kgRows','0.5+0.5*sin((kgP.x+kgP.y*0.34)*1.22)')}
+${local(vec3,'kgCrop',`mix(${palette('cropGreen')},${palette('cropGold')},smoothstep(0.38,0.68,kgBroad))*(0.78+kgRows*0.30)`)}
+kgAlbedo=mix(kgAlbedo,kgCrop,kgField*0.82);
 kgAlbedo=mix(kgAlbedo,${palette('earth')},kgEarth);
 kgAlbedo=mix(kgAlbedo,${palette('shore')},kgSand*0.80);
 kgAlbedo=mix(kgAlbedo,${palette('stone')}*(0.72+kgPatch*0.45),kgRock);

@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Agricultural fields and farm detail — September 21
+
+- Five authored 78–96m × 112–132m farm-field masks use the existing terrain vertex channels and native ground shader. They add no texture, mesh, draw call, light, collider or contact change. Two grain silos, reinforcing bands, conical caps and eight bales per farm merge into existing streamed material batches.
+- `scripts/verify-agricultural-fields.mjs` passes forced WebGL2 and actual WebGPU in installed Edge. All ten field overviews and both normal-drive captures were opened. Both paths reach **17.024m/s**, retain four contacts and zero damage, and report no browser warning/error or external request.
+- The upstream supplied client retained no artifact before its browser process stalled. The loader-aware copy completes the same input file in installed Edge at **10.933m/s**, four mixed contacts, zero damage, 12 physical + 12 distant traffic actors and no failed cell; its screenshot/state were opened.
+- Repeated streaming settles exactly at city **492/74/44**, forest **368/75/45** and lake **318/74/44** meshes/materials/textures over three loops. Three race/home cycles return to **138/73/43**, zero cells and no retained mounted-sign or grandstand detail.
+- Low maxima remain showroom **187/176,416**, Lakeshore **240/292,546**, forest **163/470,494**, mountain **142/238,483**, city **210/459,155**, wet night **211/459,300**, GT grid **298/487,166** and Formula **281/484,764** (draw calls / active triangles). These are RTX3060 submission samples, not target-laptop FPS.
+- The complete suite passes **226 tests / 34 files**. Strict TypeScript, nineteen-KTX2 integrity and production build pass (`index-CDPwHpt9.js`, `cell-worker-DIjAoBII.js`). Cold25Mbps/40ms local production reaches menu in **6.385s forced WebGL2 / 6.218s automatic WebGPU**, transfers **12,974,788 bytes**, and completes Free Drive/Northstar with no page, failed or external requests.
+
 ## Fullscreen, vibration and controller-loss recovery — September 21
 
 - `scripts/verify-platform-interactions.mjs` uses installed Edge/WebGL2 and the real browser Fullscreen API. Pressing F enters and exits fullscreen, records the expected `HTML`/null transition pair, and retains a **1280×720** canvas and render target. The opened fullscreen capture shows the complete live showroom rather than a blank or stale frame.

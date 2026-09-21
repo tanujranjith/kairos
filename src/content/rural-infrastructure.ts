@@ -22,3 +22,13 @@ export const RURAL_FARM_SITES=[
   {road:'south',at:.67,offset:-102,yaw:-.12,seed:1202},
   {road:'pass',at:.24,offset:-88,yaw:.22,seed:1301},
 ] as const;
+
+/** Cultivated footprints share the farm centres but keep distinct proportions.
+ * They are material masks on existing terrain, not additional driving surfaces. */
+export const RURAL_FIELD_SITES=[
+  {...RURAL_FARM_SITES[0],width:82,length:126},
+  {...RURAL_FARM_SITES[1],width:96,length:118},
+  {...RURAL_FARM_SITES[2],width:88,length:132},
+  {...RURAL_FARM_SITES[3],width:78,length:126},
+  {...RURAL_FARM_SITES[4],width:86,length:112},
+] as const;

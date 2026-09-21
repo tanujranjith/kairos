@@ -6,6 +6,7 @@ import type {MeshDataBuilder} from './mesh-data';
 export type RuralPropKind='utility-pole'|'crossarm'|'insulator'|'wire'|'fence-post'|'fence-rail';
 export interface RuralProp {kind:RuralPropKind;x:number;y:number;z:number;width:number;height:number;depth:number;yaw:number;color:readonly [number,number,number,number]}
 export interface RuralFarm {x:number;y:number;z:number;yaw:number;seed:number}
+export interface FarmSilo {x:number;y:number;z:number;radius:number;height:number}
 interface RuralCell {props:RuralProp[];farms:RuralFarm[]}
 
 const cells=new Map<string,RuralCell>(),wood=[.46,.31,.18,1] as const,dark=[.10,.12,.12,1] as const,ceramic=[.63,.67,.62,1] as const;
@@ -50,6 +51,26 @@ for(const site of RURAL_FARM_SITES){
 
 export function ruralInfrastructure(cx:number,cz:number):Readonly<RuralCell>{return cells.get(`${cx},${cz}`)??{props:[],farms:[]};}
 
+export function farmSilos(farm:RuralFarm):readonly FarmSilo[]{
+  const c=Math.cos(farm.yaw),s=Math.sin(farm.yaw),place=(across:number,forward:number,radius:number,height:number)=>{
+    const x=farm.x+across*c+forward*s,z=farm.z-across*s+forward*c;return {x,y:terrainHeight(x,z),z,radius,height};
+  };
+  return [place(-16,8,3.7,10.2),place(-24,9.5,2.65,7.4)];
+}
+
+function cylinder(g:MeshDataBuilder,x:number,y:number,z:number,radius:number,height:number,color:readonly number[],segments=12){
+  const first=g.positions.length/3,at=(index:number,top=false)=>{const angle=index/segments*Math.PI*2;return {x:x+Math.cos(angle)*radius,y:y+(top?height:0),z:z+Math.sin(angle)*radius};};
+  for(let index=0;index<segments;index++)g.quad(at(index),at(index+1),at(index,true),at(index+1,true));
+  g.polygon(Array.from({length:segments},(_,index)=>at(index,true)));g.polygon(Array.from({length:segments},(_,index)=>at(segments-1-index)));
+  g.tintSince(first,color);
+}
+
+function cone(g:MeshDataBuilder,x:number,y:number,z:number,radius:number,height:number,color:readonly number[],segments=12){
+  const first=g.positions.length/3,ring=(index:number)=>{const angle=index/segments*Math.PI*2;return {x:x+Math.cos(angle)*radius,y,z:z+Math.sin(angle)*radius};},tip={x,y:y+height,z};
+  for(let index=0;index<segments;index++)g.polygon([ring(index),ring(index+1),tip]);
+  g.polygon(Array.from({length:segments},(_,index)=>ring(segments-1-index)));g.tintSince(first,color);
+}
+
 /** Original infrastructure uses one bark-material detail batch per occupied
  * cell; farm buildings reuse the existing wall/roof/glass batches. */
 export function buildRuralInfrastructure(cx:number,cz:number,b:ArchitectureBuffers,rural:MeshDataBuilder){
@@ -59,5 +80,15 @@ export function buildRuralInfrastructure(cx:number,cz:number,b:ArchitectureBuffe
     buildArchitecture(b,{...farm,width:13.5,depth:10.5,height:5.1,style:'house'});
     const c=Math.cos(farm.yaw),s=Math.sin(farm.yaw),x=farm.x+19*c+7*s,z=farm.z-19*s+7*c,y=terrainHeight(x,z);
     buildArchitecture(b,{x,y,z,width:17,depth:13,height:7.2,yaw:farm.yaw+.06,style:'factory',seed:farm.seed+1});
+    for(const [index,silo] of farmSilos(farm).entries()){
+      cylinder(b.wall,silo.x,silo.y,silo.z,silo.radius,silo.height,index?[.54,.58,.55,1]:[.65,.68,.63,1]);
+      cone(b.roof,silo.x,silo.y+silo.height,silo.z,silo.radius+.28,index?2.15:2.75,[.38,.42,.41,1]);
+      for(let level=2.1;level<silo.height;level+=2.25)cylinder(b.roof,silo.x,silo.y+level,silo.z,silo.radius+.055,.10,[.31,.35,.34,1]);
+    }
+    // Repeated detail stays in the existing bark batch and remains visual-only.
+    for(let bale=0;bale<8;bale++){
+      const across=8+(bale%4)*1.85,forward=17+Math.floor(bale/4)*1.35,bx=farm.x+across*c+forward*s,bz=farm.z-across*s+forward*c,by=terrainHeight(bx,bz),first=rural.positions.length/3;
+      rural.box(bx,by,bz,1.55,.78,1.08,farm.yaw+(bale%2)*.04);rural.tintSince(first,[.68,.51,.19,1]);
+    }
   }
 }

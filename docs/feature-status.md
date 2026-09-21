@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Agricultural fields and farm focal points — September 21 (verified checkpoint)
+
+The five authored rural farms now sit inside cultivated green/gold field masks with planted-row variation instead of uninterrupted meadow. The masks are carried by the existing streamed terrain vertices and native ground shader, so they add no texture, mesh, draw call, light, collision shape or physical surface. Each farm also gains two original faceted grain silos with capped roofs and reinforcing rings plus stacked bales merged into existing wall/roof/rural batches.
+
+Pure field/silo checks, both native renderer paths, ten opened farm overviews, normal keyboard driving, the supplied input sequence, repeated worker/resource cycles, the 226-test suite, strict build, Low render audit and exact production smoke pass. The GT/Formula grids remain under the geometry budget at 298/487,166 and 281/484,764. This replaces several bare rural sightlines with recognizable land use, but it remains stylized procedural scenery without animated machinery, people, animals, crop growth or target-laptop/HTTPS certification.
+
 ## Platform interactions — September 21 (verified checkpoint)
 
 Installed Edge/WebGL2 now has one stateful verification path for real fullscreen entry/exit, live damage-to-vibration dispatch, controller-loss pause behavior and keyboard recovery. F enters an actual 1280×720 browser fullscreen surface and exits cleanly. A synthetic standards-shaped actuator receives bounded 120ms dual-rumble requests from the real damage-feedback path, including safe handling when an actuator rejects its promise.
