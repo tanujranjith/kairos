@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Signal-junction sidewalk continuity — September 21
+
+- Pure checks cover all four signal junctions, inner/outer road clearance and exact approach-strip clipping. Browser verification reports **4 approaches / 24 bands / 1 sidewalk mesh / 140 sidewalk triangles**, four contacts, zero damage and no streaming errors in forced WebGL2 and actual WebGPU.
+- Both renderer paths pass day, dusk, night, rain and ordinary city driving at **21.52m/s**. Three city/lake transitions repeat exactly at **970/85/44** and **319/85/44** meshes/materials/textures.
+- Low submission maxima are showroom **188/176,908**, Lakeshore **240/293,364**, city **266/495,619**, Commons **193/454,905**, wet night **267/495,786**, either eight-car grid **291/496,846**, pit **121/315,202** and circuit **146/245,929** (draws/triangles).
+- The supplied input sequence reaches **10.933m/s**, remains grounded with four contacts and zero damage, and retains 24 traffic actors without a failed stream. The complete suite passes **243 tests / 37 files**. Strict TypeScript, nineteen KTX2 assets and production build pass (`index-DypuZvO-.js`, worker `cell-worker-D1LLTGra.js`).
+
 ## Westbrook shelter population — September 21
 
 - Pure checks verify **20 unique pedestrians**: exactly one seated and one standing figure for each of ten shelters, correct actual-position cell ownership, road clearance, finite coloured geometry and a bounded 2,000–5,000-triangle total.

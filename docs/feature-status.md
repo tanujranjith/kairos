@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Signal-junction sidewalk continuity — September 21 (verified checkpoint)
+
+All four Westbrook signals now have terrain-following concrete corner walks connecting the existing road-parallel paving around their aprons. Straight shoulder, edge-line and sidewalk strips are analytically trimmed at the junction boundary, removing the prior renderer-visible approach wedges while preserving asphalt collision overlap and driving behavior.
+
+Forced WebGL2 and actual WebGPU show matching clean junctions: four approaches, 24 crosswalk bands and one 140-triangle corner-walk mesh at the selected junction. Both full urban passes retain weather/lighting, 21.52m/s driving, four contacts, zero damage and exact three-cycle city/lake resource counts. Low remains below target at 266/495,619 city, 267/495,786 wet night and 291/496,846 for either eight-car grid. The complete suite passes 243 tests / 37 files; strict TypeScript, KTX2 integrity, production build and the supplied input client pass. This closes signal-junction sidewalk continuity, not every city footpath, pedestrian navigation, target-laptop certification or hosted HTTPS acceptance. See [implementation and evidence](junction-sidewalks.md).
+
 ## Westbrook shelter population — September 21 (verified checkpoint)
 
 The ten existing city transit shelters now each contain one seated and one standing original figure. Twenty deterministic placements use two faceted poses and varied vertex-coloured clothing, skin and hair. People merge into one non-colliding detail mesh per owner cell and share one material; there is no downloaded character asset, texture, AI, animation, collision body or per-person draw call.

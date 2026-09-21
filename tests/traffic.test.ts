@@ -1,11 +1,11 @@
 import { describe,expect,it } from 'vitest';
 import { TRAFFIC_GRAPH } from '../src/content/traffic-network';
 import { LaneGraph, signalAspect, samplePath } from '../src/sim/lane-graph';
-import { makeRoad, RoadGraph, PUBLIC_ROADS } from '../src/content/world';
+import { makeRoad, RoadGraph, PUBLIC_ROADS, nearestRoad } from '../src/content/world';
 import { TrafficController, type TrafficObservation } from '../src/sim/traffic';
 import type { LanePath } from '../src/sim/lane-graph';
-import { subtractConvex, terrainOutsideJunctions } from '../src/content/terrain-clipping';
-import {signalCrosswalk} from '../src/render/traffic';
+import { segmentOutsideJunctions,subtractConvex, terrainOutsideJunctions } from '../src/content/terrain-clipping';
+import {signalCornerWalks,signalCrosswalk} from '../src/render/traffic';
 
 const observed=(path:LanePath,s:number,id='car',speed=0):TrafficObservation=>{const p=samplePath(path,s);return {id,position:{x:p.x,y:p.y+.7,z:p.z},yaw:p.yaw,speed,length:4.4,width:1.8};};
 
@@ -16,6 +16,12 @@ describe('authored directed traffic lanes',()=>{
     expect(subtractConvex(square,cut).reduce((sum,p)=>sum+area(p),0)).toBeCloseTo(84,8);
     expect(terrainOutsideJunctions([-1345,-945,-1335,-935])).toEqual([]);
     expect(terrainOutsideJunctions([0,0,16,16]).reduce((sum,p)=>sum+area(p),0)).toBe(256);
+  });
+  it('trims road-edge strips exactly at a junction apron',()=>{
+    const west={x:-1380,y:13,z:-940,yaw:Math.PI/2},centre={x:-1340,y:13,z:-940,yaw:Math.PI/2};
+    const inbound=segmentOutsideJunctions(west,centre,'city1');expect(inbound).toHaveLength(1);expect(inbound[0][0].x).toBeCloseTo(-1380,6);expect(inbound[0][1].x).toBeCloseTo(-1370,6);
+    const outbound=segmentOutsideJunctions(centre,west,'city1');expect(outbound).toHaveLength(1);expect(outbound[0][0].x).toBeCloseTo(-1370,6);expect(outbound[0][1].x).toBeCloseTo(-1380,6);
+    expect(segmentOutsideJunctions({...centre,x:-1350},{...centre,x:-1330},'city1')).toEqual([]);
   });
   it('resolves only explicitly authored, elevation-compatible junctions',()=>{
     expect(TRAFFIC_GRAPH.issues).toEqual([]);
@@ -48,6 +54,12 @@ describe('authored directed traffic lanes',()=>{
   it('derives six full-road crosswalk bands behind every signal approach',()=>{
     for(const junction of TRAFFIC_GRAPH.junctions.values())if(junction.control==='signal')for(const id of junction.incoming){const path=TRAFFIC_GRAPH.paths.get(id)!;if(path.laneIndex!==0)continue;const end=samplePath(path,path.length),bands=signalCrosswalk(id);expect(bands).toHaveLength(6);
       for(const band of bands){const behind=(band.x-end.x)*Math.sin(end.yaw)+(band.z-end.z)*Math.cos(end.yaw);expect(behind).toBeLessThanOrEqual(-.399);expect(behind).toBeGreaterThan(-3.7);expect(band.width).toBeGreaterThan(7);expect([band.x,band.y,band.z,band.width,band.depth,band.yaw].every(Number.isFinite)).toBe(true);}
+    }
+  });
+  it('joins signal-corner pedestrian space without covering a driving approach',()=>{
+    const signals=[...TRAFFIC_GRAPH.junctions.values()].filter(junction=>junction.control==='signal');expect(signals).toHaveLength(4);
+    for(const junction of signals){const walks=signalCornerWalks(junction.id);expect(walks.length).toBeGreaterThan(30);expect(walks.length).toBeLessThan(96);
+      for(const quad of walks)for(const [name,vertex] of Object.entries(quad)){expect([vertex.x,vertex.y,vertex.z].every(Number.isFinite)).toBe(true);const near=nearestRoad(vertex.x,vertex.z,road=>junction.roads.includes(road.id),1),margin=name.startsWith('inner')?.28:.02;expect(near.distance).toBeGreaterThanOrEqual(near.road.width/2+margin-1e-6);}
     }
   });
   it('reaches every ambient path through legal turns and same-direction lane changes',()=>{

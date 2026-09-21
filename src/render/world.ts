@@ -104,7 +104,7 @@ export class WorldRenderer {
       for(const part of blueprint.meshes)if(part.collision)this.register(cell,this.fromData(part),true);
       const attach=(mesh:Mesh|null,collision=false,handling=false)=>{if(mesh&&collision)mesh.metadata={...mesh.metadata,contactSurface:mesh.material===this.road||handling&&mesh.material===this.curb?{surface:'Asphalt',layer:handling?'handling':'surface'}:{surface:'Concrete',layer:'structure'}};this.register(cell,mesh,collision);};
       createHandlingCell(this.scene,bounds,{road:this.road,white:this.marking,red:this.curb,dark:this.roof},(mesh,collision)=>attach(mesh,collision,true));
-      cell.signals=this.trafficScenery.createCell(cx,cz,{road:this.road,white:this.marking,dark:this.roof},attach);
+      cell.signals=this.trafficScenery.createCell(cx,cz,{road:this.road,white:this.marking,dark:this.roof,sidewalk:this.wall},attach);
       this.setCellMode(cell,blueprint,demand);this.cells.set(key,cell);return cell;
     }catch(error){this.disposeCell(cell);throw error;}
   }

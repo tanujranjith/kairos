@@ -1,11 +1,12 @@
 import { Color3, StandardMaterial, type Material, type Mesh, type Scene } from '@babylonjs/core';
-import { CELL_SIZE, terrainHeight, junctionRadius } from '../content/world';
+import { CELL_SIZE, terrainHeight, junctionRadius, nearestRoad } from '../content/world';
 import { TRAFFIC_GRAPH } from '../content/traffic-network';
 import { samplePath, signalAspect, type LaneJunction } from '../sim/lane-graph';
 import { Geometry } from './geometry';
 
 export interface SignalMesh {junction:LaneJunction;group:number;aspect:'red'|'amber'|'green';mesh:Mesh}
 export interface CrosswalkBand {x:number;y:number;z:number;width:number;depth:number;yaw:number}
+export interface CornerWalkQuad {innerA:{x:number;y:number;z:number};outerA:{x:number;y:number;z:number};innerB:{x:number;y:number;z:number};outerB:{x:number;y:number;z:number}}
 
 /** Markings derive from the same incoming lane endpoint as the signal and stop
  * bar, so visual crossing geometry cannot drift away from traffic rules. */
@@ -15,14 +16,29 @@ export function signalCrosswalk(pathId:string):CrosswalkBand[]{
   const forward={x:Math.sin(end.yaw),z:Math.cos(end.yaw)};
   return Array.from({length:6},(_,index)=>{const distance=.4+index*.65;return {x:end.x-forward.x*distance,y:end.y+.047,z:end.z-forward.z*distance,width:road.width-.8,depth:.34,yaw:end.yaw};});
 }
+/** Concrete corner walks bridge the gap between road-parallel sidewalks while
+ * leaving every authored approach open. They are visual pedestrian space over
+ * the existing junction collision apron, so vehicle contacts/rules are unchanged. */
+export function signalCornerWalks(junctionId:string):CornerWalkQuad[]{
+  const junction=TRAFFIC_GRAPH.junctions.get(junctionId);if(!junction||junction.control!=='signal')return [];
+  const radius=junctionRadius(junction),inner=radius-.12,outer=radius+2.58,segments=96,roads=new Set(junction.roads),result:CornerWalkQuad[]=[];
+  const p=(r:number,a:number)=>{const x=junction.x+Math.cos(a)*r,z=junction.z+Math.sin(a)*r;return {x,y:terrainHeight(x,z)+.178,z};};
+  for(let segment=0;segment<segments;segment++){
+    const a=segment/segments*Math.PI*2,b=(segment+1)/segments*Math.PI*2,quad={innerA:p(inner,a),outerA:p(outer,a),innerB:p(inner,b),outerB:p(outer,b)};
+    const encroaches=(vertex:CornerWalkQuad['innerA'],margin:number)=>{const near=nearestRoad(vertex.x,vertex.z,road=>roads.has(road.id),1);return near.distance<near.road.width/2+margin;};
+    if(encroaches(quad.innerA,.28)||encroaches(quad.innerB,.28)||encroaches(quad.outerA,.02)||encroaches(quad.outerB,.02))continue;
+    result.push(quad);
+  }
+  return result;
+}
 export class TrafficScenery {
   private lamps:Record<'red'|'amber'|'green',StandardMaterial>;
   constructor(private scene:Scene){
     const lamp=(name:string,color:string)=>{const m=new StandardMaterial(name,scene);m.diffuseColor=Color3.Black();m.emissiveColor=Color3.FromHexString(color);m.disableLighting=true;return m;};
     this.lamps={red:lamp('signal-red','#ff443c'),amber:lamp('signal-amber','#ffc247'),green:lamp('signal-green','#51e990')};
   }
-  createCell(cx:number,cz:number,materials:{road:Material;white:Material;dark:Material},attach:(mesh:Mesh|null,collision?:boolean)=>void):SignalMesh[]{
-    const signals:SignalMesh[]=[],pavement=new Geometry(),paint=new Geometry(),poles=new Geometry();
+  createCell(cx:number,cz:number,materials:{road:Material;white:Material;dark:Material;sidewalk:Material},attach:(mesh:Mesh|null,collision?:boolean)=>void):SignalMesh[]{
+    const signals:SignalMesh[]=[],pavement=new Geometry(),sidewalk=new Geometry(),paint=new Geometry(),poles=new Geometry();
     for(const junction of TRAFFIC_GRAPH.junctions.values()){
       if(Math.floor(junction.x/CELL_SIZE)!==cx||Math.floor(junction.z/CELL_SIZE)!==cz)continue;
       // Grade-following radial rings make a smooth apron boundary, without
@@ -31,6 +47,7 @@ export class TrafficScenery {
       const p=(r:number,a:number)=>{const x=junction.x+Math.cos(a)*r,z=junction.z+Math.sin(a)*r;return {x,y:terrainHeight(x,z)+.16,z};};
       for(let ring=0;ring<rings;ring++)for(let segment=0;segment<segments;segment++){const r=ring/rings*radius,s=(ring+1)/rings*radius,a=segment/segments*Math.PI*2,b=(segment+1)/segments*Math.PI*2;pavement.quad(p(r,a),p(s,a),p(r,b),p(s,b));}
       if(junction.control==='turnaround')continue;
+      for(const quad of signalCornerWalks(junction.id))sidewalk.quad(quad.innerA,quad.outerA,quad.innerB,quad.outerB);
       const groups=new Map<number,Record<'red'|'amber'|'green',Geometry>>();
       for(const id of junction.incoming){
         const path=TRAFFIC_GRAPH.paths.get(id)!;if(path.laneIndex!==0)continue;
@@ -52,6 +69,7 @@ export class TrafficScenery {
       for(const [group,geometry] of groups)for(const aspect of ['red','amber','green'] as const){const mesh=geometry[aspect].mesh(`signal-${junction.id}-${group}-${aspect}`,this.scene,this.lamps[aspect]);if(mesh){mesh.isVisible=false;attach(mesh);signals.push({junction,group,aspect,mesh});}}
     }
     attach(pavement.mesh(`junctions-${cx},${cz}`,this.scene,materials.road),true);attach(paint.mesh(`stop-bars-${cx},${cz}`,this.scene,materials.white));attach(poles.mesh(`signal-poles-${cx},${cz}`,this.scene,materials.dark),true);
+    attach(sidewalk.mesh(`junction-sidewalks-${cx},${cz}`,this.scene,materials.sidewalk));
     return signals;
   }
   update(signals:SignalMesh[],clock:number){for(const s of signals)s.mesh.isVisible=signalAspect(s.junction,s.group,clock)===s.aspect;}

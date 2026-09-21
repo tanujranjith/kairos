@@ -22,6 +22,7 @@ import {buildIndustrialSetting,industrialReserved} from './industrial-setting';
 import {buildUrbanSetting,urbanReserved} from './urban-setting';
 import {buildUrbanForecourt,buildUrbanParcel,type ParkedCarPlacement} from './urban-parcel';
 import {PIT_BOX_LENGTH,PIT_BOX_WIDTH,PIT_SERVICE_BOXES} from '../content/pit-plan';
+import {segmentOutsideJunctions} from '../content/terrain-clipping';
 
 export type CellMaterial='terrain'|'road'|'shoulder'|'marking'|'yellow'|'curb'|'wall'|'roof'|'glass'|'trunk'|'figure';
 export interface CellMesh {name:string;material:CellMaterial;collision:boolean;data:MeshData;contactSurface?:ContactSurface;contactRanges?:ContactRange[]}
@@ -54,20 +55,26 @@ export function buildCellBlueprint(cx:number,cz:number,quality:Quality):CellBlue
   }
   for(const {road,index}of roadCells.get(key)??[]){
     const a=road.points[index],b=road.points[index+1],span=roadSpanAt(road,(a.s+b.s)/2);if(road.kind==='test'&&inHandlingCourse(a.x,a.z))continue;
-    const strip=(g:MeshDataBuilder,offset:number,width:number,y=0)=>{const p=(v:typeof a,o:number)=>({x:v.x+Math.cos(v.yaw)*o,y:v.y+y,z:v.z-Math.sin(v.yaw)*o});g.quad(p(a,offset-width/2),p(a,offset+width/2),p(b,offset-width/2),p(b,offset+width/2));};
+    const strip=(g:MeshDataBuilder,offset:number,width:number,y=0,start:{x:number;y:number;z:number;yaw:number}=a,end:{x:number;y:number;z:number;yaw:number}=b)=>{const p=(v:typeof start,o:number)=>({x:v.x+Math.cos(v.yaw)*o,y:v.y+y,z:v.z-Math.sin(v.yaw)*o});g.quad(p(start,offset-width/2),p(start,offset+width/2),p(end,offset-width/2),p(end,offset+width/2));};
     const junction=atJunction((a.x+b.x)/2,(a.z+b.z)/2,road.id);
     if(!junction&&span?.kind!=='bridge'&&road.kind==='road'&&index%2===0&&!inLake(a.x,a.z)&&!(a.x<-650&&a.z<-300)){
       const decoration=rng(hash(index,road.id.length*17));
       for(const side of [-1,1])for(let clump=0;clump<4;clump++){const offset=side*(road.width/2+2.3+decoration()*5),along=decoration()*8,x=a.x+Math.cos(a.yaw)*offset+Math.sin(a.yaw)*along,z=a.z-Math.sin(a.yaw)*offset+Math.cos(a.yaw)*along;if(inLake(x,z)||inHandlingCourse(x,z,12)||atJunction(x,z))continue;const s=.45+decoration()*.7;instances.push({kind:'grass',position:{x,y:terrainHeight(x,z)-.035,z},scale:{x:s,y:.55+decoration()*.45,z:s},yaw:decoration()*Math.PI});}
     }
-    if(!junction){const start=asphalt.indices.length/3,layer=roadLayerAt(road,(a.s+b.s)/2);strip(asphalt,0,road.width,.025);roadContacts.push({start,end:asphalt.indices.length/3,surface:'Asphalt',layer,roadId:road.id});
-      const vergeStart=verge.indices.length/3,vergeVertex=verge.positions.length/3,surface=span?.kind==='bridge'||road.id.startsWith('city')?'Concrete':'Gravel';strip(verge,0,road.width+3,-.015);verge.tintSince(vergeVertex,surface==='Concrete'?[1,1,1,1]:GRAVEL_TINT);vergeContacts.push({start:vergeStart,end:verge.indices.length/3,surface,layer,roadId:road.id});
-      for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046);}
-    if(!junction&&road.id.startsWith('city'))for(const side of [-1,1]){
-      // Flush visual paving leaves suspension/contact behaviour unchanged.
-      const start=pavement.positions.length/3;strip(pavement,side*(road.width/2+1.45),2.7,.030);pavement.tintSince(start,[.69,.71,.69,1]);
-      strip(white,side*(road.width/2+.12),.17,.037);
-      if(index%2===0){const begin=pavement.positions.length/3,offset=side*(road.width/2+1.45),px=a.x+Math.cos(a.yaw)*offset,pz=a.z-Math.sin(a.yaw)*offset;pavement.box(px,a.y+.035,pz,2.7,.005,.032,a.yaw);pavement.tintSince(begin,[.36,.38,.37,1]);}
+    if(!junction){const start=asphalt.indices.length/3,layer=roadLayerAt(road,(a.s+b.s)/2);strip(asphalt,0,road.width,.025);roadContacts.push({start,end:asphalt.indices.length/3,surface:'Asphalt',layer,roadId:road.id});}
+    // Stop within the raised corner walk. Its outer portion hides this short
+    // overlap and forms a continuous curb-ramp transition without letting the
+    // straight sidewalk reach the asphalt apron.
+    const edgePieces=segmentOutsideJunctions(a,b,road.id,1.45),layer=roadLayerAt(road,(a.s+b.s)/2),surface=span?.kind==='bridge'||road.id.startsWith('city')?'Concrete':'Gravel';
+    for(const [edgeA,edgeB] of edgePieces){
+      const vergeStart=verge.indices.length/3,vergeVertex=verge.positions.length/3;strip(verge,0,road.width+3,-.015,edgeA,edgeB);verge.tintSince(vergeVertex,surface==='Concrete'?[1,1,1,1]:GRAVEL_TINT);vergeContacts.push({start:vergeStart,end:verge.indices.length/3,surface,layer,roadId:road.id});
+      for(const side of [-1,1])strip(white,side*(road.width*.5-.22),.13,.046,edgeA,edgeB);
+      if(road.id.startsWith('city'))for(const side of [-1,1]){
+        // Flush visual paving leaves suspension/contact behaviour unchanged.
+        const start=pavement.positions.length/3;strip(pavement,side*(road.width/2+1.45),2.7,.030,edgeA,edgeB);pavement.tintSince(start,[.69,.71,.69,1]);
+        strip(white,side*(road.width/2+.12),.17,.037,edgeA,edgeB);
+        if(index%2===0&&edgeA.x===a.x&&edgeA.z===a.z){const begin=pavement.positions.length/3,offset=side*(road.width/2+1.45),px=a.x+Math.cos(a.yaw)*offset,pz=a.z-Math.sin(a.yaw)*offset;pavement.box(px,a.y+.035,pz,2.7,.005,.032,a.yaw);pavement.tintSince(begin,[.36,.38,.37,1]);}
+      }
     }
     if(road.kind==='circuit'){if(index%2===0)for(const side of [-1,1])strip(curbs,side*(road.width*.5+.4),.85,.045);}
     else if(!junction&&road.kind!=='pit'&&road.kind!=='test'){if(index%3!==0)strip(road.kind==='highway'?white:yellow,0,.12,.046);if(road.lanes===4&&index%3!==0)for(const side of [-1,1])strip(white,side*road.width*.25,.12,.046);}

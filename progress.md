@@ -1,5 +1,13 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Signal-junction sidewalk continuity — September 21 (verified checkpoint)
+
+- Added 96-segment terrain-following corner walks to all four Westbrook signals, reusing one existing concrete material and one streamed visual mesh per owner cell. Added analytic segment/circle trimming so shoulder, edge-line and straight-sidewalk geometry terminates cleanly instead of extending beneath the apron. Asphalt collision overlap remains unchanged.
+- Screenshot isolation proved the first large WebGPU triangles came from incomplete forced captures; fresh-source comparison then exposed the real pre-existing approach wedges. The final geometry is clean and matching in opened WebGL2/WebGPU overview and driver captures.
+- Focused junction verification passes 4 approaches, 24 bands and 140 sidewalk triangles, four contacts, zero damage and no stream errors. Both full streetscape paths pass day/dusk/night/rain, 21.52m/s driving and exact three-cycle city/lake cleanup.
+- Low stays under budget at 266/495,619 city, 267/495,786 wet night and 291/496,846 for either grid. The full suite passes 243 tests / 37 files; strict production build passes (`index-DypuZvO-.js`, worker `cell-worker-D1LLTGra.js`). The supplied skill client reaches 10.933m/s with four contacts, zero damage and healthy streaming; screenshot/state opened.
+- Full objective remains active. The user asked to wrap this pass quickly, so no additional feature was started. Remaining work is broader visual polish, endurance/target-laptop acceptance and authorized HTTPS delivery. Preserve the five original untracked reference/context files.
+
 ## Wet/night traffic adaptation and deadlock recovery — September 21 (verified checkpoint)
 
 - Continued from the verified dense-pit checkpoint and preserved the user's one-live-Velara-model direction. Traffic now receives actual wetness and scales cruise, corner, following, braking and amber-light decisions from the same road-grip loss used by physical tires; no hidden grip/power or frequency advantage.

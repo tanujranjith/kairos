@@ -27,7 +27,7 @@ Per the current content direction, the live game now [reuses one authored Velara
 
 City corridors now have original lamp standards, benches, bins, planted beds and shelters. A [boulevard planting pass](docs/boulevard-planting.md) pairs all 83 lamp stations with 86 raised beds that reuse the original oak/trunk and low-cost grass cards, replacing isolated greenery with a consistent tree line. At night, two nearby pooled streetlights illuminate the road and cars; their ownership follows streamed scenery. This is bounded city dressing, not pedestrians, a completed world-art pass or a bus-service feature. The existing handling corrections are unchanged.
 
-Westbrook's signalized approaches now add [lane-derived zebra crossings and correctly ordered stop bars](docs/urban-crosswalks.md) to the existing shared white-paint batch. Its ten transit shelters also carry a [small streamed street-life population](docs/street-life.md): one seated and one standing figure per shelter, merged by cell without AI or collision bodies. Together they improve junction scale and human context while preserving driving behavior.
+Westbrook's signalized approaches now add [lane-derived zebra crossings and correctly ordered stop bars](docs/urban-crosswalks.md) to the existing shared white-paint batch. [Continuous corner sidewalks](docs/junction-sidewalks.md) join the straight paving around all four signal aprons and analytically trim the old approach overlaps. Its ten transit shelters also carry a [small streamed street-life population](docs/street-life.md): one seated and one standing figure per shelter, merged by cell without AI or collision bodies. Together they improve junction scale and human context while preserving driving behavior.
 
 Ambient traffic uses wet-aware cruise, corner, following and stopping targets rather than dry-road pace on rain-reduced tire grip. A commanded-motion timer also recovers a physically wedged middle-distance car without touching legitimate red-light or following queues, preventing one blocked connector from starving an intersection indefinitely. The selected 270-second rainy-night stress evidence and remaining limits are documented in [traffic](docs/traffic.md).
 
@@ -95,6 +95,7 @@ node scripts/verify-pits.mjs
 node scripts/verify-pit-timing.mjs
 node scripts/verify-contested-pits.mjs
 node scripts/verify-scenery.mjs
+node scripts/verify-crosswalks.mjs --output=output/junction-sidewalks
 node scripts/verify-streetscape.mjs
 node scripts/verify-streetscape.mjs --renderer=auto --output=output/streetscape-webgpu
 node scripts/verify-agricultural-fields.mjs --output=output/agricultural-fields
