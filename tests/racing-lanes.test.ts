@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {racingInput,advanceLaneOffset} from '../src/sim/ai';
-import {CIRCUIT,pointAt} from '../src/content/world';
+import {CIRCUIT,ROADS,pointAt} from '../src/content/world';
 import {vehicleById} from '../src/content/vehicles';
 import type {Vehicle} from '../src/sim/physics';
 import type {VehicleState} from '../src/core/types';
@@ -11,6 +11,11 @@ function car(id:string,s:number,lateral:number,speed=35,distance=100){
 }
 const drive=(self:Vehicle,others:Vehicle[])=>racingInput(self,[self,...others],.65,0,0);
 const settled=(self:Vehicle,others:Vehicle[])=>{let input=drive(self,others);for(let i=0;i<80;i++)input=drive(self,others);return input;};
+
+function roadCar(id:string,road:typeof CIRCUIT,s:number,lateral:number,speed=35){
+  const result=car(id,0,0,speed,500),p=pointAt(road,s,lateral);
+  Object.assign(result.state,{position:p,yaw:p.yaw,velocity:{x:Math.sin(p.yaw)*speed,y:0,z:Math.cos(p.yaw)*speed}});return result;
+}
 
 describe('predictive road-coordinate racing lane reservation',()=>{
   it('does not converge the six-metre grid lanes after the launch distance threshold',()=>{
@@ -62,6 +67,12 @@ describe('predictive road-coordinate racing lane reservation',()=>{
       const self=car('edge',120,5*side,40),alongside=car('inner',121,2.2*side,40);
       expect(drive(self,[alongside]).steer*side).toBeLessThan(-.025);
     }
+  });
+  it('can target the authored right-hand lane for public-road verification without changing race defaults',()=>{
+    const road=ROADS.find(candidate=>candidate.id==='crossway')!,offset=road.width/2-road.width/road.lanes*.5;
+    const centered=roadCar('public-lane',road,600,0),defaultLine=roadCar('default-line',road,600,0);let laneInput,defaultInput;
+    for(let i=0;i<80;i++){laneInput=racingInput(centered,[centered],1,0,0,road,.1,offset);defaultInput=racingInput(defaultLine,[defaultLine],1,0,0,road,.1);}
+    expect(laneInput!.steer).toBeGreaterThan(defaultInput!.steer+.05);expect(defaultInput!.steer).toBeCloseTo(0,1);
   });
   it('creeps the head of a stopped queue around a stationary race car',()=>{
     const self=car('self',120,0,0,500),stopped=car('stopped',123,0,0,500),trailing=car('trailing',113,0,0,500);

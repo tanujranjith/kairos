@@ -11,11 +11,11 @@ const plannedLanes=new WeakMap<Vehicle,{road:Road;offset:number}>();
 /** A lane change is a path transition, not an instantaneous six-metre target jump. */
 export const advanceLaneOffset=(current:number,target:number,dt:number)=>current+clamp(target-current,-RACE_AI.laneChangeSpeed*dt,RACE_AI.laneChangeSpeed*dt);
 
-export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,wetness:number,index:number,road:Road=CIRCUIT,dt=.1):InputFrame {
+export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,wetness:number,index:number,road:Road=CIRCUIT,dt=.1,preferredOffset=0):InputFrame {
   const s=vehicle.state,near=nearestRoad(s.position.x,s.position.z,r=>r.id===road.id),speed=Math.abs(s.speed),lookAhead=clamp(9+speed*.60,9,48);
   // Retain the grid lane until launch traffic has spread out; converging all cars
   // on the centerline in the first seconds caused avoidable contact.
-  let offset=s.distance<80?clamp(near.lateral,-3,3):0,bypass=false,bypassVehicle:Vehicle|null=null;
+  let offset=s.distance<80?clamp(near.lateral,-3,3):preferredOffset,bypass=false,bypassVehicle:Vehicle|null=null;
   const laneLimit=Math.max(0,road.width/2-vehicle.definition.width/2-RACE_AI.trackingMargin);
   const previous=reservedLanes.get(vehicle),anchor=clamp(previous?.road===road?previous.offset:near.lateral,-laneLimit,laneLimit);
   let leftLimit=-laneLimit,rightLimit=laneLimit,reserved=false;

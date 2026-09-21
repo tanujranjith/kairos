@@ -92,6 +92,7 @@ node scripts/verify-scenery.mjs
 node scripts/verify-streetscape.mjs
 node scripts/verify-streetscape.mjs --renderer=auto --output=output/streetscape-webgpu
 node scripts/verify-graphics-streaming.mjs
+node scripts/verify-freedrive-stress.mjs
 node scripts/verify-worker-recovery.mjs
 node scripts/inspect-handling.mjs
 node scripts/verify-controller-navigation.mjs
@@ -116,7 +117,7 @@ The verification scripts use the dev server on port 5187. `verify-delivery.mjs` 
 
 `node scripts/verify-delivery.mjs --25mbps` adds browser-emulated 25Mbps download / 5Mbps upload with 40ms latency and a cold browser cache. Its separate `output/delivery-25mbps/` results are development-host network emulation, not an actual-laptop or Internet deployment benchmark.
 
-See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md), [rural landscape](docs/rural-landscape.md), [road/contact layers](docs/road-layers.md), [streaming](docs/streaming.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. A real-time 30-minute repeated eight-car race/session run now passes on the development PC. Further car/world art polish, maximum-speed Free Drive and broader traffic endurance, the full interaction/fault matrix, and target-laptop performance still need work.
+See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md), [rural landscape](docs/rural-landscape.md), [road/contact layers](docs/road-layers.md), [streaming](docs/streaming.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable development build, **not completion of every requirement in the approved plan**. A real-time 30-minute repeated eight-car race/session run and selected maximum-speed Free Drive routes now pass on the development PC. Further car/world art polish, broader wet/night traffic endurance, the full interaction/fault matrix, and target-laptop performance still need work.
 
 ## Static hosting
 

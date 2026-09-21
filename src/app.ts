@@ -43,7 +43,7 @@ export class Kairos {
   opponents:Opponent[]=[];trafficSystem!:TrafficRuntime;route:V3[]=[];destination:string|null=null;mapSelection:string|null=null;
   get traffic(){return this.trafficSystem?.cars??[];}
   activity:{name:string;id:string;time:number;score:number;started:boolean}|null=null;message='';messageUntil=0;
-  private manual=false;private accumulator=0;private testAccumulator=0;private last=performance.now();private aiClock=0;private saveClock=0;private uiClock=0;private routeClock=0;private serviceTimer=0;private lastInput=neutralInput();private autoTestDriver=false;private lastDamage=0;private speedTraps=new Map<string,number>();private showcase:CarVisual[]=[];private physicsMs=0;private frameTimes:number[]=[];private overloads=0;private cameraClock=0;
+  private manual=false;private accumulator=0;private testAccumulator=0;private last=performance.now();private aiClock=0;private saveClock=0;private uiClock=0;private routeClock=0;private serviceTimer=0;private lastInput=neutralInput();private autoTestDriver=false;private autoTestRoad=CIRCUIT;private autoTestOffset=0;private lastDamage=0;private speedTraps=new Map<string,number>();private showcase:CarVisual[]=[];private physicsMs=0;private frameTimes:number[]=[];private overloads=0;private cameraClock=0;
   get vehicle(){return this.player;}
   async init(){
     let phase=performance.now();const timed=(name:string)=>{const end=performance.now();performance.measure(`kairos:startup:${name}`,{start:phase,end});phase=end;};
@@ -89,7 +89,7 @@ export class Kairos {
   }
   private changeCar(id:string,spawn=this.freeSpawn(),yaw=spawn.yaw){this.player.dispose();this.visual.dispose();this.save.selected=id;const d=vehicleById(id),setup=this.store.customization(this.save,id);this.player=new Vehicle(this.physics,d,'player',spawn,yaw,setup);this.visual=createCar(this.renderer.scene,d,setup);this.renderer.registerCar(this.visual);void this.store.write(this.save);}
   private clearOthers(){this.opponents.forEach(o=>{o.vehicle.dispose();o.visual.dispose();});this.opponents=[];this.trafficSystem.clear();}
-  private prepareDrive(){this.clearOthers();this.serviceTimer=0;this.input.clear();this.autoTestDriver=false;this.hasDrive=true;this.lastDamage=0;this.activity=null;this.clock=0;this.aiClock=0;this.accumulator=0;this.race=new RaceManager();}
+  private prepareDrive(){this.clearOthers();this.serviceTimer=0;this.input.clear();this.autoTestDriver=false;this.autoTestRoad=CIRCUIT;this.autoTestOffset=0;this.hasDrive=true;this.lastDamage=0;this.activity=null;this.clock=0;this.aiClock=0;this.accumulator=0;this.race=new RaceManager();}
   private startAudio(){void this.audio.start().catch(()=>{});window.setTimeout(()=>{if(this.screen==='drive'&&this.audio.needsGesture&&this.save.settings.volume>0)this.toast('Click or press a key to enable audio. You can keep driving with your controller.',8);},700);}
   private session(operation:(ticket:number)=>Promise<void>,retry:()=>Promise<void>){
     const ticket=++this.loadingTicket;this.transitioning=true;this.loading=true;this.loadError='';this.retryOperation=retry;this.audio.pause();this.input.clear();this.loadingOverlay.show('Loading verified driving surfaces. Simulation is paused.');
@@ -166,7 +166,7 @@ export class Kairos {
       if(v.needsRecovery()||o.stuck>8){const n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id==='circuit'),p=pointAt(CIRCUIT,n.progress-8,i%2?3:-3);if(all.every(other=>other===v||distance(other.state.position,p)>9)){this.world.requestAround(p);v.reset(p,p.yaw);this.race.resetLap(v.id);o.stuck=0;o.pitDriver.reset();}}
     }
     }
-    let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.race.state.session.difficulty,this.wetness,0,CIRCUIT,dt):this.input.poll(dt,this.player.state.speed,this.player.definition.wheelbase,this.wetness,steeringContactGrip(this.player.state.wheels));this.lastInput=input;
+    let input=this.autoTestDriver||this.race.player?.finished?racingInput(this.player,all,this.race.state.session.difficulty,this.wetness,0,this.autoTestDriver?this.autoTestRoad:CIRCUIT,dt,this.autoTestDriver?this.autoTestOffset:0):this.input.poll(dt,this.player.state.speed,this.player.definition.wheelbase,this.wetness,steeringContactGrip(this.player.state.wheels));this.lastInput=input;
     const countdown=this.race.state.phase==='countdown';if(countdown&&(this.autoTestDriver||input.throttle<.05))input={...neutralInput(),brake:1};
     if(this.serviceTimer>0){this.serviceTimer-=dt;input={...neutralInput(),brake:1};if(this.serviceTimer<=0){this.player.restore();this.toast('Service complete. Check traffic before rejoining.');}}
     this.player.preStep(input,settings,this.wetness,dt);
@@ -213,7 +213,9 @@ export class Kairos {
     const pending=this.advanceQueue.catch(()=>{}).then(run);this.advanceQueue=pending;return pending;
   }
   resumeRealTime(){this.manual=false;this.last=performance.now();this.accumulator=0;}
-  setAutopilot(enabled:boolean){this.autoTestDriver=enabled;}
+  /** Development verification hook. It selects a normal authored road while
+   * retaining the same input, tire, drivetrain and collision systems. */
+  setAutopilot(enabled:boolean,roadId='circuit',offset=0){const road=ROADS.find(road=>road.id===roadId);if(!road)throw new Error(`Unknown autopilot road: ${roadId}`);this.autoTestRoad=road;this.autoTestOffset=offset;this.autoTestDriver=enabled;}
   teleport(x:number,z:number,roadId?:string){const n=nearestRoad(x,z,roadId?r=>r.id===roadId:undefined);const p=pointAt(n.road,n.progress,2);this.world.requestAround(p,true);this.player.reset(p,p.yaw);this.race.resetLap('player');}
   snapshot(){return {screen:this.screen,pausedFromDrive:this.pausedFromDrive,mode:this.mode,loading:this.loading,loadError:this.loadError,streaming:this.world.snapshot(),renderer:this.renderer.rendererName,graphics:this.graphicsState(),coordinateSystem:'meters; Y up; +Z forward at yaw 0; +X right',player:this.player.state,playerPitBox:pitServiceBox(15),race:this.race.state,cells:this.world.cells.size,traffic:this.traffic.map(t=>({id:t.vehicle.id,position:t.vehicle.state.position,speed:t.vehicle.state.speed,path:t.agent.pathId,reason:t.agent.reason})),trafficSystem:this.trafficSystem.snapshot(),opponents:this.opponents.map(o=>({id:o.vehicle.id,position:o.vehicle.state.position,speed:o.vehicle.state.speed,retired:o.retired,depleted:o.depleted,pit:o.pitDriver.snapshot()})),destination:this.destination,routePoints:this.route.length,activity:this.activity,weather:this.save.settings.weather,wetness:this.wetness,time:this.save.settings.time,physicsMs:this.physicsMs,overloads:this.overloads,frameTimeP95:percentile(this.frameTimes,.95),message:this.message};}
   view():ViewModel{return {screen:this.screen,save:this.save,player:this.player.state,race:this.race.state,raceOrder:this.race.order(),raceStage:this.race.stage,raceConfig:this.mode==='Free Drive'||this.screen==='motorsport'?this.raceConfig:this.race.state.session,mode:this.mode,renderer:this.renderer.rendererName,graphics:this.graphicsState(),fps:this.renderer.engine.getFps(),cells:this.world.cells.size,drawCalls:this.renderer.scene.getActiveMeshes().length,triangles:this.renderer.scene.getActiveIndices()/3,wetness:this.wetness,clock:this.clock,route:this.route,destination:this.destination,mapSelection:this.mapSelection,activity:this.activity,message:this.message,storageError:this.store.error,pausedFromDrive:this.pausedFromDrive,trafficCount:this.traffic.length,physicsMs:this.physicsMs};}
