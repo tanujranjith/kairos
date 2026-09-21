@@ -103,13 +103,16 @@ node scripts/verify-adaptive-quality.mjs
 node scripts/verify-graphics-recovery.mjs
 node scripts/verify-endurance.mjs --minutes=30 --sample-ms=30000 --renderer=webgl --output=output/endurance-real30
 node scripts/build-assets.mjs
+npm run build:textures
+npm run verify:textures
+node scripts/verify-compressed-textures.mjs
 ```
 
 The web-game client is an unmodified copy of the supplied skill client. Supplementary scripts inspect full HTML HUDs and run physical race traces. Artifacts go in `output/`. Headless Chromium may use SwiftShader: its timings are **not** integrated-GPU laptop performance measurements.
 
 Vite excludes generated `output/` captures/reports from hot reload. Watching those files caused a confirmed Windows `EBUSY` server crash while a report was being copied; game source and public models remain watched. This prevents that specific artifact-watcher failure, not every possible startup problem.
 
-The verification scripts use the dev server on port 5187. `verify-delivery.mjs` requires the production preview on port 5192. Browser binaries must be available to Playwright. `build-assets.mjs` rebuilds the original compressed car models through the dev-only exporter; the generated models are already included. `npm run build` also copies third-party runtime notices into `dist/licenses/`.
+The verification scripts use the dev server on port 5187. `verify-delivery.mjs` requires the production preview on port 5192. Browser binaries must be available to Playwright. `build-assets.mjs` rebuilds the original compressed car models through the dev-only exporter; the generated models are already included. `build:textures` rebuilds the nineteen original KTX2 surface/cloud assets and their cache version from the shared deterministic source fields. The ordinary production build verifies those generated assets rather than silently regenerating them. `npm run build` also copies third-party runtime notices into `dist/licenses/`.
 
 `node scripts/verify-delivery.mjs --25mbps` adds browser-emulated 25Mbps download / 5Mbps upload with 40ms latency and a cold browser cache. Its separate `output/delivery-25mbps/` results are development-host network emulation, not an actual-laptop or Internet deployment benchmark.
 
@@ -117,6 +120,6 @@ See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md
 
 ## Static hosting
 
-`dist/` is the static output. The included Vercel configuration builds with npm, revalidates the application shell and gives hashed `/assets/` files immutable caching. Select Node 24 in the authorized project's settings. Do not publish source references or the complete project directory as a static file server.
+`dist/` is the static output. The included Vercel configuration builds with npm, revalidates the application shell, gives hashed `/assets/` files immutable caching and gives fingerprint-query `/textures/` files immutable caching. Select Node 24 in the authorized project's settings. Do not publish source references or the complete project directory as a static file server.
 
 No deployment has been authorized or verified yet. Once a project is supplied, deploy a preview, test startup and driving with external hosts blocked, then promote that exact tested deployment. Keep its predecessor for rollback. The Vercel deployment guidance informed this preview-first configuration; no credentials or cloud services are required for local play.

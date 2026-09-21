@@ -1,6 +1,8 @@
-import {Mesh,MeshBuilder,RawTexture,ShaderLanguage,ShaderMaterial,Texture,Vector3,Vector4,type Scene} from '@babylonjs/core';
+import {Mesh,MeshBuilder,ShaderLanguage,ShaderMaterial,Texture,Vector3,Vector4,type Scene} from '@babylonjs/core';
 import type {Weather} from '../core/types';
 import {CLOUD_ATLAS_SIZE,CLOUD_HORIZON,cloudAtlas,skyState} from './sky-field';
+import {compressedTexture} from './compressed-texture';
+import {textureAssetUrl} from './texture-version';
 
 /** Native source for both engines. Input/output colours are linear; the existing
  * scene post-process owns exposure, ACES and display encoding exactly once. */
@@ -75,12 +77,11 @@ void main(){${body}}`;
 }
 
 export class SkyDome {
-  readonly mesh:Mesh;readonly material:ShaderMaterial;readonly atlas:RawTexture;
+  readonly mesh:Mesh;readonly material:ShaderMaterial;readonly atlas:Texture;
   private readonly sun=new Vector3();private readonly params=new Vector4();
   constructor(scene:Scene){
     const wgsl=scene.getEngine().isWebGPU;
-    this.atlas=RawTexture.CreateRGBATexture(cloudAtlas(),CLOUD_ATLAS_SIZE,CLOUD_ATLAS_SIZE,scene,true,false,Texture.TRILINEAR_SAMPLINGMODE);
-    this.atlas.name='original-cloud-density';this.atlas.gammaSpace=false;this.atlas.wrapU=this.atlas.wrapV=Texture.WRAP_ADDRESSMODE;
+    this.atlas=compressedTexture(scene,textureAssetUrl('/textures/cloud-density.ktx2'),'original-cloud-density',CLOUD_ATLAS_SIZE,CLOUD_ATLAS_SIZE,()=>cloudAtlas(),false);
     this.material=new ShaderMaterial('kairos-directional-sky',scene,skyShaders(wgsl),{attributes:['position'],uniforms:['worldViewProjection','skySun','skyParams'],samplers:['cloudAtlas'],shaderLanguage:wgsl?ShaderLanguage.WGSL:ShaderLanguage.GLSL});
     this.material.backFaceCulling=false;this.material.disableDepthWrite=true;this.material.setTexture('cloudAtlas',this.atlas);
     this.mesh=MeshBuilder.CreateSphere('atmosphere',{diameter:13000,segments:24,sideOrientation:Mesh.BACKSIDE},scene);

@@ -3,7 +3,7 @@ import type { Settings } from '../core/types';
 import { clamp, approach } from '../core/math';
 import type { Vehicle } from '../sim/physics';
 import type { CarVisual } from './car';
-import { configureLocalResources, localShaderOptions } from './local-resources';
+import { configureLocalResources, initializeLocalTextureDecoder, localShaderOptions } from './local-resources';
 import { lightingEnvironment } from './lighting-environment';
 import { solarLighting } from './atmosphere';
 import { SkyDome } from './sky-material';
@@ -43,6 +43,7 @@ export class Renderer {
     configureLocalResources();
     if(!forceGL&&await WebGPUEngine.IsSupportedAsync){let gpu:WebGPUEngine|undefined;try{gpu=new WebGPUEngine(canvas,{antialias:true,powerPreference:'high-performance',doNotHandleContextLost:true,...localShaderOptions});await gpu.initAsync();this.monitorWebGPU(gpu);engine=gpu;}catch(e){console.warn('WebGPU unavailable; using WebGL2',e);gpu?.dispose();}}
     if(!engine){const gl=new Engine(canvas,true,{preserveDrawingBuffer:true,stencil:true,powerPreference:'high-performance',disableWebGL2Support:false});if(gl.webGLVersion<2){gl.dispose();throw new Error('Kairos needs hardware-accelerated WebGL2 or WebGPU. Enable browser hardware acceleration, then reload.');}engine=gl;}
+    initializeLocalTextureDecoder(engine);
     return new Renderer(engine,canvas);
   }
   /** Babylon 9.27 starts its asynchronous WebGPU reinitialization without

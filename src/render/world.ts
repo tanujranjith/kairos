@@ -4,7 +4,7 @@ import { windowEmission } from './atmosphere';
 import { CELL_SIZE,landHeight,LAKE } from '../content/world';
 import { createVegetation } from './vegetation';
 import {createCircuitWoodland} from './circuit-woodland';
-import { surfaceTextures } from './surface-textures';
+import { surfaceTexture, surfaceTextures } from './surface-textures';
 import type { PhysicsWorld } from '../sim/physics';
 import type { V3,Quality } from '../core/types';
 import { createHandlingCell } from './handling-course';
@@ -56,10 +56,10 @@ export class WorldRenderer {
     this.woodland=createCircuitWoodland(this.root,this.oakMesh,this.trunkMesh);
     this.boulders=createBoulders(scene);
     const ridges=mountainMesh(landHeight),ridgeData=new VertexData(),ridgeMat=mat('atmospheric-ridges','#ffffff');
-    const geology=surfaceTextures(scene,'cliff',.035);ridgeMat.albedoTexture=geology.albedo;geology.normal.dispose();
+    const geology=surfaceTexture(scene,'cliff','albedo',.035);ridgeMat.albedoTexture=geology;
     new GroundMaterial(ridgeMat,true);
     Object.assign(ridgeData,ridges);this.backdrop=new Mesh('valley-horizon',scene);ridgeData.applyToMesh(this.backdrop);this.backdrop.material=ridgeMat;this.backdrop.parent=this.root;this.backdrop.isPickable=false;
-    this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene),waves=surfaceTextures(scene,'water',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves.normal;water.bumpTexture.level=.12;waves.albedo.dispose();this.water.material=water;
+    this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene),waves=surfaceTexture(scene,'water','normal',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves;water.bumpTexture.level=.12;this.water.material=water;
   }
 
   setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);if(!v)this.streetLighting.disable();}

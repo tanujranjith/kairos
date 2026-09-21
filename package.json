@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "node scripts/copy-notices.mjs && tsc --noEmit && vite build",
+    "build": "node scripts/copy-notices.mjs && node scripts/verify-texture-assets.mjs && tsc --noEmit && vite build",
+    "build:textures": "node scripts/build-textures.mjs",
+    "verify:textures": "node scripts/verify-texture-assets.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "check": "tsc --noEmit"
@@ -16,12 +18,14 @@
   "dependencies": {
     "@babylonjs/core": "9.27.1",
     "@babylonjs/havok": "1.3.14",
+    "@babylonjs/ktx2decoder": "9.27.1",
     "@babylonjs/loaders": "9.27.1",
     "@babylonjs/serializers": "9.27.1",
     "meshoptimizer": "1.2.0"
   },
   "devDependencies": {
     "@types/node": "26.6.2",
+    "ktx2-encoder": "0.6.0",
     "playwright": "1.63.0",
     "typescript": "7.0.2",
     "vite": "8.3.0",

@@ -1,6 +1,6 @@
 import { BackgroundMaterial, Color3, CubeTexture, DynamicTexture, Mesh, MeshBuilder, MirrorTexture, PBRMaterial, Plane, StandardMaterial, Texture, TransformNode, Vector3, type Scene } from '@babylonjs/core';
 import { Geometry } from './geometry';
-import { surfaceTextures } from './surface-textures';
+import { surfaceTexture, surfaceTextures } from './surface-textures';
 import { rng } from '../core/math';
 
 /** Original gallery architecture, locally bundled CC0 HDR, and an asset-failure fallback. */
@@ -45,7 +45,7 @@ export function createShowroom(scene:Scene){
     const mat=new StandardMaterial('gallery-ridge-'+layer,scene);mat.disableLighting=true;mat.emissiveColor=Color3.White();mat.backFaceCulling=false;const mesh=g.mesh('gallery-distant-ridge-'+layer,scene,mat)!;mesh.parent=fallback;mesh.applyFog=false;
   }
   const terrace=material('gallery-terrace','#707364',0,.98);panel('gallery-terrace',90,.4,18,0,-.16,-20,terrace);
-  const water=material('gallery-lake','#738986',.35,.22),waves=surfaceTextures(scene,'water',6);water.bumpTexture=waves.normal;waves.albedo.dispose();water.bumpTexture.level=.08;const lake=MeshBuilder.CreateGround('gallery-lake',{width:650,height:220},scene);lake.position.set(0,-.42,-138);lake.material=water;lake.parent=fallback;
+  const water=material('gallery-lake','#738986',.35,.22),waves=surfaceTexture(scene,'water','normal',6);water.bumpTexture=waves;water.bumpTexture.level=.08;const lake=MeshBuilder.CreateGround('gallery-lake',{width:650,height:220},scene);lake.position.set(0,-.42,-138);lake.material=water;lake.parent=fallback;
   const environment=CubeTexture.CreateFromPrefilteredData('/environment/fish-eagle-hill.env',scene);environment.name='CC0 Fish Eagle Hill / Greg Zaal';environment.rotationY=3;
   const photoMaterial=new BackgroundMaterial('gallery-hdr-background',scene);photoMaterial.reflectionBlur=0;photoMaterial.backFaceCulling=false;photoMaterial.useRGBColor=false;photoMaterial.primaryColor=new Color3(.85,.85,.85);
   const panorama=MeshBuilder.CreateBox('gallery-photographic-vista',{size:1200,sideOrientation:Mesh.BACKSIDE},scene);panorama.parent=root;panorama.material=photoMaterial;panorama.applyFog=false;panorama.isPickable=false;panorama.isVisible=false;panorama.metadata={environmentBackground:true};

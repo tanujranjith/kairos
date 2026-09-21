@@ -12,7 +12,7 @@ export default defineConfig({
     // requests otherwise serialize on HTTP/1.1 and pay latency before the menu.
     // The hashed engine stays cacheable across changes to Kairos game code.
     rolldownOptions: { output: { codeSplitting: { groups: [
-      { name: 'babylon', test: /[\\/]node_modules[\\/]@babylonjs[\\/](core|loaders)[\\/]/ },
+      { name: 'babylon', test: /[\\/]node_modules[\\/]@babylonjs[\\/](core|loaders|ktx2decoder)[\\/]/ },
     ] } } },
   },
 });

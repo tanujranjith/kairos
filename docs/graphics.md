@@ -1,10 +1,18 @@
 # Original graphics upgrade — first substantial art pass
 
+## Versioned KTX2 surface delivery — September 21
+
+The nine original periodic surface pairs and packed cloud-density atlas now ship as nineteen mipmapped KTX2 files. Perceptual albedo uses ETC1S; linear normals and cloud density use UASTC+Zstd. The deterministic field generators remain the single source for both the offline encoder and lazy error fallback, so recovery does not substitute a different-looking material. The generated manifest records dimensions, encoding, byte count and SHA-256 for every file; a content-derived version is added to runtime URLs and checked at build time.
+
+Babylon's KTX2 decoder, Basis transcoders and Zstd decoder are pinned, bundled and explicitly configured to hashed same-origin assets before any material is created. Installed Edge loaded 22 active KTX2-backed texture instances with no ordinary fallback, failed or external request on both native renderer paths. WebGL2 selected BC7 (`36492`); this Windows WebGPU adapter exposed no accepted compressed format and decoded to RGBA8. Deliberately aborting every request for the asphalt albedo rebuilt the exact procedural pixels, left all four wheels grounded and produced only the specifically classified failed requests/warning. All three captures were opened and match visually.
+
+The generated KTX2 set is 968,555 bytes, compared with roughly six megabytes of base-level runtime RGBA source data before mip overhead. This is transfer/source compression and removes ordinary startup field generation; it is not proof of a specific GPU-resident saving on adapters that require RGBA8 transcoding. Target-laptop profiling and broader final art remain active work.
+
 ## Context and device interruption recovery — September 21
 
 Kairos now treats renderer loss as a simulation boundary. The game moves to a dedicated recovery pause, clears live input and fixed-step backlog, retains the physical state, and blocks resume/reset until rebuilt resources are ready. WebGL2 recreates authored environment cubes and the double-buffered local probes after an actual context restore, invalidates stale renderer caches and dirties every material texture binding. Readiness is established before drawing the recovered scene, preventing stale IBL handles and premature texture submissions.
 
-WebGPU recovery is explicitly bounded. Kairos owns the asynchronous engine reinitialization rather than allowing Babylon 9.27 to rebuild resources before `initAsync()` completes. If the browser has not supplied a replacement device after 20 seconds, the UI offers a persisted-save WebGL2 restart. The exact device-destruction readback cancellation is recognized without hiding other rendering errors. Installed Edge verification forced both real paths; details, timings and retained captures are in [validation evidence](benchmarks.md). This adds fault tolerance but does not reduce the remaining KTX2, target-laptop, endurance or final-art work.
+WebGPU recovery is explicitly bounded. Kairos owns the asynchronous engine reinitialization rather than allowing Babylon 9.27 to rebuild resources before `initAsync()` completes. If the browser has not supplied a replacement device after 20 seconds, the UI offers a persisted-save WebGL2 restart. The exact device-destruction readback cancellation is recognized without hiding other rendering errors. Installed Edge verification forced both real paths; details, timings and retained captures are in [validation evidence](benchmarks.md). This adds fault tolerance but does not reduce the remaining target-laptop, broader endurance or final-art work. The later KTX2 checkpoint above closes the runtime texture-delivery item.
 
 ## Automatic quality and bounded dynamic resolution — September 20
 
@@ -133,7 +141,7 @@ Run the supplied `web_game_playwright_client.mjs` for driving inputs and open it
 
 Aster's pit garages now use original framed hospitality glazing, shuttered ground-floor bays, deep columns, canopies, roof equipment and a paved/painted working apron. The first underpass inspection also prompted smoothly graded embankments instead of abrupt grass walls. These changes reuse existing per-cell materials/collision batches; see [access verification](circuit-access.md). They improve the paddock's detail but do not establish the reference mockups' realism.
 
-This remains procedural, stylized game art, not the reference images' photorealism. Car families share topology; interiors, glazing, liveries, building variety, roadside dressing, terrain blending, water and vegetation silhouettes need further art direction. The local probe covers a bounded subset of nearby scenery; AI reflections remain analytic. KTX2 compression, broader quality tuning and actual 8GB laptop performance acceptance remain incomplete.
+This remains procedural, stylized game art, not the reference images' photorealism. Car families share topology; interiors, glazing, liveries, building variety, roadside dressing, terrain blending, water and vegetation silhouettes need further art direction. The local probe covers a bounded subset of nearby scenery; AI reflections remain analytic. KTX2 delivery is complete as described above; broader quality tuning and actual 8GB laptop performance acceptance remain incomplete.
 
 ## Sculpted coachwork and gallery pass
 
