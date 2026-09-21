@@ -1,5 +1,11 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Low resident GPU-resource estimate — September 21 (verified checkpoint)
+
+- Added a development-only resource estimator that de-duplicates actual Babylon vertex/index buffer capacity and ready internal textures, adds instance transforms plus framebuffer space, and reserves 25% for shader/uniform/driver allocations the browser cannot expose. Index buffers with zero reported capacity fall back to real index count and 16/32-bit upload type.
+- Installed Edge/WebGL2 passes five Low 1280×720 scenes with empty error/network arrays: city traffic 157.57MiB, mountain 113.03MiB, highway 110.35MiB, rainy Westbrook 157.57MiB and eight-car GT grid 123.57MiB. Every Free Drive scene has twelve physical traffic cars. All five screenshots were opened.
+- The isolated suite passes 250 tests / 39 files; strict TypeScript and the production build pass. Runtime hashes remain `index-BBNmaQ2P.js` and `cell-worker-D1LLTGra.js`, confirming the development-only audit adds no shipped code. The required generic skill client again remained live without output/artifacts for over a minute and was terminated, so it is not counted. NEXT: preserve the 256MiB estimate gate and prior systems. Actual 8GB-laptop frame pacing/process/GPU telemetry and authorized HTTPS deployment remain external acceptance work; the procedural visual style remains the documented art limitation. Keep the five user files untouched.
+
 ## Save reset and quota recovery — September 21 (verified checkpoint)
 
 - Expanded the browser storage verifier through the real rendered Reset progress control and confirmation dialog. A seeded non-default profile resets exactly to Velara/default settings and remains reset after reload; the opened capture shows the resulting settings state and confirmation toast.

@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Low resident GPU-resource estimate — September 21 (verified checkpoint)
+
+Kairos now has a repeatable conservative estimator for the plan's 256MiB Low-preset resident GPU-resource target. It counts unique Babylon vertex/index buffers, ready internal textures, instance transforms and framebuffer space, then reserves another 25% for allocations browser APIs do not expose. Zero-capacity index handles use the geometry's real index count and 16/32-bit upload type instead of being omitted.
+
+Five 1280×720 Edge/WebGL2 scenes pass: city traffic and rainy Westbrook peak at **157.57MiB**, mountain is 113.03MiB, highway 110.35MiB and the eight-car race 123.57MiB. Every Free Drive sample carries the intended twelve physical traffic vehicles. All screenshots were opened; page, failed-request and external-request arrays are empty. This is a development-host engineering estimate, not actual target-laptop GPU telemetry.
+
 ## Save reset and quota recovery — September 21 (verified checkpoint)
 
 The rendered Reset progress action now has direct end-to-end coverage: a seeded non-default profile is confirmed through the browser dialog, reset to the default Velara state, and remains reset after reload. The storage fault path also injects an actual `QuotaExceededError`, displays the full-storage warning, keeps the game playable, and proves a later successful write can recover the save queue.

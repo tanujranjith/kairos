@@ -40,6 +40,8 @@ Startup emits seven bounded `performance.measure` entries named `kairos:startup:
 
 `scripts/verify-endurance.mjs` exercises ownership over real wall-clock time. It leaves the normal render loop and fixed simulation active, repeatedly completes physical race sessions, returns through the production home action and verifies that collision/detail cells are gone before starting again. Browser performance counters, rolling frame p95, physics time, scene resources and CDP JavaScript heap are sampled independently. The report deliberately labels JavaScript heap as narrower than browser-process or GPU memory.
 
+`src/tools/gpu-resource-audit.ts` provides a separate conservative scene-residency estimate. It de-duplicates Babylon vertex/index `DataBuffer` capacities and ready internal textures, adds thin/ordinary instance transforms and a 1280×720 swapchain allowance, then adds 25% for shader, uniform and driver-side allocations unavailable through browser APIs. Zero-capacity index buffers fall back to their real index count and uploaded 16/32-bit type. This is an engineering estimate for the planned 256MiB budget, not driver telemetry or a substitute for the target laptop's process/GPU measurement.
+
 ## Ground geometry, materials and controlled draws
 
 `SkyDome` owns one mesh, one native-backend shader material and one mipmapped 512² density atlas. `sky-field.ts` builds periodic packed noise once. Renderer updates feed the common solar direction plus daylight, golden-hour, weather coverage and wind uniforms. Shader output is linear for the scene's existing image-processing pipeline. The previous CPU-coloured sky and separate sun mesh are gone. The sky is visual-only and has no physics ownership.

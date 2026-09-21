@@ -2,6 +2,12 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Low resident GPU-resource estimate — September 21
+
+- `audit-gpu-resources.mjs` measures five required Low 1280×720 views with installed Edge/WebGL2: twelve-car city traffic, twelve-car mountain pass, twelve-car highway, twelve-car rainy Westbrook night and an eight-car GT race grid. All captures were opened and agree with their text state; page-error, failed-request and external-request arrays are empty.
+- The estimator de-duplicates actual Babylon vertex/index buffer capacities and ready internal textures, counts instance transforms and browser-owned framebuffer space, and adds a **25% untracked-resource contingency**. The peak is rainy Westbrook at **157.57MiB**, leaving **98.43MiB** below the planned **256MiB** estimate ceiling. City is also 157.57MiB; mountain 113.03MiB; highway 110.35MiB; race 123.57MiB.
+- The isolated suite passes **250 tests / 39 files**; strict TypeScript and the production build pass with unchanged runtime files `index-BBNmaQ2P.js` and `cell-worker-D1LLTGra.js`. This closes the missing development-host estimate, not actual GPU/process telemetry. Driver allocation, the integrated-GPU shared-memory policy and the complete 8GB-laptop performance budget still require measurement on that machine. The required generic skill client was attempted after the tooling change, produced no output/artifact for over a minute, and was terminated rather than counted.
+
 ## Save reset and quota recovery — September 21
 
 - `verify-storage.mjs` now exercises the rendered **Reset progress** action through its real confirmation dialog after seeding a different selected profile, activity record, discovery, visit, distance and clock. The UI returns to the default Velara state and the exact reset state survives a page reload.
