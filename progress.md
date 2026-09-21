@@ -1,5 +1,12 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Local release handoff — September 21 (verified checkpoint)
+
+- Honored the request to wrap the current pass instead of starting another art feature. The production bundle passed cold-cache 25Mbps/40ms localhost startup, keyboard-driven Free Drive, Northstar driving, a clean eight-car GT countdown/launch and return to the menu.
+- Forced WebGL2 reached the menu in 8.723s; the automatic headless path reached it in 8.186s and correctly fell back to WebGL2 because SwiftShader exposed no WebGPU adapter. Both transferred 10,519,539 bytes, exposed no development hooks, and recorded no page errors, failed requests or external requests. JS-heap snapshots were approximately 127.5MB / 122.6MB, not whole-process memory.
+- Opened the final showroom, Free Drive and race screenshots. The release harness now distinguishes expected screenshot readback diagnostics and a verified automatic-renderer fallback from actionable warnings, and supports focused renderer reruns.
+- This is a clean local handoff, not completion of the full approved target. Actual 8GB-laptop performance/endurance and an authorized hosted HTTPS smoke remain outstanding; no deployment was attempted. Preserve the five original untracked reference/context files.
+
 ## Signal-junction sidewalk continuity — September 21 (verified checkpoint)
 
 - Added 96-segment terrain-following corner walks to all four Westbrook signals, reusing one existing concrete material and one streamed visual mesh per owner cell. Added analytic segment/circle trimming so shoulder, edge-line and straight-sidewalk geometry terminates cleanly instead of extending beneath the apron. Asphalt collision overlap remains unchanged.

@@ -1,5 +1,9 @@
 # Feature status — working build, not acceptance certification
 
+## Local release handoff — September 21 (verified checkpoint)
+
+The current production bundle completes the local menu → Free Drive → Northstar → eight-car GT launch → menu flow under cold-cache 25Mbps/40ms emulation with third-party hosts blocked. Forced WebGL2 and the automatic SwiftShader fallback record no page errors, failed requests, external requests or development hooks; final showroom, driving and race captures were opened. This is a stable local handoff, not target-laptop or hosted-release certification. Actual 8GB-laptop performance/endurance and an authorized HTTPS deployment remain outstanding.
+
 ## Signal-junction sidewalk continuity — September 21 (verified checkpoint)
 
 All four Westbrook signals now have terrain-following concrete corner walks connecting the existing road-parallel paving around their aprons. Straight shoulder, edge-line and sidewalk strips are analytically trimmed at the junction boundary, removing the prior renderer-visible approach wedges while preserving asphalt collision overlap and driving behavior.

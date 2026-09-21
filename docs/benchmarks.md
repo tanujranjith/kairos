@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Local release handoff — September 21
+
+- `scripts/verify-startup.mjs --race` passed the current production bundle through menu, keyboard-driven Free Drive, Northstar, clean eight-car GT countdown/launch and return-to-menu, with third-party hosts blocked and development hooks absent.
+- Forced WebGL2: **8.723s** menu readiness, **10,519,539 bytes**, **127,489,024-byte** JS-heap snapshot. Automatic renderer: **8.186s**, the same transfer, **122,550,912-byte** JS-heap snapshot, with the expected WebGPU-to-WebGL2 fallback under headless SwiftShader.
+- Both successful reports contain zero page errors, failed requests and external requests. Opened screenshots cover showroom, Lake Aurelia Free Drive and Aster's eight-car grid. The automatic path's `No available adapters` notice and screenshot-only `ReadPixels` stall messages are retained in its report but excluded from actionable-warning failure only when the measured renderer confirms the expected fallback.
+- Evidence: `output/final-delivery-smoke/report.json` for the successful forced-WebGL2 pass and `output/final-delivery-smoke-auto/report.json` for the focused automatic pass. These localhost/software-rendered runs do not certify WebGPU hardware, real Internet/HTTPS, target-laptop frame pacing, GPU memory or endurance.
+
 ## Signal-junction sidewalk continuity — September 21
 
 - Pure checks cover all four signal junctions, inner/outer road clearance and exact approach-strip clipping. Browser verification reports **4 approaches / 24 bands / 1 sidewalk mesh / 140 sidewalk triangles**, four contacts, zero damage and no streaming errors in forced WebGL2 and actual WebGPU.

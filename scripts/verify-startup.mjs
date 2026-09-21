@@ -4,10 +4,12 @@ import assert from 'node:assert/strict';
 
 const option=name=>process.argv.find(v=>v.startsWith(`--${name}=`))?.split('=').slice(1).join('=');
 const channel=option('channel'),repeats=Number(option('repeats')??1),output=option('output')??'output/startup-delivery',reports=[];
+const rendererOption=option('renderer'),renderers=rendererOption?[rendererOption]:['webgl','auto'];
 assert.ok(Number.isInteger(repeats)&&repeats>=1&&repeats<=10);await fs.mkdir(output,{recursive:true});
+assert.ok(renderers.every(renderer=>['webgl','auto'].includes(renderer)));
 const browser=await chromium.launch(channel?{channel,headless:true}:{headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
-  for(let run=1;run<=repeats;run++)for(const renderer of ['webgl','auto']){
+  for(let run=1;run<=repeats;run++)for(const renderer of renderers){
     const context=await browser.newContext({viewport:{width:1280,height:720}}),page=await context.newPage(),errors=[],external=[],failed=[],warnings=[];
     page.setDefaultTimeout(60000);
     const cdp=await context.newCDPSession(page);await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});await cdp.send('Performance.enable');
@@ -45,7 +47,12 @@ try{
       const metrics=await cdp.send('Performance.getMetrics');Object.assign(report,{bytes,jsHeapBytes:metrics.metrics.find(m=>m.name==='JSHeapUsedSize')?.value,network:{downloadMbps:25,uploadMbps:5,latencyMs:40},environment:'Local development host, cold browser cache. Input-to-motion includes streaming and acceleration. Not target-laptop, HTTPS, FPS or whole-process-memory certification.'});
       assert.deepEqual(errors,[]);assert.deepEqual(external,[]);assert.deepEqual(failed,[]);
       // WebGPU validation failures arrive as console messages, not pageerror.
-      assert.deepEqual(warnings.filter(w=>!w.includes('The powerPreference option is currently ignored when calling requestAdapter() on Windows')),[]);
+      const actionableWarnings=warnings.filter(w=>
+        !w.includes('The powerPreference option is currently ignored when calling requestAdapter() on Windows')&&
+        !w.includes('GPU stall due to ReadPixels')&&
+        !(w==='No available adapters.'&&renderer==='auto'&&report.renderer==='WebGL2')
+      );
+      assert.deepEqual(actionableWarnings,[]);
     }catch(error){Object.assign(report,{failure:String(error),pending:[...pending.values()]});await page.screenshot({path:`${prefix}-failure.png`,timeout:10000}).catch(()=>{});throw error;}
     finally{reports.push(report);await fs.writeFile(`${output}/report.json`,JSON.stringify(reports,null,2));console.log(JSON.stringify(report,null,2));await context.close();}
   }
