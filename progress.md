@@ -1,5 +1,11 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Low browser-process memory and terminal home state — September 21 (verified checkpoint)
+
+- Added a Windows/Edge process-tree audit for the same required Low 1280×720 scenes. It explicitly collects unreachable allocations after rapid controlled-time region changes, scopes process IDs through CDP, tolerates utility processes exiting between enumeration and the OS read, and records summed working set/private bytes per process. Peak settled working set is 1,334.97MiB at rainy Westbrook, 201.03MiB below the 1.5GiB target.
+- Opening all six captures exposed a stale `ESC · BACK TO DRIVE` footer after the race had been destroyed. `setScreen('home')` now clears resume intent and pause reason as a terminal transition. The verifier asserts `pausedFromDrive=false`, absence of the resume button and a clean post-race showroom; the final image was opened.
+- Rendered interaction checks, 250 tests / 39 files, strict TypeScript and production build pass. Refreshed cold 25Mbps/40ms production passes at 5.325s WebGL2 / 4.854s automatic and 10,521,125 bytes (`index-DeTMf4zj.js`, `cell-worker-D1LLTGra.js`); the final Free Drive and Northstar captures were opened. Both supplied and hardened generic input clients again produced no output/artifacts for over a minute and were terminated, so they are not counted. NEXT: preserve the memory/UI gates and all prior systems. Actual 8GB-laptop timing/memory and authorized HTTPS deployment remain external acceptance work; stylized procedural art remains the documented visual limitation. Keep the five user files untouched.
+
 ## Low resident GPU-resource estimate — September 21 (verified checkpoint)
 
 - Added a development-only resource estimator that de-duplicates actual Babylon vertex/index buffer capacity and ready internal textures, adds instance transforms plus framebuffer space, and reserves 25% for shader/uniform/driver allocations the browser cannot expose. Index buffers with zero reported capacity fall back to real index count and 16/32-bit upload type.

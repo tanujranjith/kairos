@@ -14,8 +14,9 @@ Kairos is a playable local release candidate. The current source integrates the 
 - Installed Chrome and Edge both drive through actual WebGPU and forced WebGL2 with third-party hosts blocked.
 - Selected 30-minute race endurance, maximum-speed streaming, 16-car racing/pits, wet-night traffic, handling/surface, race weekend and production delivery checks are retained in the dated benchmark evidence.
 - A conservative Low 1280×720 resident-resource audit peaks at 157.57MiB including a 25% untracked-allocation contingency, below the planned 256MiB estimate ceiling across city, mountain, highway, wet-night and eight-car-race scenes.
+- A CDP-scoped Windows/Edge process audit peaks at 1,334.97MiB settled summed working set, leaving 201.03MiB below the planned 1.5GiB process target on the development PC. Target-laptop certification remains separate.
 
-The exact audited production files include `index-BBNmaQ2P.js` and `cell-worker-D1LLTGra.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.277 seconds forced WebGL2 and 4.852 seconds automatic, with 10,521,118 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests.
+The exact audited production files include `index-DeTMf4zj.js` and `cell-worker-D1LLTGra.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.325 seconds forced WebGL2 and 4.854 seconds automatic, with 10,521,125 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests.
 
 ## Remaining acceptance boundary
 

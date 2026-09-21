@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Low browser-process memory and terminal home state — September 21 (verified checkpoint)
+
+A CDP-scoped Windows process audit now covers city, mountain, highway, wet-night, eight-car-race and post-race-home scenes on installed Edge/WebGL2 at Low 1280×720. Settled summed working set peaks at **1,334.97MiB**, leaving **201.03MiB** below the planned 1.5GiB target. This conservatively sums shared pages across processes and remains development-PC evidence rather than target-laptop certification.
+
+Reviewing the post-race capture found that returning home destroyed the session but retained `pausedFromDrive`, leaving a misleading `ESC · BACK TO DRIVE` footer. Home is now explicitly terminal: the pause reason and resume intent clear before rendering. The final audit asserts both state and DOM, and its screenshot shows ordinary home controls. The broader rendered interaction flow, 250 tests / 39 files, strict TypeScript, production build and refreshed cold delivery pass.
+
 ## Low resident GPU-resource estimate — September 21 (verified checkpoint)
 
 Kairos now has a repeatable conservative estimator for the plan's 256MiB Low-preset resident GPU-resource target. It counts unique Babylon vertex/index buffers, ready internal textures, instance transforms and framebuffer space, then reserves another 25% for allocations browser APIs do not expose. Zero-capacity index handles use the geometry's real index count and 16/32-bit upload type instead of being omitted.

@@ -2,11 +2,17 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Low browser-process memory — September 21
+
+- `audit-browser-memory.mjs` measures the same Low 1280×720 installed-Edge/WebGL2 matrix using CDP-scoped Windows processes: twelve-car city, mountain and highway scenes, twelve-car rainy Westbrook, an eight-car GT grid and the showroom after ending that race. Each controlled-time transition is garbage-collected before the OS sample so unreachable transient allocations do not masquerade as resident scene state.
+- Summed working set peaks at **1,334.97MiB** in rainy Westbrook, leaving **201.03MiB** under the planned **1.5GiB** browser-process target. City is 1,326.49MiB, mountain 1,296.39MiB, highway 1,268.35MiB, race 1,260.45MiB and post-race home 1,196.71MiB. This sum is conservative because shared pages may be counted once per Edge process; private bytes are retained separately in the report.
+- All six images were opened. Visual review exposed and fixed a stale `ESC · BACK TO DRIVE` footer after a race was destroyed; the final home state has `pausedFromDrive=false` and no resume control. The full rendered interaction verifier, **250 tests / 39 files**, strict TypeScript and production build pass. Cold 25Mbps/40ms production is **5.325s forced WebGL2 / 4.854s automatic**, **10,521,125 bytes**, with clean Free Drive and Northstar entry. Actual-laptop memory/frame pacing remains unverified.
+
 ## Low resident GPU-resource estimate — September 21
 
 - `audit-gpu-resources.mjs` measures five required Low 1280×720 views with installed Edge/WebGL2: twelve-car city traffic, twelve-car mountain pass, twelve-car highway, twelve-car rainy Westbrook night and an eight-car GT race grid. All captures were opened and agree with their text state; page-error, failed-request and external-request arrays are empty.
 - The estimator de-duplicates actual Babylon vertex/index buffer capacities and ready internal textures, counts instance transforms and browser-owned framebuffer space, and adds a **25% untracked-resource contingency**. The peak is rainy Westbrook at **157.57MiB**, leaving **98.43MiB** below the planned **256MiB** estimate ceiling. City is also 157.57MiB; mountain 113.03MiB; highway 110.35MiB; race 123.57MiB.
-- The isolated suite passes **250 tests / 39 files**; strict TypeScript and the production build pass with unchanged runtime files `index-BBNmaQ2P.js` and `cell-worker-D1LLTGra.js`. This closes the missing development-host estimate, not actual GPU/process telemetry. Driver allocation, the integrated-GPU shared-memory policy and the complete 8GB-laptop performance budget still require measurement on that machine. The required generic skill client was attempted after the tooling change, produced no output/artifact for over a minute, and was terminated rather than counted.
+- The isolated suite passes **250 tests / 39 files**; strict TypeScript and the production build pass. The later home-state correction produces `index-DeTMf4zj.js`; the worker remains `cell-worker-D1LLTGra.js`. This closes the missing development-host estimate, not actual GPU telemetry. Driver allocation, the integrated-GPU shared-memory policy and the complete 8GB-laptop performance budget still require measurement on that machine. The required generic skill client was attempted after the tooling change, produced no output/artifact for over a minute, and was terminated rather than counted.
 
 ## Save reset and quota recovery — September 21
 
