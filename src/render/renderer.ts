@@ -1,4 +1,4 @@
-import { Engine, WebGPUEngine, AbstractEngine, Scene, FreeCamera, Vector3, Color3, Color4, HemisphericLight, DirectionalLight, ShadowGenerator, MeshBuilder, StandardMaterial, VertexBuffer, DefaultRenderingPipeline, ImageProcessingConfiguration, Quaternion, Mesh, LinesMesh, PBRMaterial, TransformNode, DynamicTexture, SpotLight, Light } from '@babylonjs/core';
+import { Engine, WebGPUEngine, AbstractEngine, Scene, FreeCamera, Vector3, Color3, Color4, HemisphericLight, DirectionalLight, ShadowGenerator, MeshBuilder, StandardMaterial, VertexBuffer, DefaultRenderingPipeline, ImageProcessingConfiguration, Quaternion, Mesh, LinesMesh, PBRMaterial, TransformNode, DynamicTexture, SpotLight, Light, Material } from '@babylonjs/core';
 import type { Settings } from '../core/types';
 import { clamp, approach } from '../core/math';
 import type { Vehicle } from '../sim/physics';
@@ -41,9 +41,23 @@ export class Renderer {
   }
   static async create(canvas:HTMLCanvasElement){let engine:AbstractEngine|undefined;const forceGL=new URLSearchParams(location.search).get('renderer')==='webgl';
     configureLocalResources();
-    if(!forceGL&&await WebGPUEngine.IsSupportedAsync){let gpu:WebGPUEngine|undefined;try{gpu=new WebGPUEngine(canvas,{antialias:true,powerPreference:'high-performance',...localShaderOptions});await gpu.initAsync();engine=gpu;}catch(e){console.warn('WebGPU unavailable; using WebGL2',e);gpu?.dispose();}}
+    if(!forceGL&&await WebGPUEngine.IsSupportedAsync){let gpu:WebGPUEngine|undefined;try{gpu=new WebGPUEngine(canvas,{antialias:true,powerPreference:'high-performance',doNotHandleContextLost:true,...localShaderOptions});await gpu.initAsync();this.monitorWebGPU(gpu);engine=gpu;}catch(e){console.warn('WebGPU unavailable; using WebGL2',e);gpu?.dispose();}}
     if(!engine){const gl=new Engine(canvas,true,{preserveDrawingBuffer:true,stencil:true,powerPreference:'high-performance',disableWebGL2Support:false});if(gl.webGLVersion<2){gl.dispose();throw new Error('Kairos needs hardware-accelerated WebGL2 or WebGPU. Enable browser hardware acceleration, then reload.');}engine=gl;}
     return new Renderer(engine,canvas);
+  }
+  /** Babylon 9.27 starts its asynchronous WebGPU reinitialization without
+   * awaiting it before rebuilding resources. Own the loss loop so buffers,
+   * textures and effects are rebuilt only after the replacement device exists. */
+  private static monitorWebGPU(engine:WebGPUEngine){
+    type Internals={_device:GPUDevice;_isDisposed:boolean;_contextWasLost:boolean;_currentRenderPass:unknown;_clearEmptyResources:()=>void;_rebuildGraphicsResources:()=>void;_flagContextRestored:()=>void};
+    const internal=engine as unknown as Internals,device=internal._device;
+    void device.lost.then(async info=>{
+      if(internal._isDisposed)return;internal._contextWasLost=true;console.warn(`Kairos WebGPU device lost: ${info.reason}${info.message?` · ${info.message}`:''}`);engine.onContextLostObservable.notifyObservers(engine);
+      const snapshotRenderingMode=engine.snapshotRenderingMode,snapshotRendering=engine.snapshotRendering,disableCacheSamplers=engine.disableCacheSamplers,disableCacheRenderPipelines=engine.disableCacheRenderPipelines,disableCacheBindGroups=engine.disableCacheBindGroups,enableGPUTimingMeasurements=engine.enableGPUTimingMeasurements;
+      const depthTest=engine.depthCullingState.depthTest,depthFunc=engine.depthCullingState.depthFunc,depthMask=engine.depthCullingState.depthMask,stencilTest=engine.stencilState.stencilTest;
+      try{internal._clearEmptyResources();await engine.initAsync();engine.snapshotRenderingMode=snapshotRenderingMode;engine.snapshotRendering=snapshotRendering;engine.disableCacheSamplers=disableCacheSamplers;engine.disableCacheRenderPipelines=disableCacheRenderPipelines;engine.disableCacheBindGroups=disableCacheBindGroups;engine.enableGPUTimingMeasurements=enableGPUTimingMeasurements;internal._currentRenderPass=null;internal._rebuildGraphicsResources();engine.depthCullingState.depthTest=depthTest;engine.depthCullingState.depthFunc=depthFunc;engine.depthCullingState.depthMask=depthMask;engine.stencilState.stencilTest=stencilTest;this.monitorWebGPU(engine);internal._flagContextRestored();}
+      catch(error){console.error('Kairos could not rebuild the WebGPU device.',error);}
+    });
   }
   registerCar(car:CarVisual,grounded=true){
     const existing=this.registeredCars.get(car);if(existing){existing.isVisible=grounded;return;}
@@ -63,6 +77,7 @@ export class Renderer {
     }
   }
   prepareReflections(car:CarVisual,settings:Settings,garage:boolean,clock:number){this.reflections.update({position:car.root.position,garage,clock,stamp:`${Math.round(settings.time*4)}:${settings.weather}`},settings.quality,[car.paint,car.glass]);}
+  recoverGraphicsResources(){this.reflections.recover();const old=[this.outdoorEnvironment,this.studioEnvironment];this.outdoorEnvironment=lightingEnvironment(this.scene);this.studioEnvironment=lightingEnvironment(this.scene,true);this.scene.environmentTexture=this.wasGarage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;for(const texture of old){const internal=(texture as unknown as {_texture?:{_hardwareTexture:unknown}})._texture;if(internal)internal._hardwareTexture=null;texture.dispose();}this.engine.wipeCaches(true);this.scene.markAllMaterialsAsDirty(Material.TextureDirtyFlag);}
   private applyHardwareScale(){if(!this.activeSettings)return;const profiles={Low:[1280,720],Medium:[1600,900],High:[1920,1080],Ultra:[2560,1440]},profile=profiles[this.activeSettings.quality],viewportScale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(viewportScale/(this.activeSettings.resolution*this.dynamicResolutionScale));}
   applySettings(settings:Settings,resetDynamic=false){this.activeSettings=settings;if(resetDynamic)this.dynamicResolutionScale=1;this.applyHardwareScale();const shadows={Low:1024,Medium:1536,High:2048,Ultra:4096};this.shadow.getShadowMap()?.resize(shadows[settings.quality]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}
   setDynamicResolutionScale(scale:number){const next=clamp(scale,.7,1);if(Math.abs(next-this.dynamicResolutionScale)<1e-6)return;this.dynamicResolutionScale=next;this.applyHardwareScale();}

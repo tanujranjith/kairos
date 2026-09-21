@@ -4,6 +4,21 @@ export function renderPreparationFrame(engine:{beginFrame:()=>void;endFrame:()=>
   engine.beginFrame();try{draw();}finally{engine.endFrame();}
 }
 
+/** Wait for asynchronous texture/buffer rebuilds before submitting a frame.
+ * Babylon can announce context restoration while URL textures are still loading. */
+export async function waitForPresentationReady(
+  ready:()=>boolean,
+  options:{now?:()=>number;yieldFrame?:()=>Promise<void>;timeoutMs?:number}={},
+){
+  const now=options.now??(()=>performance.now());
+  const yieldFrame=options.yieldFrame??(()=>new Promise<void>(resolve=>setTimeout(resolve,16)));
+  const deadline=now()+(options.timeoutMs??30_000);
+  while(!ready()){
+    if(now()>=deadline)throw new Error('Graphics resources did not become ready. Reload or try another graphics renderer.');
+    await yieldFrame();
+  }
+}
+
 /** Render without advancing simulation until real resources are ready. Two
  * ready draws allow a completed reflection to be bound on the following draw. */
 export async function preparePresentation(

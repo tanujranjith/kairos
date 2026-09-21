@@ -60,6 +60,8 @@ Aster now has planted banks/tree belts and a dressed rear paddock. Racing AI req
 
 Settings contain key remapping, assists, units, weather, time, graphics, traffic and sound. Fresh profiles benchmark displayed frame pacing and choose a graphics preset automatically; selecting Low, Medium, High or Ultra turns that selection off. Dynamic resolution remains active during driving, with a 70% floor and gradual recovery, and never changes physics or race rules. Telemetry shows actual render dimensions and effective scale. Save data is versioned IndexedDB data on this browser and origin; use export/import to transfer it. An unavailable database leaves the game playable in memory and displays a warning. Clearing browser data removes local saves.
 
+If the browser loses its graphics context or GPU device while driving, Kairos pauses the simulation and keeps the vehicle/session state unchanged. WebGL2 rebuilds the local environment maps and reflection probes in place, then waits for the player to resume. A WebGPU device that cannot be reacquired within 20 seconds offers an explicit **Restart with WebGL2** action after persisting the save. The fallback reload is intentional because current Edge/Windows did not provide a replacement device after an explicit device destruction; it is not represented as seamless WebGPU recovery.
+
 In menus, controller D-pad / left stick up-down moves focus, left-right changes selects/sliders or cycles paint colors, A confirms and B/Menu returns. Keyboard Tab/Shift+Tab moves focus, Enter/Space activates, and Escape returns. Focus survives settings changes; held buttons must be released after connecting or entering a menu. If browser autoplay is blocked, click or press a key once to enable audio; driving does not wait for sound permission. Native save-file dialogs still require the operating system's controls.
 
 ## Validation and development
@@ -98,6 +100,7 @@ node scripts/verify-interactions.mjs
 node scripts/verify-storage.mjs
 node scripts/verify-browsers.mjs msedge
 node scripts/verify-adaptive-quality.mjs
+node scripts/verify-graphics-recovery.mjs
 node scripts/build-assets.mjs
 ```
 

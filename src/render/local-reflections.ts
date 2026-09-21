@@ -76,6 +76,10 @@ export class LocalReflections {
     probe.cubeTexture.resetRefreshCounter();
   }
   snapshot(){return {size:this.size,ready:this.ready,captures:this.captures,faceSubmissions:this.faceSubmissions,pendingFace:this.pendingFace,meshes:this.probe?.renderList?.length??0,trianglesPerFace:this.triangles,lastCpuSubmitMs:this.lastCpuMs,signature:this.signature};}
+  /** Render-target wrappers are rebuilt after WebGL loss, but material-held
+   * cube textures can still reference the old context. Recreate both probes;
+   * the next update captures and publishes a complete replacement cube. */
+  recover(){const materials=[...this.bound],size=this.size;this.releaseProbe();if(size)this.create(size);this.bound=new Set(materials);for(const material of materials)material.reflectionTexture=null;}
   private releaseProbe(){
     for(const material of this.bound)material.reflectionTexture=null;this.bound.clear();
     for(const probe of this.buffers){const index=this.scene.customRenderTargets.indexOf(probe.cubeTexture);if(index>=0)this.scene.customRenderTargets.splice(index,1);probe.dispose();}

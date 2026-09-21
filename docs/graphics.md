@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Context and device interruption recovery — September 21
+
+Kairos now treats renderer loss as a simulation boundary. The game moves to a dedicated recovery pause, clears live input and fixed-step backlog, retains the physical state, and blocks resume/reset until rebuilt resources are ready. WebGL2 recreates authored environment cubes and the double-buffered local probes after an actual context restore, invalidates stale renderer caches and dirties every material texture binding. Readiness is established before drawing the recovered scene, preventing stale IBL handles and premature texture submissions.
+
+WebGPU recovery is explicitly bounded. Kairos owns the asynchronous engine reinitialization rather than allowing Babylon 9.27 to rebuild resources before `initAsync()` completes. If the browser has not supplied a replacement device after 20 seconds, the UI offers a persisted-save WebGL2 restart. The exact device-destruction readback cancellation is recognized without hiding other rendering errors. Installed Edge verification forced both real paths; details, timings and retained captures are in [validation evidence](benchmarks.md). This adds fault tolerance but does not reduce the remaining KTX2, target-laptop, endurance or final-art work.
+
 ## Automatic quality and bounded dynamic resolution — September 20
 
 Fresh profiles begin on Low while a live displayed-frame benchmark warms for 30 frames and samples the next 120 valid frames. Its p95 selects Low, Medium, High or Ultra; manual preset selection disables that automatic choice. Profiles created before this field existed stay manual so an update cannot silently replace the player's saved preset. If the benchmark completes after entering gameplay, the chosen preset is deferred until returning to the showroom, preventing a density change from clearing streamed roads or race reservations in motion.

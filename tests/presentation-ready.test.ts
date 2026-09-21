@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {preparePresentation,renderPreparationFrame} from '../src/core/presentation-ready';
+import {preparePresentation,renderPreparationFrame,waitForPresentationReady} from '../src/core/presentation-ready';
 
 describe('initial presentation readiness',()=>{
   it('submits each standalone engine frame before yielding, including failed draws',()=>{
@@ -21,5 +21,10 @@ describe('initial presentation readiness',()=>{
   });
   it('does not swallow render errors',async()=>{
     await expect(preparePresentation(()=>{throw new Error('device lost');},()=>true)).rejects.toThrow('device lost');
+  });
+  it('waits for rebuilt resources without submitting premature frames',async()=>{
+    let clock=0,checks=0;
+    await waitForPresentationReady(()=>++checks===4,{now:()=>clock,yieldFrame:async()=>{clock+=5;}});
+    expect(checks).toBe(4);expect(clock).toBe(15);
   });
 });
