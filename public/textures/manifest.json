@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "assetVersion": "551cbf6d74e06598",
+  "assetVersion": "d0e0147642f9b3bd",
   "generator": "src/render/texture-fields.mjs",
   "generatorSha256": "6edf04dfe295ae9c9e64c4ca17bb6684cff90d280dd51a6795f622c83d7fe0c6",
   "builder": "scripts/build-textures.mjs",
-  "builderSha256": "21902c171e74ceb59d1f8992030357cbf9ae430545bf8ee06b513e7bc33ff5b7",
+  "builderSha256": "bf4c21e04647e698120b4545a8d098e1f6735ee3d16ad730ad6825d8570f64ff",
   "generatedBy": "ktx2-encoder 0.6.0 / Basis Universal",
   "entries": [
     {
@@ -12,9 +12,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 17655,
-      "sha256": "e2a401f1b1ec6253ab8546e8eacb498d914e5e820d8ac5c542788779f7c7430e"
+      "encoding": "UASTC+Zstd",
+      "bytes": 58901,
+      "sha256": "f5904a5c297199f09da6671cc09e978ae42554e91a2f7e733e8a6684681aeb42"
     },
     {
       "file": "surface/asphalt-normal.ktx2",
@@ -30,9 +30,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 18857,
-      "sha256": "dabf295266a0aa080ea9692bafde641f8cda35569e4ed235865ddf93deee57f8"
+      "encoding": "UASTC+Zstd",
+      "bytes": 66498,
+      "sha256": "d7d26c92d7f8d7b0b348faa497a62229e0ae7192eed115e20bd4ad5086757546"
     },
     {
       "file": "surface/meadow-normal.ktx2",
@@ -48,9 +48,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 18560,
-      "sha256": "e167d9b43136212960146ba694f6ca9ccb9ca8f4f1c5aab3b720dae0c5374dd4"
+      "encoding": "UASTC+Zstd",
+      "bytes": 70186,
+      "sha256": "accf5c36722e9d69e7be29bb8214002f9190159c3c51462db7f68751bea28fa6"
     },
     {
       "file": "surface/gravel-normal.ktx2",
@@ -66,9 +66,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 15008,
-      "sha256": "71ad3c1f8265d861b4fa5e07c82551f6ebc8ec45bfbecfbc165a9da0866c2475"
+      "encoding": "UASTC+Zstd",
+      "bytes": 39185,
+      "sha256": "b02cc11ec0cc6fcf69386954d5d72c57e6bd7656970febc02d3cc0fe152ad0d7"
     },
     {
       "file": "surface/concrete-normal.ktx2",
@@ -84,9 +84,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 3151,
-      "sha256": "726e442c1017b40441b3b03a8b42823f4adc665f9a88f3130361d2b142de2199"
+      "encoding": "UASTC+Zstd",
+      "bytes": 22515,
+      "sha256": "4446565677efad898986024b5d7cbd689a22a4f6938ba9b4154f51c709f82730"
     },
     {
       "file": "surface/stone-normal.ktx2",
@@ -102,9 +102,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 14615,
-      "sha256": "20c8c74d6e1c88c26c769e646fd9cec21de26890af5d1fe683faacf100e12bbf"
+      "encoding": "UASTC+Zstd",
+      "bytes": 39600,
+      "sha256": "0c209efaece4969950422bb3d38554a0f28034a53b94ceb520d3c40a46a6011c"
     },
     {
       "file": "surface/bark-normal.ktx2",
@@ -120,9 +120,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 3629,
-      "sha256": "1fb5055b1905ed83c4d7abccefdfcbfb21834f49a035f6f93100039ef793bd5f"
+      "encoding": "UASTC+Zstd",
+      "bytes": 23139,
+      "sha256": "68268b2145b85ff800ccced717b9c3325dec1fadcbfabbdbf446573ed2f2946e"
     },
     {
       "file": "surface/water-normal.ktx2",
@@ -138,9 +138,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 14512,
-      "sha256": "45ff67b29bf7934756341c89c0b41e69e3f805460fbfb791fb311714a7818f8d"
+      "encoding": "UASTC+Zstd",
+      "bytes": 37999,
+      "sha256": "bf4362197dbd3ed2e8ae830a45b437298eb60bbe70e6f39c6f3cea863bb8562b"
     },
     {
       "file": "surface/cliff-normal.ktx2",
@@ -156,9 +156,9 @@
       "width": 256,
       "height": 256,
       "kind": "albedo",
-      "encoding": "ETC1S",
-      "bytes": 19413,
-      "sha256": "a1c3d4406ca6f13735f123afe5843ae6b96aecb8a8c94c4a6674f567bf791558"
+      "encoding": "UASTC+Zstd",
+      "bytes": 75027,
+      "sha256": "9e81f9464921fa71dfab407f264829deefdfe4bbbbc9d49a6042a26c6c99d2db"
     },
     {
       "file": "surface/boulder-normal.ktx2",
@@ -179,5 +179,5 @@
       "sha256": "377fbde56cd67b2b4e0d9630364f19ac74077b49a7526e7f6cdfd092fc21768c"
     }
   ],
-  "totalBytes": 968555
+  "totalBytes": 1276205
 }

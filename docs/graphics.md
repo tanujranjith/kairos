@@ -1,5 +1,11 @@
 # Original graphics upgrade — first substantial art pass
 
+## Renderer-safe façades and texture mipmaps — September 21
+
+Concrete plazas and masonry no longer break into large triangular tonal fields on Chromium WebGPU. Controlled variants isolated the defect to ETC1S albedo mip levels: the exact procedural PNG and the same KTX2 without mipmapping were both clean. All albedo assets now use UASTC+Zstd with sRGB transfer and mipmaps, bringing the complete nineteen-texture set to 1,276,205 bytes. Native WebGL2/WebGPU decoding, mipmaps and the local PNG failure path pass.
+
+Detailed office glazing now uses a restrained dielectric material, wider 3.1 m modules and a raster-only depth bias against its solid wall shell. This removes the distance-only diagonal pane split without moving visual or collision geometry. Low city improves to 217 draws / 427,817 triangles and wet night to 218 / 427,962. See [diagnosis and measured evidence](facade-materials.md).
+
 ## Procedural urban parcel grounding and parking — September 21
 
 Procedural Westbrook buildings now sit on a narrow concrete apron that rotates with the footprint and follows the underlying terrain sample at every grid vertex. Eligible street-facing setbacks also use a darker parking forecourt capped at seven metres with restrained white bay separators. The generator measures road width and actual lateral setback, refusing placements that cannot remain clear of the outer sidewalk.
@@ -18,7 +24,7 @@ A follow-up normalizes pane-tint variation for negative deterministic cell seeds
 
 The continuous-band secondary-wing design is now a shared architecture primitive and appears in a deterministic one-third of procedural Westbrook offices. The form retains a plinth, cornice, roof/equipment silhouette, four-sided glazing, sparse proud mullions and a canopy while continuing to mix with brick, limestone and individual-pane buildings. Screenshot review rejected all-office and half-office distributions as too repetitive; the final mix reads as a distinct modern background family rather than the whole skyline.
 
-The new bands sit 0.065m outside the opaque shell and render without the coplanar WebGPU streaks found in the first authored-block attempt. They reuse existing streamed buffers and add no material, texture, light, collision owner or runtime request. The live Low city sample drops to 210 draws / 464,507 triangles, recovering about 26,892 triangles from the previous block checkpoint. Existing pane-grid towers retain their stylized WebGPU reflection speckling; broader material/façade realism remains unfinished. See [implementation and measured checks](background-offices.md).
+The new bands sit 0.065m outside the opaque shell and render without the coplanar WebGPU streaks found in the first authored-block attempt. They reuse existing streamed buffers and add no material, texture, light, collision owner or runtime request. The live Low city sample drops to 210 draws / 464,507 triangles, recovering about 26,892 triangles from the previous block checkpoint. This checkpoint did not fix the then-visible pane-grid variation; the later [renderer-safe façade pass](facade-materials.md) does. See [implementation and measured checks](background-offices.md).
 
 ## Westbrook block composition — September 21
 
@@ -48,11 +54,11 @@ All twelve GLBs were regenerated and the manifest now records the animation-read
 
 ## Versioned KTX2 surface delivery — September 21
 
-The nine original periodic surface pairs and packed cloud-density atlas now ship as nineteen mipmapped KTX2 files. Perceptual albedo uses ETC1S; linear normals and cloud density use UASTC+Zstd. The deterministic field generators remain the single source for both the offline encoder and lazy error fallback, so recovery does not substitute a different-looking material. The generated manifest records dimensions, encoding, byte count and SHA-256 for every file; a content-derived version is added to runtime URLs and checked at build time.
+The nine original periodic surface pairs and packed cloud-density atlas now ship as nineteen mipmapped KTX2 files. Perceptual albedo, linear normals and cloud density use UASTC+Zstd; albedo keeps an sRGB transfer function while normal/cloud data remain linear. The deterministic field generators remain the single source for both the offline encoder and lazy error fallback, so recovery does not substitute a different-looking material. The generated manifest records dimensions, encoding, byte count and SHA-256 for every file; a content-derived version is added to runtime URLs and checked at build time.
 
 Babylon's KTX2 decoder, Basis transcoders and Zstd decoder are pinned, bundled and explicitly configured to hashed same-origin assets before any material is created. Installed Edge loaded 22 active KTX2-backed texture instances with no ordinary fallback, failed or external request on both native renderer paths. WebGL2 selected BC7 (`36492`); this Windows WebGPU adapter exposed no accepted compressed format and decoded to RGBA8. Deliberately aborting every request for the asphalt albedo rebuilt the exact procedural pixels, left all four wheels grounded and produced only the specifically classified failed requests/warning. All three captures were opened and match visually.
 
-The generated KTX2 set is 968,555 bytes, compared with roughly six megabytes of base-level runtime RGBA source data before mip overhead. This is transfer/source compression and removes ordinary startup field generation; it is not proof of a specific GPU-resident saving on adapters that require RGBA8 transcoding. Target-laptop profiling and broader final art remain active work.
+The renderer-safe generated KTX2 set is 1,276,205 bytes, compared with roughly six megabytes of base-level runtime RGBA source data before mip overhead. This is transfer/source compression and removes ordinary startup field generation; it is not proof of a specific GPU-resident saving on adapters that require RGBA8 transcoding. Target-laptop profiling and broader final art remain active work.
 
 ## Context and device interruption recovery — September 21
 

@@ -22,4 +22,4 @@ The helper appends only to the existing wall, roof and glass buffers. It adds no
 - Strict TypeScript, 231 tests / 36 files, all nineteen KTX2 files and the Node24 production build pass. The exact chunks are `index-C7MrWYeJ.js` and `cell-worker-B5AXItFC.js`.
 - Cold-cache 25Mbps/40ms local production reaches the menu in 6.204s forced WebGL2 and 5.768s on the automatic renderer request, transfers 12,977,628 bytes, and enters Free Drive plus Northstar without page, failed or external requests. These are development-host delivery samples, not target-laptop FPS, actual Internet or authorized HTTPS evidence.
 
-The result is a cleaner and cheaper background-office family, not a global photoreal architecture pass. Broader façade materials, occupied interiors, pedestrians, street density and the legacy pane-grid appearance remain future art work.
+The result is a cleaner and cheaper background-office family, not a global photoreal architecture pass. The later [renderer-safe façade pass](facade-materials.md) resolves the reproduced distant mip/depth triangles. Occupied interiors, pedestrians, street density and reference-level architecture remain future art work.

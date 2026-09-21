@@ -1,5 +1,14 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Renderer-safe façade materials and albedo mipmaps — September 21 (verified checkpoint)
+
+- Isolated the WebGPU city triangles into two faults. Large concrete/plaza fields came from ETC1S albedo mip levels: removing only albedo, disabling only mipmapping and replacing it with the exact procedural PNG proved source pixels, UVs, normals, shadows and geometry were sound. Close panes were clean while distance views split against the solid wall shell, proving depth precision rather than reflections.
+- Rebuilt every albedo as sRGB UASTC+Zstd, retained UASTC linear normals/cloud data and added a manifest gate. Nineteen files total 1,276,205 bytes, version `d0e0147642f9b3bd`. Shared glass is now restrained dielectric with a tested raster-only `-6` shell bias; detailed offices use wider 3.1m/2.55m modules.
+- Forced WebGL2 and actual WebGPU pass all four Westbrook sites, four `Concrete` contacts each and normal driving at 19.325m/s. Opened final aerial/drive images are clean. Supplied input reaches 10.933m/s, four contacts, zero damage, 12+12 traffic and no failed cell. Native compressed decoding/fallback passes both renderers.
+- Low city improves to 217/427,817 and wet night 218/427,962 draws/triangles. Three city/forest/lake loops remain 498/74/44, 368/75/45 and 318/74/44; three race/home cycles return to 138/73/43 and zero cells.
+- Complete suite passes 236 tests / 37 files; strict TypeScript, nineteen-texture integrity and production build pass (`index-DrUztXtx.js`, worker `cell-worker-_XpAMRNN.js`). Cold25Mbps/40ms production reaches menu in 6.365s forced WebGL2 / 5.688s automatic, transfers 12,794,314 bytes and has no page, failed or external requests. Final production images were opened.
+- NEXT: preserve this fixed texture/depth foundation and continue a materially visible world/model or broad interaction gap. Actual 8GB-laptop performance and authorized HTTPS deployment still require access. Keep the five user files untouched.
+
 ## Marked procedural parking forecourts — September 21 (verified follow-up)
 
 - Added capped street-facing parking surfaces to eligible procedural Westbrook buildings. The generator derives safe depth from actual road width/setback, refuses cramped sites, follows terrain and keeps physical `Concrete` identity. Bay separators share the normal white-marking batch.

@@ -7,6 +7,7 @@ const manifest=JSON.parse(await fs.readFile(path.join(root,'manifest.json'),'utf
 assert.equal(manifest.version,1);assert.equal(manifest.generatorSha256,sha(generator),'KTX2 source fields changed; run npm run build:textures');assert.equal(manifest.builderSha256,sha(builder),'KTX2 builder changed; run npm run build:textures');assert.equal(manifest.entries.length,19);
 let total=0;
 for(const entry of manifest.entries){
+  if(entry.kind==='albedo')assert.equal(entry.encoding,'UASTC+Zstd',`${entry.file} must retain renderer-safe UASTC mip levels`);
   const data=await fs.readFile(path.join(root,entry.file));assert.deepEqual([...data.subarray(0,12)],magic,`${entry.file} is not KTX2`);assert.equal(data.readUInt32LE(20),entry.width,`${entry.file} width mismatch`);assert.equal(data.readUInt32LE(24),entry.height,`${entry.file} height mismatch`);assert.equal(data.byteLength,entry.bytes);assert.equal(sha(data),entry.sha256,`${entry.file} hash mismatch`);total+=data.byteLength;
 }
 async function filesBelow(directory,prefix=''){const files=[];for(const item of await fs.readdir(directory,{withFileTypes:true})){const relative=path.posix.join(prefix,item.name);if(item.isDirectory())files.push(...await filesBelow(path.join(directory,item.name),relative));else if(item.name.endsWith('.ktx2'))files.push(relative);}return files;}

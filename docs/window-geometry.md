@@ -10,7 +10,7 @@ The original modular-building generator represented every repeated upper-story w
 
 Forced WebGL2 and native WebGPU screenshots were opened at Cedar Square, Market Court, Harbor Exchange, Westbrook Campus and during normal road driving. Every exterior elevation keeps visible windows and the authored band-window buildings are unchanged. The old box volume is gone without creating culling holes or missing side elevations.
 
-This optimization does **not** remove the remaining stylized light/dark variation on legacy pane-grid towers. That variation survives with single surfaces and is therefore a glass/material/reflection art issue rather than proof of overlapping pane geometry. It remains future work and is not represented as fixed here.
+This geometry checkpoint did **not** remove the then-visible light/dark variation on pane-grid towers. Later controlled diagnostics separated ETC1S albedo mip corruption from distance-only shell depth precision and fixed both without undoing these single surfaces; see [renderer-safe façades](facade-materials.md).
 
 ### Deterministic tint range follow-up
 

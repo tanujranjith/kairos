@@ -44,11 +44,14 @@ export function buildArchitecture(b:ArchitectureBuffers,s:BuildingSpec){
   }
   // Four distinct elevations share geometry helpers but not a wall of identical black holes.
   for(let floor=0,level=factory?4.4:house?1.2:4.7;level+(house?1.45:office?2.4:1.9)<h-.45;floor++,level+=house?3.0:3.2){
-    const halfW=w/2-(office?setback:0),halfD=d/2-(office?setback:0),spacing=office?2.3:3.1,paneH=house?1.45:office?2.4:1.9;
+    // Office modules need a readable pier between panes. The old 2.30 m
+    // cadence left only 25 cm of wall, which became a subpixel moiré pattern
+    // across skyline buildings even though the close geometry was sound.
+    const halfW=w/2-(office?setback:0),halfD=d/2-(office?setback:0),spacing=3.1,paneH=house?1.45:office?2.4:1.9;
     for(let face=0;face<4;face++){
       const side=face%2===0?-1:1,front=face<2,span=front?halfW:halfD;
       for(let offset=-span+1.7,index=0;offset<span-1;offset+=spacing,index++){
-        const px=front?offset:side*(halfW+.027),pz=front?side*(halfD+.027):offset,paneW=office?2.05:1.6,shade=.7+(Math.abs(index*7+floor*3+s.seed)%9)/30;
+        const px=front?offset:side*(halfW+.027),pz=front?side*(halfD+.027):offset,paneW=office?2.55:1.6,shade=.7+(Math.abs(index*7+floor*3+s.seed)%9)/30;
         pane(front,side,offset,level,paneW,paneH,side*((front?halfD:halfW)+.065),glass.map((v,c)=>c===3?1:v*shade));
         // Proud frames and sills read as recesses without hollow, expensive wall topology.
         box(b.wall,px,level-.12,pz,front?paneW+.27:.16,.12,front?.16:paneW+.27,trim);

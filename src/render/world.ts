@@ -18,6 +18,7 @@ import { ResourcePool } from '../world/resource-pool';
 import {StreetLighting} from './street-lighting';
 import {GroundMaterial} from './ground-material';
 import {createBoulders} from './boulders';
+import {configureArchitecturalGlass} from './architectural-glass';
 
 interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mesh[];detailMeshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];signals:SignalMesh[];collision:boolean;detail:boolean;leases:Map<Mesh,{release:()=>void}>}
 export class WorldRenderer {
@@ -46,10 +47,7 @@ export class WorldRenderer {
     }
     this.road.roughness=.94;this.road.metallic=0;
     new GroundMaterial(this.terrain);
-    // Opaque architectural glazing approximates an unmodeled dark interior.
-    // A pale diffuse base used to overwhelm reflections and read as pink panels.
-    this.glass.albedoColor=Color3.FromHexString('#35464e').toLinearSpace();this.glass.metallic=.35;this.glass.roughness=.14;
-    this.glass.clearCoat.isEnabled=true;this.glass.clearCoat.intensity=1;this.glass.clearCoat.roughness=.10;
+    configureArchitecturalGlass(this.glass);
     const windowAtlas=RawTexture.CreateRGBATexture(new Uint8Array([0,0,0,255,255,180,103,255]),2,1,scene,false,false,Texture.NEAREST_SAMPLINGMODE);windowAtlas.name='original-occupied-window-emission';windowAtlas.gammaSpace=true;windowAtlas.wrapU=windowAtlas.wrapV=Texture.CLAMP_ADDRESSMODE;this.glass.emissiveTexture=windowAtlas;
     const vegetation=createVegetation(scene);this.treeMesh=vegetation.tree;this.oakMesh=vegetation.oak;this.trunkMesh=vegetation.trunk;this.oakTrunkMesh=vegetation.oakTrunk;this.grassMesh=vegetation.grass;this.foliage=vegetation.foliage;this.trunk=vegetation.bark;
     for(const source of [this.treeMesh,this.oakMesh,this.trunkMesh,this.oakTrunkMesh,this.grassMesh])(source.material as PBRMaterial).maxSimultaneousLights=6;

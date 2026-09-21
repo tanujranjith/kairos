@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Renderer-safe façade materials — September 21 (verified checkpoint)
+
+The reproduced WebGPU triangles across concrete/masonry were traced to ETC1S albedo mip levels, not normals, shadows, reflections or source geometry. All nineteen original surface/cloud outputs now use UASTC+Zstd while preserving sRGB albedo, linear normal/cloud data, mipmaps, versioning and the exact procedural fallback. Detailed office windows use wider stable modules, restrained dielectric glass and a raster-only depth bias against the low-cost solid shell.
+
+Both renderer paths show clean Westbrook overviews and driving views; four-site physical contacts, native compressed-texture decoding/fallback, supplied keyboard input and repeated streaming/race cleanup pass. Low city improves to 217 / 427,817 draws/triangles and wet night to 218 / 427,962. The complete 236-test / 37-file suite, strict TypeScript, texture integrity, production build and exact cold-cache delivery smoke pass. This fixes the reproduced development-GPU artifact, not every adapter, modeled interiors, photoreal architecture, target-laptop certification or hosted HTTPS acceptance. See [diagnosis and evidence](facade-materials.md).
+
 ## Procedural urban aprons and parking forecourts — September 21 (verified checkpoint)
 
 Every procedural Westbrook building now receives a narrow, rotated, terrain-following concrete apron. Eligible setbacks also gain a capped street-facing parking forecourt with restrained bays; sites too close to the sidewalk are refused. The hardscape joins the collision-bearing structure mesh and carries `Concrete/structure` contact identity, while separators share the existing white-marking batch.
@@ -10,7 +16,7 @@ Forced WebGL2 and actual WebGPU views show clean edges and readable bays without
 
 Repeated upper-story windows in the detailed modular building family now use one correctly wound exterior quad instead of a shallow six-faced box. Proud frames, sills, deterministic colour/occupancy, all four elevations and the shared glass material remain unchanged. Native WebGL2/WebGPU inspection shows no missing façades or culling holes, and the ordinary physical surfaces are untouched.
 
-The Low city sample falls again to 218 draws / 428,325 triangles and wet night to 219 / 428,492; the two most recent architecture checkpoints together recover 63,074 triangles from the 491,399-triangle pre-pass city sample. A follow-up fixes signed-remainder tint values that could darken negative-seed panes below their authored range. Four-site contacts, normal and supplied keyboard input, repeated resource cleanup, 232 tests / 36 files, strict build, texture integrity and exact production delivery pass. The surviving legacy pane-grid light/dark variation is now isolated as a material/reflection art issue and remains unfinished. See [implementation and evidence](window-geometry.md).
+The Low city sample falls again to 218 draws / 428,325 triangles and wet night to 219 / 428,492; the two most recent architecture checkpoints together recover 63,074 triangles from the 491,399-triangle pre-pass city sample. A follow-up fixes signed-remainder tint values that could darken negative-seed panes below their authored range. Four-site contacts, normal and supplied keyboard input, repeated resource cleanup, 232 tests / 36 files, strict build, texture integrity and exact production delivery pass. The later renderer-safe façade checkpoint resolves the surviving reproduced distance triangles; see [that diagnosis](facade-materials.md). See [this implementation and evidence](window-geometry.md).
 
 ## Shared background-office family — September 21 (verified checkpoint)
 
@@ -84,7 +90,7 @@ This closes the selected maximum-speed traversal and abrupt-route resource-lifec
 
 ## Versioned KTX2 runtime textures — September 21 (verified checkpoint)
 
-The original surface and cloud fields now have an offline, deterministic KTX2 pipeline. Nineteen mipmapped files total 968,555 bytes; albedo uses ETC1S and linear normal/cloud data uses UASTC+Zstd. Content fingerprints version every texture URL, the production build rejects stale or modified output, and all Basis/Zstd decoder resources are pinned and delivered from Kairos's own hashed assets. A missing texture lazily rebuilds its exact original procedural field rather than leaving a blank material.
+The original surface and cloud fields now have an offline, deterministic KTX2 pipeline. After the renderer-safe façade follow-up, nineteen mipmapped files total 1,276,205 bytes and all use UASTC+Zstd; albedo retains sRGB transfer while normal/cloud data remain linear. Content fingerprints version every texture URL, the production build rejects stale or modified output, and all Basis/Zstd decoder resources are pinned and delivered from Kairos's own hashed assets. A missing texture lazily rebuilds its exact original procedural field rather than leaving a blank material.
 
 Installed Edge verifies 22 active KTX2-backed instances in WebGL2 and WebGPU with no ordinary fallback, failed or external requests. WebGL2 transcodes to BC7; the tested WebGPU adapter exposes no supported block-compression format and receives RGBA8. A deliberately blocked asphalt texture falls back successfully with four grounded contacts and no unrelated warning/error. The supplied input client, 218-test suite, strict TypeScript, production build and cold 25Mbps/40ms production smoke pass; exact metrics and limits are in [validation evidence](benchmarks.md).
 

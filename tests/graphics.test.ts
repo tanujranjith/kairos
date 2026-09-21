@@ -1,5 +1,5 @@
 import { describe,it,expect } from 'vitest';
-import { NullEngine,Scene,PBRMaterial } from '@babylonjs/core';
+import { Color3,NullEngine,Scene,PBRMaterial } from '@babylonjs/core';
 import { surfacePixels } from '../src/render/surface-textures';
 import { createCar } from '../src/render/car';
 import { VEHICLES } from '../src/content/vehicles';
@@ -11,6 +11,7 @@ import { buildArchitecture,buildBandArchitecture,type BuildingStyle } from '../s
 import { MeshDataBuilder } from '../src/world/mesh-data';
 import { solarLighting,windowLighting } from '../src/render/atmosphere';
 import { buildServicePavilion } from '../src/world/service-pavilion';
+import { configureArchitecturalGlass } from '../src/render/architectural-glass';
 
 describe('original graphics assets',()=>{
   it('shares a lower warm evening sun and turns direct sunlight off at night',()=>{
@@ -67,6 +68,11 @@ describe('original graphics assets',()=>{
   });
   it('batches lit and unlit panes in one glass material and fades occupancy lighting at dusk',()=>{
     const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()};buildArchitecture(b,{x:0,y:0,z:0,width:21,depth:16,height:24,yaw:0,style:'office',seed:5});const slots=new Set(b.glass.uvs.filter((_,i)=>i%2===0)),glass=b.glass.finish();expect(slots).toEqual(new Set([.25,.75]));expect(glass.indices.length/3).toBeLessThan(500);expect([...glass.positions,...glass.normals].every(Number.isFinite)).toBe(true);expect(windowLighting(12)).toBe(0);expect(windowLighting(22)).toBe(1);expect(windowLighting(18)).toBeCloseTo(.5);expect(windowLighting(24)).toEqual(windowLighting(0));
+  });
+  it('keeps architectural glazing dielectric and biased ahead of its distant wall shell',()=>{
+    const engine=new NullEngine(),scene=new Scene(engine),material=new PBRMaterial('architectural-glass',scene);
+    try{configureArchitecturalGlass(material);expect(material.albedoColor.equals(Color3.FromHexString('#2d4149').toLinearSpace())).toBe(true);expect(material.metallic).toBe(0);expect(material.roughness).toBe(.27);expect(material.environmentIntensity).toBe(.62);expect(material.clearCoat.isEnabled).toBe(true);expect(material.clearCoat.intensity).toBe(.48);expect(material.clearCoat.roughness).toBe(.18);expect(material.zOffset).toBe(-6);expect(material.zOffsetUnits).toBe(-6);}
+    finally{scene.dispose();engine.dispose();}
   });
   it('keeps deterministic pane tint in its intended range for negative cell seeds',()=>{
     const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()};buildArchitecture(b,{x:0,y:0,z:0,width:21,depth:16,height:24,yaw:0,style:'office',seed:-113});const red=b.glass.colors.filter((_,index)=>index%4===0);expect(Math.min(...red)).toBeGreaterThanOrEqual(.55*.7-.0001);expect(Math.max(...red)).toBeLessThanOrEqual(.55+.0001);

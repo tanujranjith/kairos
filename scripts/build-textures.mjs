@@ -8,17 +8,20 @@ const outputRoot='public/textures',surfaceRoot=path.join(outputRoot,'surface'),s
 await fs.mkdir(surfaceRoot,{recursive:true});
 const entries=[];
 async function encode(name,pixels,width,height,kind){
-  const normal=kind==='normal',linear=normal||kind==='cloud';
+  const normal=kind==='normal',linear=normal||kind==='cloud',uastc=linear||kind==='albedo';
   const data=await encodeToKTX2(new Uint8Array(),{
     imageDecoder:async()=>({data:pixels,width,height}),isKTX2File:true,generateMipmap:true,
-    isUASTC:linear,qualityLevel:192,compressionLevel:4,needSupercompression:linear,
-    uastcLDRQualityLevel:2,enableRDO:linear,rdoQualityLevel:1,
+    // ETC1S-generated mip levels produce face-sized triangular corruption on
+    // Chromium WebGPU at distance. UASTC preserves the same authored pixels,
+    // valid mip filtering and sRGB transfer while remaining Zstd-compressed.
+    isUASTC:uastc,qualityLevel:192,compressionLevel:4,needSupercompression:uastc,
+    uastcLDRQualityLevel:2,enableRDO:uastc,rdoQualityLevel:1,
     isNormalMap:normal,isPerceptual:!linear,isSetKTX2SRGBTransferFunc:!linear,
     kvData:{'KTXwriter':'Kairos texture build','kairos.source':'original procedural field'},
   });
   const target=path.join(outputRoot,name);await fs.writeFile(target,data);
-  entries.push({file:name.replaceAll('\\','/'),width,height,kind,encoding:linear?'UASTC+Zstd':'ETC1S',bytes:data.byteLength,sha256:sha(data)});
-  console.log(`${name}: ${data.byteLength} bytes (${linear?'UASTC+Zstd':'ETC1S'})`);
+  entries.push({file:name.replaceAll('\\','/'),width,height,kind,encoding:uastc?'UASTC+Zstd':'ETC1S',bytes:data.byteLength,sha256:sha(data)});
+  console.log(`${name}: ${data.byteLength} bytes (${uastc?'UASTC+Zstd':'ETC1S'})`);
 }
 for(const kind of surfaceKinds){
   const pixels=surfacePixels(kind,256);
