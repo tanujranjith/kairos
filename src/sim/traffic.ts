@@ -1,6 +1,6 @@
 import type { InputFrame, V3 } from '../core/types';
 import { clamp, distance, lerp, wrap } from '../core/math';
-import { LaneGraph, projectPath, samplePath, signalAspect, type LanePath } from './lane-graph';
+import { LaneGraph, projectPath, projectPathWindow, samplePath, signalAspect, type LanePath } from './lane-graph';
 
 export interface TrafficObservation { id:string; position:V3; yaw:number; speed:number; length:number; width:number }
 export interface TrafficAgent {
@@ -33,7 +33,7 @@ export class TrafficController {
     agent.nextId=pick?.id??null;agent.sequence++;
   }
   sync(agent:TrafficAgent,observation:TrafficObservation){
-    let path=this.graph.paths.get(agent.pathId)!,projection=projectPath(path,observation.position);
+    let path=this.graph.paths.get(agent.pathId)!,projection=projectPathWindow(path,observation.position,agent.progress,60);if(projection.distance>20)projection=projectPath(path,observation.position);
     // Validate directional endpoint passage, not nearest-road switching at crossings.
     const end=path.points.at(-1)!,forward=(observation.position.x-end.x)*Math.sin(end.yaw)+(observation.position.z-end.z)*Math.cos(end.yaw);
     if(agent.nextId&&projection.progress>path.length-5&&forward>=-.25){
@@ -54,7 +54,7 @@ export class TrafficController {
     if(aspect==='red'||aspect==='amber'&&observation.speed**2/(2*stoppingDeceleration)<Math.max(0,gap))return false;
     const exit=this.graph.paths.get(turn.targetLane!)!;
     // Keep the crossing clear when a queue leaves no room beyond the exit.
-    if(others.some(other=>{if(other.id===agent.id||Math.abs(other.position.y-junction.y)>3||Math.abs(other.speed)>2)return false;const p=projectPath(exit,other.position);return p.distance<(observation.width+other.width)/2+.3&&p.progress<12;}))return false;
+    if(others.some(other=>{if(other.id===agent.id||Math.abs(other.position.y-junction.y)>3||Math.abs(other.speed)>2)return false;const p=projectPathWindow(exit,other.position,8,20);return p.distance<(observation.width+other.width)/2+.3&&p.progress<12;}))return false;
     for(const [id,reservation] of this.reservations){
       const owner=this.agents.get(id);
       if(!owner||reservation.expires<clock&&owner.pathId!==reservation.path){this.reservations.delete(id);continue;}
@@ -88,10 +88,10 @@ export class TrafficController {
     return true;
   }
   adjacentClear(agent:TrafficAgent,target:LanePath,observation:TrafficObservation,others:TrafficObservation[]){
-    const location=projectPath(target,observation.position);
+    const location=projectPathWindow(target,observation.position,agent.progress,130);
     for(const other of others){
       if(other.id===agent.id||Math.abs(other.position.y-observation.position.y)>3)continue;
-      const p=projectPath(target,other.position);if(p.distance>2.5)continue;
+      const p=projectPathWindow(target,other.position,location.progress,130);if(p.distance>2.5)continue;
       const delta=p.progress-location.progress;
       const closing=delta>0?Math.max(0,observation.speed-other.speed):Math.max(0,other.speed-observation.speed);
       if(Math.abs(delta)<12+closing*2)return false;
@@ -122,10 +122,10 @@ export class TrafficController {
     // Once a maneuver begins, anticipate traffic in the destination lane. The
     // immediate swept corridor still protects against a car directly in front.
     const followingPath=agent.laneChange?this.graph.paths.get(agent.laneChange.to)!:path;
-    const followingProgress=projectPath(followingPath,observation.position).progress;
+    const followingProgress=agent.laneChange?projectPathWindow(followingPath,observation.position,agent.progress,60).progress:projection.progress;
     for(const other of others){
       if(other.id===agent.id||Math.abs(other.position.y-observation.position.y)>3)continue;
-      const p=projectPath(followingPath,other.position),dx=other.position.x-observation.position.x,dz=other.position.z-observation.position.z;
+      const p=projectPathWindow(followingPath,other.position,followingProgress,130),dx=other.position.x-observation.position.x,dz=other.position.z-observation.position.z;
       const forward=dx*Math.sin(observation.yaw)+dz*Math.cos(observation.yaw),side=dx*Math.cos(observation.yaw)-dz*Math.sin(observation.yaw);
       const along=p.progress-followingProgress;
       const inLane=p.distance<(observation.width+other.width)*.5+.4&&along>0;
@@ -143,14 +143,14 @@ export class TrafficController {
     }
     let target=this.graph.sample(path,agent.progress+look,route);
     if(agent.laneChange){
-      const change=agent.laneChange,other=this.graph.paths.get(change.to)!,p=projectPath(other,observation.position),blend=clamp((clock-change.started+look/Math.max(5,speed))/3.5,0,1),goal=samplePath(other,p.progress+look);
+      const change=agent.laneChange,other=this.graph.paths.get(change.to)!,p=projectPathWindow(other,observation.position,agent.progress,60),blend=clamp((clock-change.started+look/Math.max(5,speed))/3.5,0,1),goal=samplePath(other,p.progress+look);
       target={...target,x:lerp(target.x,goal.x,blend),z:lerp(target.z,goal.z,blend)};reason='lane-change';
       if(clock-change.started>=3.5&&p.distance<1.5){agent.pathId=other.id;agent.progress=p.progress;agent.laneChange=null;path=other;this.chooseNext(agent);}
     }
     const alpha=wrap(Math.atan2(target.x-observation.position.x,target.z-observation.position.z)-observation.yaw);
     if(Math.abs(alpha)>.7)targetSpeed=Math.min(targetSpeed,5);
-    let laneError=projectPath(path,observation.position).distance;
-    if(agent.laneChange)laneError=Math.min(laneError,projectPath(this.graph.paths.get(agent.laneChange.to)!,observation.position).distance);
+    let laneError=path.id===projection.path.id?projection.distance:projectPathWindow(path,observation.position,agent.progress,60).distance;
+    if(agent.laneChange)laneError=Math.min(laneError,projectPathWindow(this.graph.paths.get(agent.laneChange.to)!,observation.position,agent.progress,60).distance);
     if(laneError>4){targetSpeed=Math.min(targetSpeed,5);reason='recovery';}
     const angle=Math.atan2(2*wheelbase*Math.sin(alpha),look),maxSteer=clamp(.57/(1+speed*.055),.115,.57),error=targetSpeed-speed;
     const input={...neutral(),steer:clamp(angle/maxSteer,-1,1),throttle:clamp(error*.24,0,.65),brake:clamp(-error*.32,0,1)};

@@ -1,4 +1,4 @@
-import { Engine, WebGPUEngine, AbstractEngine, Scene, FreeCamera, Vector3, Color3, Color4, HemisphericLight, DirectionalLight, ShadowGenerator, MeshBuilder, StandardMaterial, VertexBuffer, DefaultRenderingPipeline, ImageProcessingConfiguration, Quaternion, Mesh, LinesMesh, PBRMaterial, TransformNode, DynamicTexture, SpotLight, Light, Material } from '@babylonjs/core';
+import { Engine, WebGPUEngine, AbstractEngine, Scene, ScenePerformancePriority, FreeCamera, Vector3, Color3, Color4, HemisphericLight, DirectionalLight, ShadowGenerator, MeshBuilder, StandardMaterial, VertexBuffer, DefaultRenderingPipeline, ImageProcessingConfiguration, Quaternion, Mesh, LinesMesh, PBRMaterial, TransformNode, DynamicTexture, SpotLight, Light, Material } from '@babylonjs/core';
 import type { Settings } from '../core/types';
 import { clamp, approach } from '../core/math';
 import type { Vehicle } from '../sim/physics';
@@ -23,7 +23,7 @@ export class Renderer {
   private activeSettings:Settings|null=null;private dynamicResolutionScale=1;private daylightColour=new Color3();private shadowSelectionAt=-Infinity;
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
-    this.scene=new Scene(engine);const scene=this.scene;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
+    this.scene=new Scene(engine);const scene=this.scene;scene.performancePriority=ScenePerformancePriority.Intermediate;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
     scene.imageProcessingConfiguration.toneMappingEnabled=true;scene.imageProcessingConfiguration.toneMappingType=ImageProcessingConfiguration.TONEMAPPING_ACES;scene.imageProcessingConfiguration.exposure=1.1;scene.imageProcessingConfiguration.contrast=1.07;
     this.reflections=new LocalReflections(scene);
     this.camera=new FreeCamera('driver-camera',new Vector3(0,2,-8),scene);this.camera.minZ=.08;this.camera.maxZ=9000;this.camera.fov=.80;this.camera.inputs.clear();

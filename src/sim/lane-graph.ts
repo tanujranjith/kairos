@@ -19,9 +19,9 @@ export function samplePath(path:{points:RoadPoint[];length:number;layer?:string}
   const a=points[lo],b=points[hi],t=(s-a.s)/Math.max(.000001,b.s-a.s);
   return {x:lerp(a.x,b.x,t),y:lerp(a.y,b.y,t),z:lerp(a.z,b.z,t),s,yaw:a.yaw+wrap(b.yaw-a.yaw)*t,curvature:lerp(a.curvature,b.curvature,t),layer:(t===1?b.layer:a.layer)??path.layer??'surface'};
 }
-export function projectPath<T extends {points:RoadPoint[];length:number}>(path:T,position:Pick<V3,'x'|'z'>&Partial<Pick<V3,'y'>>,heightAware=false):LaneProjection<T>{
+function projectPathRange<T extends {points:RoadPoint[];length:number}>(path:T,position:Pick<V3,'x'|'z'>&Partial<Pick<V3,'y'>>,heightAware:boolean,start:number,end:number):LaneProjection<T>{
   let best=Infinity,bestDistance=Infinity,progress=0,lateral=0;
-  for(let i=0;i<path.points.length-1;i++){
+  for(let i=start;i<=end;i++){
     const a=path.points[i],b=path.points[i+1],dx=b.x-a.x,dz=b.z-a.z,len2=dx*dx+dz*dz;
     const t=clamp(((position.x-a.x)*dx+(position.z-a.z)*dz)/Math.max(.00001,len2),0,1);
     const x=a.x+dx*t,z=a.z+dz*t,d=Math.hypot(position.x-x,position.z-z);
@@ -29,6 +29,18 @@ export function projectPath<T extends {points:RoadPoint[];length:number}>(path:T
     if(score<best){best=score;bestDistance=d;progress=lerp(a.s,b.s,t);lateral=((position.x-x)*dz-(position.z-z)*dx)/Math.sqrt(Math.max(.00001,len2));}
   }
   return {path,progress,point:samplePath(path,progress),distance:bestDistance,lateral};
+}
+export function projectPath<T extends {points:RoadPoint[];length:number}>(path:T,position:Pick<V3,'x'|'z'>&Partial<Pick<V3,'y'>>,heightAware=false):LaneProjection<T>{
+  return projectPathRange(path,position,heightAware,0,path.points.length-2);
+}
+/** Projects only the physically relevant progress corridor. Traffic calls this
+ * for local following checks instead of rescanning an entire long lane for
+ * actors that cannot affect the current decision. */
+export function projectPathWindow<T extends {points:RoadPoint[];length:number}>(path:T,position:Pick<V3,'x'|'z'>&Partial<Pick<V3,'y'>>,center:number,radius:number,heightAware=false):LaneProjection<T>{
+  const points=path.points,low=clamp(center-radius,0,path.length),high=clamp(center+radius,0,path.length);
+  let lo=0,hi=points.length;while(lo<hi){const mid=(lo+hi)>>1;if(points[mid].s<low)lo=mid+1;else hi=mid;}const start=Math.max(0,lo-1);
+  lo=0;hi=points.length;while(lo<hi){const mid=(lo+hi)>>1;if(points[mid].s<=high)lo=mid+1;else hi=mid;}const end=Math.min(points.length-2,Math.max(start,lo-1));
+  return projectPathRange(path,position,heightAware,start,end);
 }
 function roadPoint(road:Road,s:number,offset=0){
   const p=samplePath(road,road.loop?((s%road.length)+road.length)%road.length:s);

@@ -2,7 +2,7 @@
 
 ## Low frame-performance instrumentation — September 21 (verified with open sub-budget)
 
-Development state now reports complete render-loop CPU time, total fixed-step-loop time, isolated vehicle/Havok simulation time and AI/input time. The required five moving Low scenes pass 40ms frame p95, 28ms GPU p95 and 5ms simulation p95 with four wheel contacts throughout. Four Free Drive scenes remain above the stricter 12ms CPU sub-budget, and city/highway exceed the 2ms AI sub-budget; those are explicit remaining performance work rather than accepted results. Rendered interactions, 250 tests / 39 files, strict TypeScript and production build pass. See [measured evidence](benchmarks.md).
+Development state reports complete render-loop CPU time, total fixed-step-loop time, isolated vehicle/Havok simulation time and AI/input time. The required five moving Low scenes pass 40ms frame p95, 28ms GPU p95, 5ms simulation p95 and 2ms AI p95 with four wheel contacts throughout. Windowed lane projection eliminates whole-lane rescans from local following decisions without changing traffic behavior. Four Free Drive scenes remain above the stricter 12ms CPU callback sub-budget; that is explicit remaining performance work rather than an accepted result. Rendered interactions, 252 tests / 40 files, strict TypeScript and production build pass. See [measured evidence](benchmarks.md).
 
 ## Low browser-process memory and terminal home state — September 21 (verified checkpoint)
 

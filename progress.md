@@ -1,5 +1,11 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Windowed traffic projection and scene CPU profiling — September 21 (verified checkpoint)
+
+- CDP profiling identified Babylon active-mesh/material/light submission as the dominant dense-scene cost and full path projection as Kairos's largest AI cost. Added an exact bounded projection primitive and use it only for local following, lane-change and junction-exit corridors; own-lane sync retains a full-scan recovery fallback. All eleven rendered traffic scenarios and 252 tests / 40 files pass.
+- AI p95 now passes the 2ms budget in every required scene at 1.4/0.7/1.0/1.3/0.9ms. Frame, GPU and simulation p95 also pass throughout. City CPU p95 improved from 33.3ms to 22.6ms; mountain/highway/wet-night remain 14.9/14.0/25.8ms and the race passes at 11.7ms. Keep the four Free Drive CPU failures explicit.
+- Enabled Babylon's intermediate performance path without disabling frustum culling and froze static world matrices. Opened all five final performance captures plus the supplied-client showroom; rendered interactions and cold production delivery are clean. Current bundle is `index-CBTseZuh.js` / `cell-worker-BYSSieaE.js`; 25Mbps/40ms startup is 5.561s WebGL2 / 5.177s automatic, 10,521,633 bytes. NEXT: further CPU work belongs in incremental main-thread cell installation/scene batching, then target-laptop profiling and authorized HTTPS delivery. Preserve the five user files.
+
 ## Moving Low frame-performance audit — September 21 (verified checkpoint with retained sub-budget failure)
 
 - Added development timing for complete callback CPU, total fixed-step loop, isolated vehicle/Havok/post-step simulation and AI/input work, plus a five-scene installed-Edge GPU timer-query audit. Capped redundant world-demand refresh at 10Hz and world signal/material refresh at 20Hz; unchanged world enabled/wetness state now returns early. Physics remains 120Hz and collision look-ahead/readiness are unchanged.

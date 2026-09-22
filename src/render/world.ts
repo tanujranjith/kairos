@@ -35,7 +35,7 @@ export class WorldRenderer {
   private materialPool=new ResourcePool<Material>(m=>m.dispose(false,true));private rootLeases=new Map<number,{release:()=>void}>();
   private warm=new Map<string,{demand:CellDemand;until:number}>();private demand=new Map<string,CellDemand>();private profile:StreamingProfile='exploration';
   constructor(public scene:Scene,public physics:PhysicsWorld){
-    this.root=new TransformNode('world',scene);
+    this.root=new TransformNode('world',scene);this.root.freezeWorldMatrix();
     this.streetLighting=new StreetLighting(scene);
     this.streamer=new CellStreamer({load:(d,signal)=>this.worker.build(d.cx,d.cz,this.quality,signal),install:(b,d)=>this.installCell(b,d),mode:(cell,b,d)=>this.setCellMode(cell,b,d),dispose:cell=>this.disposeCell(cell)});
     this.trafficScenery=new TrafficScenery(scene);
@@ -59,8 +59,8 @@ export class WorldRenderer {
     const ridges=mountainMesh(landHeight),ridgeData=new VertexData(),ridgeMat=mat('atmospheric-ridges','#ffffff');
     const geology=surfaceTexture(scene,'cliff','albedo',.035);ridgeMat.albedoTexture=geology;
     new GroundMaterial(ridgeMat,true);
-    Object.assign(ridgeData,ridges);this.backdrop=new Mesh('valley-horizon',scene);ridgeData.applyToMesh(this.backdrop);this.backdrop.material=ridgeMat;this.backdrop.parent=this.root;this.backdrop.isPickable=false;
-    this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene),waves=surfaceTexture(scene,'water','normal',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves;water.bumpTexture.level=.12;this.water.material=water;
+    Object.assign(ridgeData,ridges);this.backdrop=new Mesh('valley-horizon',scene);ridgeData.applyToMesh(this.backdrop);this.backdrop.material=ridgeMat;this.backdrop.parent=this.root;this.backdrop.isPickable=false;this.backdrop.freezeWorldMatrix();
+    this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;this.water.freezeWorldMatrix();const water=new PBRMaterial('lake-water',scene),waves=surfaceTexture(scene,'water','normal',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves;water.bumpTexture.level=.12;this.water.material=water;
   }
 
   setEnabled(v:boolean){if(v===this.enabled)return;this.enabled=v;this.root.setEnabled(v);if(!v)this.streetLighting.disable();}
@@ -94,7 +94,7 @@ export class WorldRenderer {
   async waitForSurfaces(positions:V3[]){const keys=new Set<string>();for(const p of positions)for(const key of this.requestAround(p,false))keys.add(key);await this.streamer.waitFor([...keys]);}
   retry(){this.streamer.retry();}
   private register(cell:Cell,mesh:Mesh|null,collision=false,detail=false){
-    if(!mesh)return;mesh.parent=this.root;cell.meshes.push(mesh);if(collision)cell.collisionMeshes.push(mesh);if(detail)cell.detailMeshes.push(mesh);
+    if(!mesh)return;mesh.parent=this.root;mesh.freezeWorldMatrix();cell.meshes.push(mesh);if(collision)cell.collisionMeshes.push(mesh);if(detail)cell.detailMeshes.push(mesh);
     if(mesh.material&&!mesh.metadata?.ownedMaterial){const material=mesh.material,key='material-'+material.uniqueId;if(!this.rootLeases.has(material.uniqueId))this.rootLeases.set(material.uniqueId,this.materialPool.acquire(key,()=>material));cell.leases.set(mesh,this.materialPool.acquire(key,()=>material));}
   }
   private fromData(part:CellMesh){const mesh=new Mesh(part.name,this.scene),data=new VertexData();data.positions=part.data.positions;data.indices=part.data.indices;data.normals=part.data.normals;data.uvs=part.data.uvs;if(part.data.colors)data.colors=part.data.colors;data.applyToMesh(mesh);mesh.material=this[part.material];mesh.receiveShadows=true;mesh.isPickable=false;mesh.metadata={worldCaster:part.name.startsWith('structures')||part.name.startsWith('roofs'),contactSurface:part.contactSurface,contactRanges:part.contactRanges};return mesh;}
