@@ -4,7 +4,7 @@ Kairos is a playable local release candidate. The current source integrates the 
 
 ## Verified locally
 
-- Strict TypeScript, nineteen KTX2 assets, production build and 252 tests in 40 files pass.
+- Strict TypeScript, nineteen KTX2 assets, production build and 256 tests in 41 files pass.
 - Garage, customization, settings, map/routing, Free Drive, reverse/reset, all five cameras, pause/resume, night, the handling course and persisted reload pass in a complete rendered browser flow.
 - Confirmed progress reset survives reload. Save export/import, corrupt data preservation, genuine quota failure/recovery, closed-database writes and unavailable IndexedDB fail safely while play remains available.
 - Keyboard and controller navigation are covered; real fullscreen, disconnect pause and bounded vibration dispatch pass. A physical controller motor was not available.
@@ -17,13 +17,13 @@ Kairos is a playable local release candidate. The current source integrates the 
 - A CDP-scoped Windows/Edge process audit peaks at 1,334.97MiB settled summed working set, leaving 201.03MiB below the planned 1.5GiB process target on the development PC. Target-laptop certification remains separate.
 - A moving Low 1280×720 audit passes the 40ms frame-p95, 12ms complete CPU callback, 28ms GPU-p95, 5ms simulation-p95 and 2ms AI-p95 targets in city, mountain, highway, wet-night and eight-car-race scenes; see the benchmark log for exact values.
 
-The exact current production files include `index-CBTseZuh.js` and `cell-worker-BYSSieaE.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.561 seconds forced WebGL2 and 5.177 seconds automatic, with 10,521,633 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests.
+The exact current production files include `index-Dd5feGKq.js` and `cell-worker-BYSSieaE.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 6.339 seconds forced WebGL2 and 5.873 seconds automatic, with 10,522,025 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests. The smoke test confirms fingerprinted requests for both shared Velara LODs, the gallery environment, and all nineteen KTX2 textures.
 
 ## Remaining acceptance boundary
 
 The development machine cannot certify the 8 GB integrated-graphics laptop's 720p/30 FPS frame pacing, whole-process memory or actual driver-reported GPU residency. Run the documented benchmark routes on that machine before calling the hardware target accepted. The development RTX now passes every stated frame/CPU/GPU/simulation/AI p95 target, but that result must still be reproduced on the target machine before release.
 
-No cloud project or destination has been authorized, so the included static/Vercel configuration has not been deployed or smoke-tested over HTTPS. Deployment requires an explicitly authorized project, preview-first validation and preservation of the previous release for rollback.
+No cloud project or destination has been authorized, so the included static/Vercel configuration has not been deployed or smoke-tested over HTTPS. Its local contract tests cover the Vite build/output commands, revalidated application shell, immutable fingerprinted payloads and absence of a service worker. Deployment still requires an explicitly authorized project, preview-first validation and preservation of the previous release for rollback.
 
 The original procedural cars and world are substantially richer than the initial blockout but remain stylized. They do not match the references' photorealism, and the compact racing rules/AI are not a complete real-world marshal or safety-car simulation. These are documented product simplifications, not hidden test passes.
 

@@ -6,7 +6,7 @@ const browser=await chromium.launch({channel:'msedge',headless:true}),page=await
 page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(String(e)));page.on('request',r=>{if(/^https?:/.test(r.url())&&!r.url().startsWith('http://127.0.0.1:5187'))external.push(r.url());});
 const warm=async()=>page.evaluate(async()=>{const g=window.kairos;await g.advanceTime(0);await g.renderer.scene.whenReadyAsync();for(let n=0;n<12;n++)await g.advanceTime(0);});
 try{
-  if(fallback)await page.route('**/models/*.glb',route=>route.abort());
+  if(fallback)await page.route('**/models/*.glb*',route=>route.abort());
   await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForFunction(()=>window.kairos?.ui);await page.evaluate(()=>window.advanceTime(0));
   for(const id of ['aeris','velara','crest','nova','gtx','apex']){
     await page.click('[data-action="screen"][data-value="garage"]');await page.click(`[data-action="select-car"][data-value="${id}"]`);

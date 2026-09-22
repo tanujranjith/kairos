@@ -1,5 +1,11 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Static delivery closeout and showroom reflection — September 21 (verified checkpoint)
+
+- Added the concrete Vercel static-build contract: npm/Vite to `dist`, revalidated shell, immutable caching for hashed or explicitly fingerprinted payloads, and no service worker. Velara LOD0/LOD1 and the gallery environment now carry stable version queries alongside the existing nineteen versioned KTX2 files; production verification asserts all of them and rejects external/failed requests.
+- Fixed the shared-car showroom edge case found by the art audit: selecting another physics profile now refreshes the floor reflection around the new Velara visual instead of retaining disposed meshes. All six profiles show 37,936 triangles, four wheel pivots, bounded car reflection and no floor feedback; environment fallback, cameras, water, grass and grounded entry pass.
+- Complete suite passes 256 tests / 41 files; strict TypeScript and production build pass (`index-Dd5feGKq.js`, `cell-worker-BYSSieaE.js`). Cold 25Mbps/40ms local production reaches the menu in 6.339s WebGL2 / 5.873s automatic, transfers 10,522,025 bytes, enters Free Drive/Northstar and records no page, failed or external request. The supplied skill client completed and its screenshot/state were opened. NEXT: run the existing acceptance matrix on the actual 8GB integrated-graphics laptop and deploy/smoke-test only after an HTTPS project is explicitly authorized. Preserve the five user files.
+
 ## Windowed traffic projection and scene CPU profiling — September 21 (verified checkpoint)
 
 - CDP profiling identified Babylon active-mesh/material/light submission as the dominant dense-scene cost and full path projection as Kairos's largest AI cost. Added an exact bounded projection primitive and use it only for local following, lane-change and junction-exit corridors; own-lane sync retains a full-scan recovery fallback. All eleven rendered traffic scenarios and 252 tests / 40 files pass.

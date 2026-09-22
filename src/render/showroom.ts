@@ -2,6 +2,7 @@ import { BackgroundMaterial, Color3, CubeTexture, DynamicTexture, Mesh, MeshBuil
 import { Geometry } from './geometry';
 import { surfaceTexture, surfaceTextures } from './surface-textures';
 import { rng } from '../core/math';
+import {galleryEnvironmentUrl} from './asset-version';
 
 /** Original gallery architecture, locally bundled CC0 HDR, and an asset-failure fallback. */
 export function createShowroom(scene:Scene){
@@ -46,7 +47,7 @@ export function createShowroom(scene:Scene){
   }
   const terrace=material('gallery-terrace','#707364',0,.98);panel('gallery-terrace',90,.4,18,0,-.16,-20,terrace);
   const water=material('gallery-lake','#738986',.35,.22),waves=surfaceTexture(scene,'water','normal',6);water.bumpTexture=waves;water.bumpTexture.level=.08;const lake=MeshBuilder.CreateGround('gallery-lake',{width:650,height:220},scene);lake.position.set(0,-.42,-138);lake.material=water;lake.parent=fallback;
-  const environment=CubeTexture.CreateFromPrefilteredData('/environment/fish-eagle-hill.env',scene);environment.name='CC0 Fish Eagle Hill / Greg Zaal';environment.rotationY=3;
+  const environment=CubeTexture.CreateFromPrefilteredData(galleryEnvironmentUrl(),scene);environment.name='CC0 Fish Eagle Hill / Greg Zaal';environment.rotationY=3;
   const photoMaterial=new BackgroundMaterial('gallery-hdr-background',scene);photoMaterial.reflectionBlur=0;photoMaterial.backFaceCulling=false;photoMaterial.useRGBColor=false;photoMaterial.primaryColor=new Color3(.85,.85,.85);
   const panorama=MeshBuilder.CreateBox('gallery-photographic-vista',{size:1200,sideOrientation:Mesh.BACKSIDE},scene);panorama.parent=root;panorama.material=photoMaterial;panorama.applyFog=false;panorama.isPickable=false;panorama.isVisible=false;panorama.metadata={environmentBackground:true};
   const showPhoto=()=>{const skyMap=environment.clone();skyMap.name='gallery-skybox-map';skyMap.coordinatesMode=Texture.SKYBOX_MODE;photoMaterial.reflectionTexture=skyMap;panorama.isVisible=true;fallback.setEnabled(false);};if(environment.isReady())showPhoto();else environment.onLoadObservable.addOnce(showPhoto);

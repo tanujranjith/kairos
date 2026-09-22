@@ -98,10 +98,10 @@ export class Renderer {
     this.scene.fogColor.set(...atmosphereFog(time,settings.weather));this.scene.fogDensity=.00013+golden*.000025+wetness*.0006;
     this.sky.visibility=1;this.atmosphere.update(time,settings.weather,clock);
     if(this.showroom.isEnabled(false)!==garage)this.showroom.setEnabled(garage);
-    // Planar reflection is confined to the gallery; driving never pays for this pass.
-    if(garage&&!this.wasGarage)this.floorReflection.renderList=this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.name!=='car-contact-shadow'&&(mesh.metadata?.floorReflection||(()=>{let node=mesh.parent;while(node){if(node.metadata?.kairosCar)return true;node=node.parent;}return false;})()));
-    else if(!garage&&this.wasGarage)this.floorReflection.renderList=[];
     this.registerCar(visual,garage||vehicle.state.grounded);
+    // Planar reflection is confined to the gallery; driving never pays for this pass.
+    if(garage&&(!this.wasGarage||!visual.parts.some(mesh=>this.floorReflection.renderList?.includes(mesh))))this.floorReflection.renderList=this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.name!=='car-contact-shadow'&&(mesh.metadata?.floorReflection||(()=>{let node=mesh.parent;while(node){if(node.metadata?.kairosCar)return true;node=node.parent;}return false;})()));
+    else if(!garage&&this.wasGarage)this.floorReflection.renderList=[];
     this.studioLights.forEach(light=>{if(light.isEnabled()!==garage)light.setEnabled(garage);});const headlampsEnabled=!garage;this.headlights.forEach(light=>{if(light.isEnabled()!==headlampsEnabled)light.setEnabled(headlampsEnabled);});
     if(garage){visual.glass.alpha=.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;for(const n of visual.root.getChildTransformNodes())if(/brake-\d$/.test(n.name)){n.position.y=-.32;n.rotationQuaternion=null;n.rotation.set(0,0,0);}}
     this.headlights.forEach((light,i)=>{const f=new Vector3(Math.sin(vehicle.state.yaw),-.08,Math.cos(vehicle.state.yaw)),r=new Vector3(Math.cos(vehicle.state.yaw),0,-Math.sin(vehicle.state.yaw));light.position.copyFrom(vehicle.node.position).addInPlace(f.scale(vehicle.definition.length*.48)).addInPlace(r.scale(i===0?-.55:.55));light.direction.copyFrom(f);light.intensity=!garage&&this.lightsEnabled?(night>.72?650:1):0;});

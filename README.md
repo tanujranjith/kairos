@@ -146,6 +146,6 @@ See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md
 
 ## Static hosting
 
-`dist/` is the static output. The included Vercel configuration builds with npm, revalidates the application shell, gives hashed `/assets/` files immutable caching and gives fingerprint-query `/textures/` files immutable caching. Select Node 24 in the authorized project's settings. Do not publish source references or the complete project directory as a static file server.
+`dist/` is the static output. The included Vercel configuration builds with npm, revalidates the application shell, and gives only hashed or fingerprint-query runtime payloads immutable caching: `/assets/`, `/models/*.glb`, `/textures/*.ktx2`, and `/environment/*.env`. The production smoke test asserts the retained Velara LODs and gallery environment carry their expected fingerprints. Select Node 24 in the authorized project's settings. Do not publish source references or the complete project directory as a static file server.
 
 No deployment has been authorized or verified yet. Once a project is supplied, deploy a preview, test startup and driving with external hosts blocked, then promote that exact tested deployment. Keep its predecessor for rollback. The Vercel deployment guidance informed this preview-first configuration; no credentials or cloud services are required for local play.

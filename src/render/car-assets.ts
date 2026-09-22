@@ -5,6 +5,7 @@ import type { CarVisual } from './car';
 import { carInstruments } from './car-instruments';
 import { finishCarTrim,finishCarPaint } from './car-materials';
 import {updateSteeringVisual} from './car-steering';
+import {modelAssetUrl} from './asset-version';
 const libraries=new WeakMap<Scene,Map<string,AssetContainer>>();
 let staticInstance=0;
 export const SHARED_CAR_MODEL='velara';
@@ -12,7 +13,7 @@ export const visualModelId=(_vehicleId:string)=>SHARED_CAR_MODEL;
 
 export async function loadCarAssets(scene:Scene,_ids:string[]){
   const library=libraries.get(scene)??new Map<string,AssetContainer>();libraries.set(scene,library);
-  await Promise.all([0,1].map(async lod=>{try{const container=await LoadAssetContainerAsync(`/models/${SHARED_CAR_MODEL}-lod${lod}.glb`,scene);library.set(`${SHARED_CAR_MODEL}:${lod}`,container);}catch(error){console.warn(`Kairos: using original procedural fallback for shared ${SHARED_CAR_MODEL} LOD${lod}`,error);}}));
+  await Promise.all([0,1].map(async lod=>{try{const container=await LoadAssetContainerAsync(modelAssetUrl(SHARED_CAR_MODEL,lod),scene);library.set(`${SHARED_CAR_MODEL}:${lod}`,container);}catch(error){console.warn(`Kairos: using original procedural fallback for shared ${SHARED_CAR_MODEL} LOD${lod}`,error);}}));
 }
 export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Customization,lite=false):CarVisual|null{
   const modelId=visualModelId(d.id),container=libraries.get(scene)?.get(`${modelId}:${lite?1:0}`);if(!container)return null;

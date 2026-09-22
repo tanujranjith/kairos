@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Static delivery and shared-showroom closeout — September 21
+
+- `vercel.json` now declares the pinned npm/Vite build and `dist` output, revalidates the application shell, preserves baseline response-hardening headers, and applies one-year immutable caching only to hashed `/assets/` or query-fingerprinted GLB, KTX2 and environment payloads. Four unit contracts verify those rules and that no service worker ships.
+- The production smoke test now records runtime payload URLs. Both retained Velara LODs request `v=3-shared-velara`, the gallery environment requests `v=a51e9198f02a`, and all nineteen textures retain `v=d0e0147642f9b3bd`. Forced WebGL2 is ready in **6.339s** and the automatic renderer request in **5.873s** under local cold-cache 25Mbps/40ms emulation; each transfers **10,522,025 bytes**, enters Free Drive and Northstar, and records no page, failed or external request.
+- Selecting any of the six garage profiles now refreshes the bounded showroom reflection around the newly created shared Velara visual. The art verifier passes all six 37,936-triangle selections, four wheel pivots, the nonrecursive floor reflection, all five driving cameras, moving water/grass and blocked-environment fallback. The supplied gameplay client also completed its short input sequence; its opened 1280×720 capture is grounded on Lakeshore with twelve physical traffic cars.
+- Strict TypeScript, **256 tests / 41 files**, nineteen-texture integrity and production build `index-Dd5feGKq.js` / `cell-worker-BYSSieaE.js` pass. These are local static-delivery checks, not evidence of deployed header behavior, actual Internet timing or the target 8GB laptop.
+
 ## Bounded active-scene performance closeout — September 21
 
 - `output/frame-performance-final/report.json` repeats the full installed-Edge/WebGL2 Low 1280×720 moving matrix after the scene-submission pass. All five images were opened and show complete streamed scenery, moving traffic/race cars, current weather and four grounded wheel contacts. Frame p95 is **19.4/19.1/20.9/19.1/19.3ms** for city/mountain/highway/wet-night/eight-car-race.

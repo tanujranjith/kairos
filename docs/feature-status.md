@@ -1,5 +1,11 @@
 # Feature status — working build, not acceptance certification
 
+## Static delivery closeout — September 21 (verified locally)
+
+The retained Velara GLBs and gallery environment now use explicit same-origin version fingerprints, matching the existing versioned KTX2 path. The Vercel project configuration revalidates `/` and `/index.html` while assigning immutable caching only to hashed or fingerprinted assets. Four contract tests protect those rules, baseline response hardening and the no-service-worker decision. The final 25Mbps/40ms cold-cache checks load the menu in 6.339s WebGL2 / 5.873s automatic, enter Free Drive and Northstar, and record the expected versioned payloads with no failed or external requests.
+
+The showroom reflection now refreshes when the shared car is replaced by another garage profile; all six selections and the blocked-environment fallback pass with four wheel pivots and no recursive floor reflection. The complete suite passes 256 tests / 41 files, strict TypeScript and production build `index-Dd5feGKq.js`. Actual target-laptop and authorized HTTPS acceptance remain external.
+
 ## Low frame-performance instrumentation — September 21 (verified locally)
 
 Development state reports complete render-loop CPU time, total fixed-step-loop time, isolated vehicle/Havok simulation time and AI/input time. The required five moving Low scenes now pass the 40ms frame, 12ms CPU callback, 28ms GPU, 5ms simulation and 2ms AI p95 budgets with four wheel contacts throughout. Windowed lane projection eliminates whole-lane rescans from local following decisions. A bounded active render list, transition-driven light synchronization, allocation-free rain updates and lower-frequency shadow-caster membership scans remove redundant scene work without freezing vehicle transforms or changing physics, visibility rules or draw quality. Rendered interactions, all eleven traffic cases, 252 tests / 40 files, strict TypeScript and production build pass. This is development-machine evidence, not target-laptop certification. See [measured evidence](benchmarks.md).

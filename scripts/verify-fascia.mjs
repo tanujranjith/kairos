@@ -6,7 +6,7 @@ await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[],rows=[];
 page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(String(e)));
 try{
-  if(fallback)await page.route('**/models/*.glb',r=>r.abort());
+  if(fallback)await page.route('**/models/*.glb*',r=>r.abort());
   await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForFunction(()=>window.kairos?.ui);await page.evaluate(()=>window.advanceTime(0));
   for(const id of ['aeris','velara','crest','nova','gtx']){
     await page.evaluate(async id=>{const g=window.kairos;await g.action('select-car',id);g.setScreen('garage');g.save.settings.timeRate=0;await g.advanceTime(0);await g.renderer.scene.whenReadyAsync();for(let n=0;n<12;n++)await g.advanceTime(0);},id);

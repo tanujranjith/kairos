@@ -21,7 +21,7 @@ for(const requested of ['webgl','webgpu']){
   }finally{await page.close();}
 }
 {
-  const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[];page.setDefaultTimeout(90000);page.on('pageerror',error=>errors.push(String(error)));await page.route('**/models/*.glb',route=>route.abort());
+  const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[];page.setDefaultTimeout(90000);page.on('pageerror',error=>errors.push(String(error)));await page.route('**/models/*.glb*',route=>route.abort());
   try{
     await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForSelector('#loading',{state:'detached'});const profiles=[];
     for(const id of ['aeris','velara','crest','nova','gtx','apex'])profiles.push(await page.evaluate(async id=>{const g=window.kairos;await g.action('select-car',id);g.setScreen('garage');await g.advanceTime(0);await g.renderer.scene.whenReadyAsync();for(let frame=0;frame<8;frame++)await g.advanceTime(0);return {id,asset:g.visual.parts.some(mesh=>mesh.name.includes('instance')),model:g.visual.root.metadata?.visualModel,profile:g.visual.root.metadata?.handlingProfile,fallback:g.visual.root.metadata?.fallback,parts:g.visual.parts.length,triangles:g.visual.parts.reduce((sum,mesh)=>sum+mesh.getTotalIndices()/3,0),wheels:g.visual.wheels.length};},id));
