@@ -17,7 +17,7 @@ Kairos is a playable local release candidate. The current source integrates the 
 - A CDP-scoped Windows/Edge process audit peaks at 1,334.97MiB settled summed working set, leaving 201.03MiB below the planned 1.5GiB process target on the development PC. Target-laptop certification remains separate.
 - A moving Low 1280×720 audit passes the 40ms frame-p95, 12ms complete CPU callback, 28ms GPU-p95, 5ms simulation-p95 and 2ms AI-p95 targets in city, mountain, highway, wet-night and eight-car-race scenes; see the benchmark log for exact values.
 
-The exact current production files include `index-Dd5feGKq.js` and `cell-worker-BYSSieaE.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 6.339 seconds forced WebGL2 and 5.873 seconds automatic, with 10,522,025 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests. The smoke test confirms fingerprinted requests for both shared Velara LODs, the gallery environment, and all nineteen KTX2 textures.
+The exact current production files include `index-BYFdtviE.js` and `cell-worker-BYSSieaE.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.920 seconds forced WebGL2 and 5.963 seconds automatic, with 10,522,034 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests. The smoke test confirms fingerprinted requests for both shared Velara LODs, the gallery environment, and all nineteen KTX2 textures.
 
 ## Remaining acceptance boundary
 

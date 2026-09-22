@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Night-background readability closeout — September 21
+
+- The final night envelope raises only the after-dark ambient, environment, moon-key, exposure, fog and generated-sky/cloud floors; noon remains exactly 0.92 ambient / 1.0 environment / 2.8 direct / 1.18 exposure. Clear night is **0.46 / 0.36 / 0.36 / 1.23**, while rainy night keeps the same ambient/reflection floor and reduces the directional key to **0.217**.
+- Installed Edge passes the same eight fixed-clock clear/cloud/storm/day/night views on forced WebGL2 and actual WebGPU. Both opened wet-night captures retain the road edges, trees, utility corridor, service building, car and mountain layers instead of collapsing the background to black. Each backend drives normally to **17.023624m/s** with four contacts, stable **319 meshes / 75 materials / 44 textures**, and empty error arrays.
+- The supplied skill client completed its short canonical input burst; the opened 1280×720 screenshot/state show a grounded Lakeshore car, twelve physical traffic vehicles and no loading/streaming error. The full **256 tests / 41 files**, strict TypeScript and production build pass.
+- The full Low submission audit remains inside budget: wet night is **250 draws / 473,098 active triangles**, city **234 / 456,948**, and both eight-car grids **282 / 481,782**. Production `index-BYFdtviE.js` / `cell-worker-BYSSieaE.js` reaches the menu under cold 25Mbps/40ms emulation in **5.920s WebGL2 / 5.963s automatic**, transfers **10,522,034 bytes**, enters Free Drive and Northstar, and records no page, failed or external request. These are development-host results, not target-laptop or hosted-HTTPS acceptance.
+
 ## Static delivery and shared-showroom closeout — September 21
 
 - `vercel.json` now declares the pinned npm/Vite build and `dist` output, revalidates the application shell, preserves baseline response-hardening headers, and applies one-year immutable caching only to hashed `/assets/` or query-fingerprinted GLB, KTX2 and environment payloads. Four unit contracts verify those rules and that no service worker ships.

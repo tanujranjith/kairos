@@ -24,7 +24,7 @@ ${local(v3,'horizon',`mix(${v3}(0.40,0.57,0.76),${v3}(0.88,0.39,0.13),golden*(0.
 ${local(v3,'zenith',`mix(${v3}(0.025,0.14,0.34),${v3}(0.10,0.16,0.28),golden*0.5)`)}
 ${local(v3,'colour',`mix(horizon,zenith,pow(height,0.44))`)}
 colour=mix(colour,${v3}(0.23,0.28,0.34)*(1.0-height*0.18),cover*0.70);
-colour=mix(mix(${v3}(0.020,0.034,0.060),${v3}(0.004,0.009,0.022),pow(height,0.46)),colour,day);
+colour=mix(mix(${v3}(0.034,0.052,0.086),${v3}(0.007,0.014,0.030),pow(height,0.46)),colour,day);
 colour+=${v3}(1.0,0.67,0.34)*pow(sunDot,85.0)*(0.10+golden*0.24)*day*(1.0-cover*0.85);
 
 // Two world-direction cloud decks. Mip filtering handles distant compression;
@@ -42,9 +42,9 @@ ${scalar('alpha',`density*smoothstep(${CLOUD_HORIZON.fadeStart.toFixed(3)},${CLO
 ${local(v3,'cloudColour',`mix(${v3}(0.29,0.35,0.43),${v3}(0.94,0.96,1.0),clamp(0.50+edgeLight*0.50-thick*0.42,0.0,1.0))`)}
 cloudColour*=1.0-cover*0.51;
 cloudColour=mix(cloudColour,${v3}(0.93,0.48,0.21)*(0.68+edgeLight*0.35),golden*(0.20+sunward*0.70)*(1.0-cover));
-cloudColour=mix(${v3}(0.020,0.030,0.048)*(0.62+edgeLight*0.38),cloudColour,day);
+cloudColour=mix(${v3}(0.038,0.050,0.072)*(0.62+edgeLight*0.38),cloudColour,day);
 ${scalar('wisps',`smoothstep(0.54,0.73,${sample(`uv*${v2}(0.46,1.8)+${v2}(0.41,0.19)`)}.b)*0.22*(1.0-cover)*smoothstep(${CLOUD_HORIZON.fadeStart.toFixed(3)},0.28,height)`)}
-colour=mix(colour,mix(${v3}(0.022,0.034,0.056),${v3}(0.68,0.77,0.88),day),wisps);
+colour=mix(colour,mix(${v3}(0.035,0.052,0.082),${v3}(0.68,0.77,0.88),day),wisps);
 colour=mix(colour,cloudColour,alpha);
 
 // Small angular sun with a soft aureole, naturally obscured by cloud coverage.

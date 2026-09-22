@@ -1,5 +1,11 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Night-background readability closeout — September 21 (verified checkpoint)
+
+- Completion audit rejected a stale historical startup-shader note because the current loader already proves complete first-visible paint; visual review instead found the current rainy-night background materially too black. Raised only the night ambient/reflection, moon-key, exposure, fog and generated sky/cloud floors while preserving exact noon lighting, resource ownership and all driving systems.
+- Opened all final clear/rain views on installed Edge forced WebGL2 and actual WebGPU. Road edges, utility corridor, trees, service building, mountains and the shared Velara remain readable; both eight-view verifiers drive to 17.023624m/s with four contacts and stable 319/75/44 resources. The required skill client screenshot/state were opened and remain grounded with twelve physical traffic cars and no stream error.
+- Full 256 tests / 41 files, strict TypeScript and production build pass (`index-BYFdtviE.js`, `cell-worker-BYSSieaE.js`). Low wet night is 250 draws / 473,098 active triangles; both eight-car grids are 282 / 481,782. Cold 25Mbps/40ms local production passes in 5.920s WebGL2 / 5.963s automatic, 10,522,034 bytes, with versioned same-origin assets and no page/failed/external requests. NEXT: actual 8GB integrated-graphics acceptance and an authorized HTTPS preview remain external; preserve the five user files.
+
 ## Static delivery closeout and showroom reflection — September 21 (verified checkpoint)
 
 - Added the concrete Vercel static-build contract: npm/Vite to `dist`, revalidated shell, immutable caching for hashed or explicitly fingerprinted payloads, and no service worker. Velara LOD0/LOD1 and the gallery environment now carry stable version queries alongside the existing nineteen versioned KTX2 files; production verification asserts all of them and rejects external/failed requests.

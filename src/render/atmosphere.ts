@@ -21,10 +21,10 @@ export function drivingLighting(time:number,weather:Weather){
   const overcast={Clear:0,Cloudy:.20,Overcast:.55,Rain:.72}[weather];
   return {
     solar,day,night,overcast,
-    ambientIntensity:.38+day*.54,
-    environmentIntensity:.28+day*.72,
-    directIntensity:day*(2.8+solar.golden*.9)*(1-overcast)+night*.30*(1-overcast*.55),
-    exposure:1.12+day*.06+solar.golden*.15+night*.05,
+    ambientIntensity:.46+day*.46,
+    environmentIntensity:.36+day*.64,
+    directIntensity:day*(2.8+solar.golden*.9)*(1-overcast)+night*.36*(1-overcast*.55),
+    exposure:1.15+day*.03+solar.golden*.15+night*.08,
     nightBlend:night*night*night,
   };
 }

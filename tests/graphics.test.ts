@@ -25,8 +25,8 @@ describe('original graphics assets',()=>{
   it('keeps night roads readable with a bounded weather-aware moon key',()=>{
     const noon=drivingLighting(12,'Clear'),night=drivingLighting(22,'Clear'),rain=drivingLighting(22,'Rain');
     expect(noon.ambientIntensity).toBeCloseTo(.92);expect(noon.environmentIntensity).toBe(1);expect(noon.directIntensity).toBeCloseTo(2.8);
-    expect(night.day).toBe(0);expect(night.ambientIntensity).toBe(.38);expect(night.environmentIntensity).toBe(.28);expect(night.directIntensity).toBe(.3);expect(night.exposure).toBeGreaterThan(1.15);
-    expect(rain.directIntensity).toBeGreaterThan(.15);expect(rain.directIntensity).toBeLessThan(night.directIntensity);expect(rain.overcast).toBe(.72);
+    expect(night.day).toBe(0);expect(night.ambientIntensity).toBe(.46);expect(night.environmentIntensity).toBe(.36);expect(night.directIntensity).toBe(.36);expect(night.exposure).toBeGreaterThan(1.21);
+    expect(rain.directIntensity).toBeGreaterThan(.20);expect(rain.directIntensity).toBeLessThan(.24);expect(rain.directIntensity).toBeLessThan(night.directIntensity);expect(rain.overcast).toBe(.72);
   });
   it('batches detailed service pavilions and their terrace with bounded original geometry',()=>{
     const b={wall:new MeshDataBuilder(),roof:new MeshDataBuilder(),glass:new MeshDataBuilder()},paving=new MeshDataBuilder();buildServicePavilion(b,paving,{x:0,y:12,z:0,yaw:0});let total=0;

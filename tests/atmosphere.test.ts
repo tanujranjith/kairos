@@ -10,7 +10,7 @@ describe('directional sky and original cloud atlas',()=>{
   });
   it('desaturates storm haze while preserving clear-day and night fog',()=>{
     const day=atmosphereFog(12,'Clear'),rain=atmosphereFog(12,'Rain');expect(day).toEqual([.54,.66,.79]);
-    expect(rain[2]-rain[0]).toBeLessThan((day[2]-day[0])*.4);expect(atmosphereFog(0,'Rain')).toEqual([.035,.05,.08]);
+    expect(rain[2]-rain[0]).toBeLessThan((day[2]-day[0])*.4);expect(atmosphereFog(0,'Rain')).toEqual([.055,.075,.11]);
     for(const weather of ['Clear','Cloudy','Overcast','Rain'] as const)for(let time=0;time<24;time+=.25)expect(atmosphereFog(time,weather).every(v=>v>=0&&v<=1)).toBe(true);
   });
   it('wraps its cloud field continuously in both axes',()=>{

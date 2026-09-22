@@ -10,7 +10,7 @@ The old sky repainted a 1024 × 256 equirectangular texture whenever the time bu
 
 ## Night legibility continuation — September 21
 
-The existing directional light now reverses to the shared lunar direction after the solar light is below the horizon. Clear night uses a restrained 0.30 cool key; rain reduces that key to 0.18. Ambient and reflection-environment floors rise to 0.38 and 0.28, with a 1.17 night exposure. The generated shader has a richer blue-black horizon, more readable sparse stars and a broader low-energy moon halo. Headlight activation and all daytime/golden-hour values remain on the same solar envelope.
+The existing directional light now reverses to the shared lunar direction after the solar light is below the horizon. Clear night uses a restrained 0.36 cool key; rain reduces that key to 0.217. Ambient and reflection-environment floors are 0.46 and 0.36, with a 1.23 night exposure. The generated shader has a lifted blue-black horizon and storm-cloud floor, readable sparse stars and a broad low-energy moon halo. Noon intensity, headlight activation and the daytime/golden-hour envelope are unchanged.
 
 This reuses the already-budgeted sun/shadow path. It adds no lights, materials, textures, meshes, draw calls or physical effects. The pure lighting envelope is regression-tested so weather cannot accidentally remove all direct night definition or turn rain brighter than clear night.
 
@@ -20,7 +20,7 @@ The final installed-Edge WebGL2 and actual-WebGPU matrices each pass eight fixed
 
 This is a layered sky approximation, not volumetric ray marching or a physically calibrated atmospheric scattering simulation. There are no moving cloud shadows or astronomical lunar phases. Storm fog is desaturated with the sky to avoid bright blue distant cutouts. Vehicle inputs, tire forces, terrain geometry and collision contacts are unchanged. Local reflections can naturally pick up the new sky.
 
-Historical captures remain in `output/atmosphere/`; the current continuation is in `output/night-ambience-webgl/` and `output/night-ambience-webgpu/`. The current full suite passes 250 tests, strict production build, both native eight-view checks and the Low geometry audit. The production preview serves `index-BBNmaQ2P.js`; full measurements and their hardware limitations are recorded in [benchmarks](benchmarks.md).
+Historical captures remain in `output/atmosphere/`; the current continuation is in `output/night-ambience-final-webgl/` and `output/night-ambience-final-webgpu/`. The current full suite passes 256 tests / 41 files, strict production build, both native eight-view checks and the Low geometry audit. The production preview serves `index-BYFdtviE.js`; full measurements and their hardware limitations are recorded in [benchmarks](benchmarks.md).
 
 ```sh
 node scripts/verify-atmosphere.mjs --output=output/atmosphere/webgl

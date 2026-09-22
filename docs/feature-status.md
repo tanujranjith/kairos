@@ -36,9 +36,9 @@ This closes the broad local interaction/fault audit, not the full external accep
 
 ## Night ambience and legibility — September 21 (verified checkpoint)
 
-Clear and rainy nights now retain readable road, vehicle, vegetation and terrain silhouettes beyond the headlamp cone. The existing directional light becomes a restrained weather-aware moon key after sunset, while the generated sky receives a richer blue-black horizon, brighter sparse stars and a wider moon halo. No light, mesh, texture, physics or traffic allocation was added.
+Clear and rainy nights now retain readable road, vehicle, vegetation, buildings and terrain silhouettes beyond the headlamp cone. The existing directional light becomes a restrained weather-aware moon key after sunset, while the generated sky and storm clouds receive a lifted blue-black floor. No light, mesh, texture, physics or traffic allocation was added, and noon lighting remains numerically unchanged.
 
-Both installed-Edge backends pass eight fixed-clock weather/time views with identical controlled driving, stable 319/75/44 mesh/material/texture counts and clean error arrays. The clear-night key is 0.30 intensity; rain reduces it to 0.18. Latest clear/rain, upward-sky and moon-direction captures were opened on WebGL2 and actual WebGPU. The full suite passes 250 tests / 39 files, and Low wet night remains 267 draws / approximately 495.8k triangles. See [directional sky](atmosphere.md).
+Both installed-Edge backends pass eight fixed-clock weather/time views with identical controlled driving, stable 319/75/44 mesh/material/texture counts and clean error arrays. Clear night uses 0.46 ambient / 0.36 directional / 0.36 environment / 1.23 exposure; rain reduces the directional key to 0.217. Latest clear/rain, upward-sky and moon-direction captures were opened on WebGL2 and actual WebGPU. The full suite passes 256 tests / 41 files; Low wet night remains 250 draws / 473,098 active triangles, and both eight-car grids remain 282 / 481,782. See [directional sky](atmosphere.md).
 
 ## Browser visibility pause — September 21 (verified checkpoint)
 

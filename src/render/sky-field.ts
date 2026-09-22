@@ -20,7 +20,7 @@ export function skyState(time:number,weather:Weather,clock:number){
  * desaturate the distant terrain along with the sky, not leave blue cutouts. */
 export function atmosphereFog(time:number,weather:Weather):[number,number,number]{
   const state=skyState(time,weather,0),overcast={Clear:0,Cloudy:.20,Overcast:.55,Rain:.72}[weather];
-  const day=[.54,.66,.79],warm=[.76,.67,.58],storm=[.47,.49,.53],night=[.035,.05,.08];
+  const day=[.54,.66,.79],warm=[.76,.67,.58],storm=[.47,.49,.53],night=[.055,.075,.11];
   return day.map((c,i)=>lerp(night[i],lerp(lerp(c,warm[i],state.golden*(1-overcast)*.40),storm[i],overcast/.72*.85),state.day)) as [number,number,number];
 }
 /** Pure equivalent of the shader coverage gate, for parameter regression. */
