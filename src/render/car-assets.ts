@@ -18,7 +18,8 @@ export async function loadCarAssets(scene:Scene,_ids:string[]){
 export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Customization,lite=false):CarVisual|null{
   const modelId=visualModelId(d.id),container=libraries.get(scene)?.get(`${modelId}:${lite?1:0}`);if(!container)return null;
   const root=new TransformNode(`visual-${d.id}`,scene),entry=container.instantiateModelsToScene(name=>`${d.id}-instance-${name}`,true,{doNotInstantiate:true});root.metadata={kairosCar:true,visualModel:modelId,handlingProfile:d.id};entry.rootNodes.forEach(n=>n.parent=root);
-  const parts=root.getChildMeshes().filter((m):m is Mesh=>m instanceof Mesh),nodes=root.getChildTransformNodes(),wheels=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`wheel-${i}`))!);
+  const allMeshes=root.getChildMeshes().filter((m):m is Mesh=>m instanceof Mesh),collisionMeshes=allMeshes.filter(mesh=>mesh.name.endsWith('collision-chassis'));collisionMeshes.forEach(mesh=>{mesh.setEnabled(false);mesh.isVisible=false;mesh.isPickable=false;});
+  const parts=allMeshes.filter(mesh=>!collisionMeshes.includes(mesh)),nodes=root.getChildTransformNodes(),wheels=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`wheel-${i}`))!);
   const brakes=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`brake-${i}`)));
   const steering=nodes.find(node=>node.name.endsWith('steering-pivot'));if(steering&&!steering.rotationQuaternion)steering.rotationQuaternion=Quaternion.Identity();
   const materials=[...new Set(parts.map(p=>p.material).filter((m):m is PBRMaterial=>m instanceof PBRMaterial))];
@@ -45,6 +46,7 @@ export function instantiateStaticCarAsset(scene:Scene,d:VehicleDefinition){
   const id=staticInstance++,root=new TransformNode(`parked-${d.id}-${id}`,scene),entry=container.instantiateModelsToScene(name=>`parked-${id}-${name}`,false,{doNotInstantiate:false});
   root.metadata={kairosCar:true,parkedCar:true,visualModel:modelId};entry.rootNodes.forEach(node=>node.parent=root);
   for(const part of root.getChildMeshes()){
+    if(part.name.endsWith('collision-chassis')){part.setEnabled(false);part.isVisible=false;part.isPickable=false;continue;}
     part.isPickable=false;if(part instanceof InstancedMesh)part.sourceMesh.receiveShadows=true;else part.receiveShadows=true;
     const material=part.material;if(material instanceof PBRMaterial)material.maxSimultaneousLights=6;
     const name=material?.name??'';part.metadata={...part.metadata,worldCaster:!/(glass|headlight|lamp-lens|taillight|instruments)/.test(name),parkedCar:true};

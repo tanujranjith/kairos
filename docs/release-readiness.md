@@ -4,7 +4,7 @@ Kairos is a playable local release candidate. The current source integrates the 
 
 ## Verified locally
 
-- Strict TypeScript, nineteen KTX2 assets, production build and 256 tests in 41 files pass.
+- Strict TypeScript, nineteen KTX2 assets, production build and 257 tests in 41 files pass.
 - Garage, customization, settings, map/routing, Free Drive, reverse/reset, all five cameras, pause/resume, night, the handling course and persisted reload pass in a complete rendered browser flow.
 - Confirmed progress reset survives reload. Save export/import, corrupt data preservation, genuine quota failure/recovery, closed-database writes and unavailable IndexedDB fail safely while play remains available.
 - Keyboard and controller navigation are covered; real fullscreen, disconnect pause and bounded vibration dispatch pass. A physical controller motor was not available.
@@ -17,7 +17,7 @@ Kairos is a playable local release candidate. The current source integrates the 
 - A CDP-scoped Windows/Edge process audit peaks at 1,334.97MiB settled summed working set, leaving 201.03MiB below the planned 1.5GiB process target on the development PC. Target-laptop certification remains separate.
 - A moving Low 1280×720 audit passes the 40ms frame-p95, 12ms complete CPU callback, 28ms GPU-p95, 5ms simulation-p95 and 2ms AI-p95 targets in city, mountain, highway, wet-night and eight-car-race scenes; see the benchmark log for exact values.
 
-The exact current production files include `index-CwSirQfd.js` and `cell-worker-BYSSieaE.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 6.064 seconds forced WebGL2 and 5.230 seconds automatic, with 10,524,713 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests. The smoke test confirms fingerprinted requests for the version-4 shared Velara LODs, the gallery environment, and all nineteen KTX2 textures.
+The exact current production files include `index-CDWvVxTB.js` and `cell-worker-BYSSieaE.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 6.204 seconds forced WebGL2 and 5.352 seconds automatic, with 10,527,494 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests. The smoke test confirms version-5 fingerprinted shared Velara LODs, the gallery environment and all nineteen KTX2 textures.
 
 ## Remaining acceptance boundary
 

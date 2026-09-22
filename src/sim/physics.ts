@@ -9,6 +9,7 @@ import { tireForces, tractionTorque,brakingTorque,brakingCapacity } from './tire
 import { steeringLock } from '../core/steering';
 import { compressionSpeed } from './suspension';
 import { contactForTriangle,SURFACE_GRIP } from './contacts';
+import {vehicleCollisionShape} from '../content/vehicle-collision';
 
 export const FIXED_DT=1/120;
 export const neutralInput=():InputFrame=>({throttle:0,brake:0,steer:0,handbrake:false,shift:0,reverse:false});
@@ -30,7 +31,8 @@ export class Vehicle {
     const d=definition;this.setup=setup??{paint:d.color,wheels:'#b2bac0',livery:0,brakeBias:.6,aero:1};
     this.node=new TransformNode(`body-${id}`,world.scene);this.node.position.copyFromFloats(spawn.x,spawn.y+.7,spawn.z);this.node.rotationQuaternion=Quaternion.RotationYawPitchRoll(yaw,0,0);
     this.body=new PhysicsBody(this.node,PhysicsMotionType.DYNAMIC,false,world.scene);
-    this.shape=new PhysicsShapeBox(new Vector3(0,.05,0),Quaternion.Identity(),new Vector3(d.width*.86,.38,d.length*.87),world.scene);
+    const collision=vehicleCollisionShape(d);
+    this.shape=new PhysicsShapeBox(new Vector3(collision.center.x,collision.center.y,collision.center.z),Quaternion.Identity(),new Vector3(collision.size.x,collision.size.y,collision.size.z),world.scene);
     this.shape.material={friction:.2,restitution:.08};this.shape.filterMembershipMask=2;this.body.shape=this.shape;
     this.body.setMassProperties({mass:d.mass+d.tank*.75,centerOfMass:new Vector3(0,-.12,d.drive==='FWD'?.12:-.05)});
     this.body.setLinearDamping(.015);this.body.setAngularDamping(.22);
