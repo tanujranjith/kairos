@@ -2,6 +2,15 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Bounded active-scene performance closeout — September 21
+
+- `output/frame-performance-final/report.json` repeats the full installed-Edge/WebGL2 Low 1280×720 moving matrix after the scene-submission pass. All five images were opened and show complete streamed scenery, moving traffic/race cars, current weather and four grounded wheel contacts. Frame p95 is **19.4/19.1/20.9/19.1/19.3ms** for city/mountain/highway/wet-night/eight-car-race.
+- The strict complete-callback CPU p95 now passes in every scene at **10.9/9.5/11.5/10.2/8.5ms**. Simulation p95 is **2.3/1.9/2.0/1.8/1.2ms**, AI p95 is **1.2/0.7/1.0/1.1/1.2ms**, and native timer-query GPU p95 is **9.72/8.50/9.53/12.74/8.98ms**. These are development RTX/Windows measurements, not the 8GB integrated-graphics laptop result.
+- Babylon's active render list is retained between structural changes while per-submesh frustum clipping remains live. Streamed mesh-count changes, world/showroom swaps, weather changes, vehicle replacement, traffic visibility and LOD transitions explicitly invalidate it; meshes themselves remain unfrozen so every vehicle transform continues to update. Traffic lamps remain present in the retained list and change numeric visibility with their real signal phase. The eleven-scenario traffic verifier confirms the expected red/green pair.
+- Repeated no-op `setEnabled` calls on six lights had forced Babylon to rescan every scene mesh. Light state is now changed only on actual transitions. Rain-buffer writes no longer allocate 250 temporary arrays per frame, and the wide-band shadow-caster membership scan runs at 4Hz while selected moving casters and the shadow map still update each frame.
+- The supplied skill client completed its short canonical input burst; the opened capture is grounded on Lakeshore with twelve physical traffic cars and no load/error artifact. General interactions, all traffic cases, strict TypeScript and **252 tests / 40 files** pass. Production is `index-iqvASOOz.js` with `cell-worker-BYSSieaE.js`; cold 25Mbps/40ms local delivery is **5.938s forced WebGL2 / 5.885s automatic**, **10,521,944 bytes**, with clean Free Drive and Northstar entry and no page, failed or external requests.
+- Earlier failed CPU samples below remain in the log as pre-optimization evidence. The local CPU budget is closed; actual-laptop performance and authorized HTTPS deployment remain external acceptance items.
+
 ## Moving Low frame-performance audit — September 21
 
 - `audit-frame-performance.mjs` records real-time city traffic, mountain pass, highway, rainy Westbrook night and eight-car GT driving at Low 1280×720 in installed Edge/WebGL2. Each Free Drive scene uses twelve physical traffic cars and the ordinary input, tire, Havok, streaming and rendering paths. All five captures were opened; the car stayed grounded with four contacts, and the error, failed-request and external-request arrays are empty.

@@ -15,13 +15,13 @@ Kairos is a playable local release candidate. The current source integrates the 
 - Selected 30-minute race endurance, maximum-speed streaming, 16-car racing/pits, wet-night traffic, handling/surface, race weekend and production delivery checks are retained in the dated benchmark evidence.
 - A conservative Low 1280×720 resident-resource audit peaks at 157.57MiB including a 25% untracked-allocation contingency, below the planned 256MiB estimate ceiling across city, mountain, highway, wet-night and eight-car-race scenes.
 - A CDP-scoped Windows/Edge process audit peaks at 1,334.97MiB settled summed working set, leaving 201.03MiB below the planned 1.5GiB process target on the development PC. Target-laptop certification remains separate.
-- A moving Low 1280×720 audit passes the 40ms frame-p95, 28ms GPU-p95, 5ms simulation-p95 and 2ms AI-p95 targets in city, mountain, highway, wet-night and eight-car-race scenes. The stricter 12ms CPU callback budget remains open in four Free Drive scenes; see the benchmark log for exact values.
+- A moving Low 1280×720 audit passes the 40ms frame-p95, 12ms complete CPU callback, 28ms GPU-p95, 5ms simulation-p95 and 2ms AI-p95 targets in city, mountain, highway, wet-night and eight-car-race scenes; see the benchmark log for exact values.
 
 The exact current production files include `index-CBTseZuh.js` and `cell-worker-BYSSieaE.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.561 seconds forced WebGL2 and 5.177 seconds automatic, with 10,521,633 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests.
 
 ## Remaining acceptance boundary
 
-The development machine cannot certify the 8 GB integrated-graphics laptop's 720p/30 FPS frame pacing, whole-process memory or actual driver-reported GPU residency. Run the documented benchmark routes on that machine before calling the hardware target accepted. The development RTX passes the frame, GPU, simulation and AI targets, but dense Free Drive still exceeds the aspirational CPU callback sub-budget and should be profiled on the target machine before release.
+The development machine cannot certify the 8 GB integrated-graphics laptop's 720p/30 FPS frame pacing, whole-process memory or actual driver-reported GPU residency. Run the documented benchmark routes on that machine before calling the hardware target accepted. The development RTX now passes every stated frame/CPU/GPU/simulation/AI p95 target, but that result must still be reproduced on the target machine before release.
 
 No cloud project or destination has been authorized, so the included static/Vercel configuration has not been deployed or smoke-tested over HTTPS. Deployment requires an explicitly authorized project, preview-first validation and preservation of the previous release for rollback.
 

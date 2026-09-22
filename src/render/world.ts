@@ -124,7 +124,7 @@ export class WorldRenderer {
     }else if(!demand.detail&&cell.detail){for(const mesh of [...cell.detailMeshes])this.disposeMesh(cell,mesh);cell.detailMeshes=[];this.disposeParkedCars(cell);}
     cell.detail=demand.detail;for(const mesh of cell.meshes)mesh.isVisible=demand.detail;
     // Signal aspects, not the general visibility switch, decide which lens is lit.
-    for(const signal of cell.signals)signal.mesh.isVisible=false;
+    for(const signal of cell.signals)signal.mesh.visibility=.0001;
   }
   private disposeMesh(cell:Cell,mesh:Mesh){if(mesh.metadata?.ownedMaterial)mesh.material?.dispose(false,true);cell.leases.get(mesh)?.release();cell.leases.delete(mesh);mesh.dispose();const index=cell.meshes.indexOf(mesh);if(index>=0)cell.meshes.splice(index,1);}
   private disposeParkedCars(cell:Cell){for(const parked of cell.parkedCars){parked.collider?.body.dispose();parked.collider?.shape.dispose();parked.collisionMesh.dispose();parked.dispose();}cell.parkedCars=[];}

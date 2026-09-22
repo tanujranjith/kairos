@@ -21,6 +21,7 @@ export class Renderer {
   private outdoorEnvironment:ReturnType<typeof lightingEnvironment>;private studioEnvironment:ReturnType<typeof lightingEnvironment>;private pipeline:DefaultRenderingPipeline;private contactMaterial:StandardMaterial;
   reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];private floorReflection:MirrorTexture;private galleryEnvironment:BaseTexture;
   private activeSettings:Settings|null=null;private dynamicResolutionScale=1;private daylightColour=new Color3();private shadowSelectionAt=-Infinity;
+  private activeMeshListDirty=true;private activeMeshCount=-1;private activeMeshRefreshes=0;
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
     this.scene=new Scene(engine);const scene=this.scene;scene.performancePriority=ScenePerformancePriority.Intermediate;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
@@ -63,7 +64,7 @@ export class Renderer {
     });
   }
   registerCar(car:CarVisual,grounded=true){
-    const existing=this.registeredCars.get(car);if(existing){existing.isVisible=grounded;return;}
+    const existing=this.registeredCars.get(car);if(existing){existing.visibility=grounded?1:0;return;}
     // Sun/sky, two headlamps and at most two nearby street lights.
     for(const part of car.parts)if(part.material instanceof PBRMaterial)part.material.maxSimultaneousLights=6;
     car.root.metadata={...car.root.metadata,kairosCar:true};
@@ -71,7 +72,7 @@ export class Renderer {
     const patch=(width:number,height:number,x:number,z:number,y:number)=>{const mesh=MeshBuilder.CreateGround('contact-patch',{width,height},this.scene);mesh.position.set(x,y,z);mesh.material=this.contactMaterial;patches.push(mesh);};
     patch(2.55,5.2,0,0,-car.groundOffset+.006);
     for(const wheel of car.wheels)patch(.65,1.05,wheel.position.x,wheel.position.z,-car.groundOffset+.007);
-    const contact=Mesh.MergeMeshes(patches,true,true)!;contact.name='car-contact-shadow';contact.parent=car.root;contact.material=this.contactMaterial;contact.isPickable=false;contact.isVisible=grounded;this.registeredCars.set(car,contact);
+    const contact=Mesh.MergeMeshes(patches,true,true)!;contact.name='car-contact-shadow';contact.parent=car.root;contact.material=this.contactMaterial;contact.isPickable=false;contact.isVisible=true;contact.visibility=grounded?1:0;this.registeredCars.set(car,contact);
     for(const part of car.parts){
       // Glass and tiny emissive faces are not opaque sun occluders. The body,
       // cabin/wing, tyres and wheels provide the car's actual shadow silhouette.
@@ -79,8 +80,10 @@ export class Renderer {
       this.shadowParts.add(part);part.onDisposeObservable.addOnce(()=>{this.shadowParts.delete(part);this.shadow.removeShadowCaster(part);});
     }
   }
+  invalidateActiveMeshes(){this.activeMeshListDirty=true;}
+  activeMeshState(){return {frozen:this.scene._activeMeshesFrozen,active:this.scene.getActiveMeshes().length,total:this.scene.meshes.length,refreshes:this.activeMeshRefreshes};}
   prepareReflections(car:CarVisual,settings:Settings,garage:boolean,clock:number){this.reflections.update({position:car.root.position,garage,clock,stamp:`${Math.round(settings.time*4)}:${settings.weather}`},settings.quality,[car.paint,car.glass]);}
-  recoverGraphicsResources(){this.reflections.recover();const old=[this.outdoorEnvironment,this.studioEnvironment];this.outdoorEnvironment=lightingEnvironment(this.scene);this.studioEnvironment=lightingEnvironment(this.scene,true);this.scene.environmentTexture=this.wasGarage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;for(const texture of old){const internal=(texture as unknown as {_texture?:{_hardwareTexture:unknown}})._texture;if(internal)internal._hardwareTexture=null;texture.dispose();}this.engine.wipeCaches(true);this.scene.markAllMaterialsAsDirty(Material.TextureDirtyFlag);}
+  recoverGraphicsResources(){this.scene.unfreezeActiveMeshes();this.invalidateActiveMeshes();this.reflections.recover();const old=[this.outdoorEnvironment,this.studioEnvironment];this.outdoorEnvironment=lightingEnvironment(this.scene);this.studioEnvironment=lightingEnvironment(this.scene,true);this.scene.environmentTexture=this.wasGarage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;for(const texture of old){const internal=(texture as unknown as {_texture?:{_hardwareTexture:unknown}})._texture;if(internal)internal._hardwareTexture=null;texture.dispose();}this.engine.wipeCaches(true);this.scene.markAllMaterialsAsDirty(Material.TextureDirtyFlag);}
   private applyHardwareScale(){if(!this.activeSettings)return;const profiles={Low:[1280,720],Medium:[1600,900],High:[1920,1080],Ultra:[2560,1440]},profile=profiles[this.activeSettings.quality],viewportScale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(viewportScale/(this.activeSettings.resolution*this.dynamicResolutionScale));}
   applySettings(settings:Settings,resetDynamic=false){this.activeSettings=settings;if(resetDynamic)this.dynamicResolutionScale=1;this.applyHardwareScale();const shadows={Low:1024,Medium:1536,High:2048,Ultra:4096};this.shadow.getShadowMap()?.resize(shadows[settings.quality]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}
   setDynamicResolutionScale(scale:number){const next=clamp(scale,.7,1);if(Math.abs(next-this.dynamicResolutionScale)<1e-6)return;this.dynamicResolutionScale=next;this.applyHardwareScale();}
@@ -99,7 +102,7 @@ export class Renderer {
     if(garage&&!this.wasGarage)this.floorReflection.renderList=this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.name!=='car-contact-shadow'&&(mesh.metadata?.floorReflection||(()=>{let node=mesh.parent;while(node){if(node.metadata?.kairosCar)return true;node=node.parent;}return false;})()));
     else if(!garage&&this.wasGarage)this.floorReflection.renderList=[];
     this.registerCar(visual,garage||vehicle.state.grounded);
-    this.studioLights.forEach(light=>light.setEnabled(garage));this.headlights.forEach(light=>light.setEnabled(!garage));
+    this.studioLights.forEach(light=>{if(light.isEnabled()!==garage)light.setEnabled(garage);});const headlampsEnabled=!garage;this.headlights.forEach(light=>{if(light.isEnabled()!==headlampsEnabled)light.setEnabled(headlampsEnabled);});
     if(garage){visual.glass.alpha=.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;for(const n of visual.root.getChildTransformNodes())if(/brake-\d$/.test(n.name)){n.position.y=-.32;n.rotationQuaternion=null;n.rotation.set(0,0,0);}}
     this.headlights.forEach((light,i)=>{const f=new Vector3(Math.sin(vehicle.state.yaw),-.08,Math.cos(vehicle.state.yaw)),r=new Vector3(Math.cos(vehicle.state.yaw),0,-Math.sin(vehicle.state.yaw));light.position.copyFrom(vehicle.node.position).addInPlace(f.scale(vehicle.definition.length*.48)).addInPlace(r.scale(i===0?-.55:.55));light.direction.copyFrom(f);light.intensity=!garage&&this.lightsEnabled?(night>.72?650:1):0;});
     if(garage){const a=-.58+Math.sin(clock*.07)*.08;visual.wheels.forEach(w=>{w.position.y=-.32;w.rotation.set(0,0,0);w.rotationQuaternion=null;});visual.root.position.set(0,-1000+.105+.32+vehicle.definition.wheelRadius,0);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(.2,0,0);this.camera.position.set(Math.sin(a)*8.5,-998.32,Math.cos(a)*8.5);this.camera.setTarget(new Vector3(0,-999.12,0));this.camera.fov=.59;this.sun.position.copyFrom(visual.root.position).subtractInPlace(this.sun.direction.scale(90));this.scene.fogDensity=.0003;this.wasGarage=true;}
@@ -116,11 +119,26 @@ export class Renderer {
       this.cameraCurrentDistance=Vector3.Distance(cameraOrigin,this.cameraPosition);
       this.camera.position.copyFrom(this.cameraPosition);this.camera.setTarget(this.look);this.camera.fov=approach(this.camera.fov,.77+clamp(Math.abs(vehicle.state.speed)/120,0,.17),5,dt);this.sun.position.copyFrom(p).subtractInPlace(this.sun.direction.scale(90));this.wasGarage=false;
     }
-    const shadowMap=this.shadow.getShadowMap();if(shadowMap&&(clock-this.shadowSelectionAt>=.1||this.wasGarage!==garage)){this.shadowSelectionAt=clock;const p=visual.root.position;
+    // Caster membership changes only as objects cross a wide 60–80 m band;
+    // four refreshes per second keep moving transforms live while avoiding a
+    // full scene/bounds scan on one frame in every six.
+    const shadowMap=this.shadow.getShadowMap();if(shadowMap&&(clock-this.shadowSelectionAt>=.25||this.wasGarage!==garage)){this.shadowSelectionAt=clock;const p=visual.root.position;
       const scenery=this.scene.meshes.filter(m=>{if(!m.metadata?.worldCaster||!m.isVisible||!m.isEnabled())return false;const b=m.getBoundingInfo().boundingBox;return b.minimumWorld.x<p.x+80&&b.maximumWorld.x>p.x-80&&b.minimumWorld.z<p.z+80&&b.maximumWorld.z>p.z-80;});
       shadowMap.renderList=[...[...this.shadowParts].filter(m=>m.isEnabled()&&Vector3.DistanceSquared(m.getAbsolutePosition(),p)<3600),...scenery];
     }
-    const rainy=settings.weather==='Rain';this.rain.setEnabled(rainy&&!garage);if(rainy&&!garage){const p=this.camera.position;for(let i=0;i<250;i++){const x=((i*7.31)%34)-17+p.x,z=((i*11.27)%34)-17+p.z,y=(((i*3.71-clock*24)%18)+18)%18+p.y-3;this.rainPositions.set([x,y,z,x-.15,y-1.05,z],i*6);}this.rain.updateVerticesData(VertexBuffer.PositionKind,this.rainPositions);this.rain.refreshBoundingInfo();}
+    const rainy=settings.weather==='Rain',showRain=rainy&&!garage;if(this.rain.isEnabled()!==showRain){this.rain.setEnabled(showRain);this.invalidateActiveMeshes();}if(showRain){const p=this.camera.position;for(let i=0;i<250;i++){const offset=i*6,x=((i*7.31)%34)-17+p.x,z=((i*11.27)%34)-17+p.z,y=(((i*3.71-clock*24)%18)+18)%18+p.y-3;this.rainPositions[offset]=x;this.rainPositions[offset+1]=y;this.rainPositions[offset+2]=z;this.rainPositions[offset+3]=x-.15;this.rainPositions[offset+4]=y-1.05;this.rainPositions[offset+5]=z;}this.rain.updateVerticesData(VertexBuffer.PositionKind,this.rainPositions);this.rain.refreshBoundingInfo();}
   }
-  render(){this.scene.render();}
+  render(){
+    const count=this.scene.meshes.length;if(count!==this.activeMeshCount)this.activeMeshListDirty=true;
+    if(this.activeMeshListDirty){
+      if(this.scene._activeMeshesFrozen)this.scene.unfreezeActiveMeshes();
+      // Keep the current render list but continue per-submesh frustum clipping.
+      // Dynamic car transforms remain live because meshes themselves are not frozen.
+      if(this.scene.isReady(false)){
+        this.activeMeshListDirty=false;this.activeMeshCount=count;this.activeMeshRefreshes++;
+        this.scene.freezeActiveMeshes(true,undefined,()=>{this.activeMeshListDirty=true;},false,true);
+      }
+    }
+    this.scene.render();
+  }
 }

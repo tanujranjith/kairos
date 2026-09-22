@@ -27,9 +27,9 @@ export class StreetLighting {
       if(!slot.fixture){const next=desired.find(f=>!occupied.has(f.id));if(next){slot.fixture=next;occupied.add(next.id);slot.weight=fadingReplacement?0:1;}}
       if(slot.fixture&&desired.some(f=>f.id===slot.fixture!.id))slot.weight=1-(1-slot.weight)*Math.exp(-6*Math.max(0,dt));
       if(slot.fixture){const f=slot.fixture,p=lampPosition(f);slot.light.position.set(p.x,p.y,p.z);slot.light.direction.set(-Math.cos(f.yaw)*f.side*.20,-1,Math.sin(f.yaw)*f.side*.20).normalize();}
-      slot.light.intensity=1600*night*slot.weight;slot.light.setEnabled(enabled&&!!slot.fixture&&slot.light.intensity>1);
+      slot.light.intensity=1600*night*slot.weight;const shouldEnable=enabled&&!!slot.fixture&&slot.light.intensity>1;if(slot.light.isEnabled()!==shouldEnable)slot.light.setEnabled(shouldEnable);
     }
   }
-  disable(){for(const s of this.slots){s.light.setEnabled(false);s.light.intensity=0;s.fixture=null;s.weight=0;}}
+  disable(){for(const s of this.slots){if(s.light.isEnabled())s.light.setEnabled(false);s.light.intensity=0;s.fixture=null;s.weight=0;}}
   snapshot(){return this.slots.map(s=>({id:s.fixture?.id??null,cell:s.fixture?.cell??null,enabled:s.light.isEnabled(),intensity:s.light.intensity,position:s.light.position.asArray()}));}
 }

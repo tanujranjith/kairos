@@ -9,7 +9,7 @@ import { wheelModel } from './wheel-model';
 import { finishCarTrim,finishCarPaint } from './car-materials';
 import {updateSteeringVisual} from './car-steering';
 
-export interface CarVisual {root:TransformNode;groundOffset:number;wheels:TransformNode[];paint:PBRMaterial;glass:PBRMaterial;lights:PBRMaterial;tail:PBRMaterial;parts:Mesh[];readonly lod?:0|1;selectDetail?:(distance:number,quality:Quality)=>void;update:(s:VehicleState)=>void;dispose:()=>void}
+export interface CarVisual {root:TransformNode;groundOffset:number;wheels:TransformNode[];paint:PBRMaterial;glass:PBRMaterial;lights:PBRMaterial;tail:PBRMaterial;parts:Mesh[];readonly lod?:0|1;selectDetail?:(distance:number,quality:Quality)=>boolean;update:(s:VehicleState)=>void;dispose:()=>void}
 export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,lite=false):CarVisual {
   const asset=instantiateCarAsset(scene,d,setup,lite);if(asset)return asset;
   // The local fallback preserves the same shared body when GLB loading fails;

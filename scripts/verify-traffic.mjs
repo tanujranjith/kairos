@@ -26,7 +26,7 @@ try{
     const g=window.kairos,{TRAFFIC_GRAPH}=await import('/src/content/traffic-network.ts'),{samplePath}=await import('/src/sim/lane-graph.ts');
     g.trafficSystem.clear();const lane=[...TRAFFIC_GRAPH.paths.values()].find(p=>p.kind==='lane'&&p.roadId==='city3'&&p.to==='westbrook-cedar'&&p.direction===1),p=samplePath(lane,lane.length-7);
     g.world.ensure(p);g.player.reset(p,p.yaw);g.clock=0;await g.advanceTime(8000);g.message='';g.advanceTime(0);await g.renderer.scene.whenReadyAsync();g.advanceTime(0);
-    return g.renderer.scene.meshes.filter(m=>m.name.startsWith('signal-westbrook-cedar-')&&m.isVisible).map(m=>m.name);
+    return g.renderer.scene.meshes.filter(m=>m.name.startsWith('signal-westbrook-cedar-')&&m.isVisible&&m.visibility>.5).map(m=>m.name);
   });
   await page.screenshot({path:'output/traffic/red-light.png'});
   const checks=[

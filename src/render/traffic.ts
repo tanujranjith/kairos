@@ -66,13 +66,13 @@ export class TrafficScenery {
         if(!geometry){geometry={red:new Geometry(),amber:new Geometry(),green:new Geometry()};groups.set(group,geometry);}
         for(const [i,aspect] of (['red','amber','green'] as const).entries())geometry[aspect].box(x-forward.x*.20,y+4.13-i*.45,z-forward.z*.20,.31,.31,.06,end.yaw);
       }
-      for(const [group,geometry] of groups)for(const aspect of ['red','amber','green'] as const){const mesh=geometry[aspect].mesh(`signal-${junction.id}-${group}-${aspect}`,this.scene,this.lamps[aspect]);if(mesh){mesh.isVisible=false;attach(mesh);signals.push({junction,group,aspect,mesh});}}
+      for(const [group,geometry] of groups)for(const aspect of ['red','amber','green'] as const){const mesh=geometry[aspect].mesh(`signal-${junction.id}-${group}-${aspect}`,this.scene,this.lamps[aspect]);if(mesh){mesh.isVisible=true;mesh.visibility=.0001;attach(mesh);signals.push({junction,group,aspect,mesh});}}
     }
     attach(pavement.mesh(`junctions-${cx},${cz}`,this.scene,materials.road),true);attach(paint.mesh(`stop-bars-${cx},${cz}`,this.scene,materials.white));attach(poles.mesh(`signal-poles-${cx},${cz}`,this.scene,materials.dark),true);
     attach(sidewalk.mesh(`junction-sidewalks-${cx},${cz}`,this.scene,materials.sidewalk));
     return signals;
   }
-  update(signals:SignalMesh[],clock:number){for(const s of signals)s.mesh.isVisible=signalAspect(s.junction,s.group,clock)===s.aspect;}
+  update(signals:SignalMesh[],clock:number){for(const s of signals)s.mesh.visibility=signalAspect(s.junction,s.group,clock)===s.aspect?1:.0001;}
 }
 
 export function insideJunction(x:number,z:number,roadId?:string){return [...TRAFFIC_GRAPH.junctions.values()].some(j=>(!roadId||j.roads.includes(roadId))&&Math.hypot(x-j.x,z-j.z)<(j.control==='turnaround'?16:j.radius+5));}

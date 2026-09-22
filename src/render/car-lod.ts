@@ -18,7 +18,7 @@ export function createLodCar(scene:Scene,d:VehicleDefinition,setup?:Customizatio
   return {
     root,groundOffset:rigs[0].groundOffset,parts:rigs.flatMap(r=>r.parts),get lod(){return level;},
     get wheels(){return rigs[level].wheels;},get paint(){return rigs[level].paint;},get glass(){return rigs[level].glass;},get lights(){return rigs[level].lights;},get tail(){return rigs[level].tail;},
-    selectDetail(distance,quality){const next=carDetail(level,distance,quality);if(next===level)return;rigs[level].root.setEnabled(false);level=next;rigs[level].root.setEnabled(true);},
+    selectDetail(distance,quality){const next=carDetail(level,distance,quality);if(next===level)return false;rigs[level].root.setEnabled(false);level=next;rigs[level].root.setEnabled(true);return true;},
     // Updating both tiny pivot sets avoids one-frame wheel snapping on a detail change.
     update(state){for(const rig of rigs)rig.update(state);},
     dispose(){if(disposed)return;disposed=true;for(const rig of rigs)rig.dispose();root.dispose();},
