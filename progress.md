@@ -1,5 +1,11 @@
 Original prompt: Implement the approved Kairos implementation plan: a locally simulated browser open-world driving and motorsport game, six original vehicles, one circuit, traffic, race AI, garage, map, weather, saves, and scalable graphics. All work stays in this Kairos folder. Target 8 GB integrated graphics and no paid assets.
 
+## Moving Low frame-performance audit — September 21 (verified checkpoint with retained sub-budget failure)
+
+- Added development timing for complete callback CPU, total fixed-step loop, isolated vehicle/Havok/post-step simulation and AI/input work, plus a five-scene installed-Edge GPU timer-query audit. Capped redundant world-demand refresh at 10Hz and world signal/material refresh at 20Hz; unchanged world enabled/wetness state now returns early. Physics remains 120Hz and collision look-ahead/readiness are unchanged.
+- Opened city, mountain, highway, wet-night and eight-car-race captures. Every scene retained four contacts and clean page/failed/external arrays. Frame p95 passes 40ms at 34.0/20.6/20.3/21.0/18.9ms; GPU p95 passes 28ms at 15.18/11.76/10.64/12.32/8.91ms; simulation p95 passes 5ms. CPU p95 remains above 12ms in four Free Drive scenes (33.3/14.6/14.6/18.9ms), and city/highway AI remains above 2ms. Keep those failures explicit.
+- The supplied generic skill client completed and produced a clean showroom screenshot/state. Rendered interactions, 250 tests / 39 files, strict TypeScript and production build pass. Current production is `index-b8pznHR_.js` / `cell-worker-D1LLTGra.js`; cold 25Mbps/40ms passes at 5.340s WebGL2 / 4.951s automatic and 10,521,375 bytes. NEXT: this is the local wrap point. Target-laptop profiling, CPU/AI optimization there if needed, and authorized HTTPS deployment remain external. Preserve the five user files.
+
 ## Low browser-process memory and terminal home state — September 21 (verified checkpoint)
 
 - Added a Windows/Edge process-tree audit for the same required Low 1280×720 scenes. It explicitly collects unreachable allocations after rapid controlled-time region changes, scopes process IDs through CDP, tolerates utility processes exiting between enumeration and the OS read, and records summed working set/private bytes per process. Peak settled working set is 1,334.97MiB at rainy Westbrook, 201.03MiB below the 1.5GiB target.

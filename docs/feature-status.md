@@ -1,5 +1,9 @@
 # Feature status — working build, not acceptance certification
 
+## Low frame-performance instrumentation — September 21 (verified with open sub-budget)
+
+Development state now reports complete render-loop CPU time, total fixed-step-loop time, isolated vehicle/Havok simulation time and AI/input time. The required five moving Low scenes pass 40ms frame p95, 28ms GPU p95 and 5ms simulation p95 with four wheel contacts throughout. Four Free Drive scenes remain above the stricter 12ms CPU sub-budget, and city/highway exceed the 2ms AI sub-budget; those are explicit remaining performance work rather than accepted results. Rendered interactions, 250 tests / 39 files, strict TypeScript and production build pass. See [measured evidence](benchmarks.md).
+
 ## Low browser-process memory and terminal home state — September 21 (verified checkpoint)
 
 A CDP-scoped Windows process audit now covers city, mountain, highway, wet-night, eight-car-race and post-race-home scenes on installed Edge/WebGL2 at Low 1280×720. Settled summed working set peaks at **1,334.97MiB**, leaving **201.03MiB** below the planned 1.5GiB target. This conservatively sums shared pages across processes and remains development-PC evidence rather than target-laptop certification.

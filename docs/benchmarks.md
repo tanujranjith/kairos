@@ -2,6 +2,13 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## Moving Low frame-performance audit — September 21
+
+- `audit-frame-performance.mjs` records real-time city traffic, mountain pass, highway, rainy Westbrook night and eight-car GT driving at Low 1280×720 in installed Edge/WebGL2. Each Free Drive scene uses twelve physical traffic cars and the ordinary input, tire, Havok, streaming and rendering paths. All five captures were opened; the car stayed grounded with four contacts, and the error, failed-request and external-request arrays are empty.
+- The primary **40ms frame-p95 target passes in all scenes**: city 34.0ms, mountain 20.6ms, highway 20.3ms, wet night 21.0ms and race 18.9ms. Native timer-query GPU p95 also passes the 28ms target: 15.18ms, 11.76ms, 10.64ms, 12.32ms and 8.91ms respectively. Isolated vehicle/Havok simulation passes 5ms in all scenes.
+- The stricter **12ms CPU callback sub-budget does not pass** in four Free Drive scenes: city 33.3ms, mountain 14.6ms, highway 14.6ms and wet night 18.9ms; the eight-car race passes at 10.8ms. AI p95 exceeds its 2ms sub-budget in city (2.6ms) and highway (2.9ms), driven partly by bounded catch-up work after Free Drive submission/streaming stalls. These failures are retained rather than relabelled as passes. They do not prevent the measured 30 FPS frame target on this development PC, but target-laptop acceptance remains open.
+- The development snapshot now distinguishes complete callback CPU time, total fixed-step-loop time, vehicle/Havok simulation and AI/input time. World demand refresh is capped at 10Hz, low-frequency world material/signal updates at 20Hz, and unchanged enabled/wetness state no longer dirties the scene graph. The final production bundle is `index-b8pznHR_.js` with `cell-worker-D1LLTGra.js`.
+
 ## Low browser-process memory — September 21
 
 - `audit-browser-memory.mjs` measures the same Low 1280×720 installed-Edge/WebGL2 matrix using CDP-scoped Windows processes: twelve-car city, mountain and highway scenes, twelve-car rainy Westbrook, an eight-car GT grid and the showroom after ending that race. Each controlled-time transition is garbage-collected before the OS sample so unreachable transient allocations do not masquerade as resident scene state.

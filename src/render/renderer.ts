@@ -20,7 +20,7 @@ export class Renderer {
   showroom:TransformNode;rendererName:string;lightsEnabled=true;private shadowParts=new Set<Mesh>();private headlights:SpotLight[]=[];private cameraPosition=new Vector3();private look=new Vector3();private wasGarage=true;private cameraMode=0;private cameraObstructed=false;private cameraRequestedDistance=0;private cameraResolvedDistance=0;private cameraCurrentDistance=0;private rain:LinesMesh;private rainPositions:Float32Array;
   private outdoorEnvironment:ReturnType<typeof lightingEnvironment>;private studioEnvironment:ReturnType<typeof lightingEnvironment>;private pipeline:DefaultRenderingPipeline;private contactMaterial:StandardMaterial;
   reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];private floorReflection:MirrorTexture;private galleryEnvironment:BaseTexture;
-  private activeSettings:Settings|null=null;private dynamicResolutionScale=1;private daylightColour=new Color3();
+  private activeSettings:Settings|null=null;private dynamicResolutionScale=1;private daylightColour=new Color3();private shadowSelectionAt=-Infinity;
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
     this.scene=new Scene(engine);const scene=this.scene;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
@@ -94,9 +94,10 @@ export class Renderer {
     if(garage)this.sun.direction.set(.55,-.6,-.65).normalize();else if(day>.04)this.sun.direction.set(-solar.direction.x,-Math.max(.02,solar.direction.y),-solar.direction.z).normalize();else this.sun.direction.set(solar.direction.x,Math.min(-.20,solar.direction.y),solar.direction.z).normalize();
     this.scene.fogColor.set(...atmosphereFog(time,settings.weather));this.scene.fogDensity=.00013+golden*.000025+wetness*.0006;
     this.sky.visibility=1;this.atmosphere.update(time,settings.weather,clock);
-    this.showroom.setEnabled(garage);
+    if(this.showroom.isEnabled(false)!==garage)this.showroom.setEnabled(garage);
     // Planar reflection is confined to the gallery; driving never pays for this pass.
-    this.floorReflection.renderList=garage?this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.name!=='car-contact-shadow'&&(mesh.metadata?.floorReflection||(()=>{let node=mesh.parent;while(node){if(node.metadata?.kairosCar)return true;node=node.parent;}return false;})())):[];
+    if(garage&&!this.wasGarage)this.floorReflection.renderList=this.scene.meshes.filter(mesh=>mesh.isEnabled()&&mesh.isVisible&&mesh.name!=='car-contact-shadow'&&(mesh.metadata?.floorReflection||(()=>{let node=mesh.parent;while(node){if(node.metadata?.kairosCar)return true;node=node.parent;}return false;})()));
+    else if(!garage&&this.wasGarage)this.floorReflection.renderList=[];
     this.registerCar(visual,garage||vehicle.state.grounded);
     this.studioLights.forEach(light=>light.setEnabled(garage));this.headlights.forEach(light=>light.setEnabled(!garage));
     if(garage){visual.glass.alpha=.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;for(const n of visual.root.getChildTransformNodes())if(/brake-\d$/.test(n.name)){n.position.y=-.32;n.rotationQuaternion=null;n.rotation.set(0,0,0);}}
@@ -115,7 +116,7 @@ export class Renderer {
       this.cameraCurrentDistance=Vector3.Distance(cameraOrigin,this.cameraPosition);
       this.camera.position.copyFrom(this.cameraPosition);this.camera.setTarget(this.look);this.camera.fov=approach(this.camera.fov,.77+clamp(Math.abs(vehicle.state.speed)/120,0,.17),5,dt);this.sun.position.copyFrom(p).subtractInPlace(this.sun.direction.scale(90));this.wasGarage=false;
     }
-    const shadowMap=this.shadow.getShadowMap();if(shadowMap){const p=visual.root.position;
+    const shadowMap=this.shadow.getShadowMap();if(shadowMap&&(clock-this.shadowSelectionAt>=.1||this.wasGarage!==garage)){this.shadowSelectionAt=clock;const p=visual.root.position;
       const scenery=this.scene.meshes.filter(m=>{if(!m.metadata?.worldCaster||!m.isVisible||!m.isEnabled())return false;const b=m.getBoundingInfo().boundingBox;return b.minimumWorld.x<p.x+80&&b.maximumWorld.x>p.x-80&&b.minimumWorld.z<p.z+80&&b.maximumWorld.z>p.z-80;});
       shadowMap.renderList=[...[...this.shadowParts].filter(m=>m.isEnabled()&&Vector3.DistanceSquared(m.getAbsolutePosition(),p)<3600),...scenery];
     }

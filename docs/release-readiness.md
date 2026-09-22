@@ -15,12 +15,13 @@ Kairos is a playable local release candidate. The current source integrates the 
 - Selected 30-minute race endurance, maximum-speed streaming, 16-car racing/pits, wet-night traffic, handling/surface, race weekend and production delivery checks are retained in the dated benchmark evidence.
 - A conservative Low 1280×720 resident-resource audit peaks at 157.57MiB including a 25% untracked-allocation contingency, below the planned 256MiB estimate ceiling across city, mountain, highway, wet-night and eight-car-race scenes.
 - A CDP-scoped Windows/Edge process audit peaks at 1,334.97MiB settled summed working set, leaving 201.03MiB below the planned 1.5GiB process target on the development PC. Target-laptop certification remains separate.
+- A moving Low 1280×720 audit passes the 40ms frame-p95 and 28ms GPU-p95 targets in city, mountain, highway, wet-night and eight-car-race scenes. The stricter 12ms CPU callback budget remains open in four Free Drive scenes; see the benchmark log for exact values.
 
-The exact audited production files include `index-DeTMf4zj.js` and `cell-worker-D1LLTGra.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.325 seconds forced WebGL2 and 4.854 seconds automatic, with 10,521,125 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests.
+The exact current production files include `index-b8pznHR_.js` and `cell-worker-D1LLTGra.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 5.340 seconds forced WebGL2 and 4.951 seconds automatic, with 10,521,375 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests.
 
 ## Remaining acceptance boundary
 
-The development machine cannot certify the 8 GB integrated-graphics laptop's 720p/30 FPS frame pacing, whole-process memory or actual driver-reported GPU residency. Run the documented benchmark routes on that machine before calling the hardware target accepted; the local resource estimate above is useful headroom evidence, not hardware certification.
+The development machine cannot certify the 8 GB integrated-graphics laptop's 720p/30 FPS frame pacing, whole-process memory or actual driver-reported GPU residency. Run the documented benchmark routes on that machine before calling the hardware target accepted. The development RTX passes the primary frame/GPU targets, but dense Free Drive still exceeds the aspirational CPU/AI sub-budgets and should be profiled on the target machine before release.
 
 No cloud project or destination has been authorized, so the included static/Vercel configuration has not been deployed or smoke-tested over HTTPS. Deployment requires an explicitly authorized project, preview-first validation and preservation of the previous release for rollback.
 
@@ -40,6 +41,7 @@ node scripts/verify-browsers.mjs
 node scripts/verify-interactions.mjs
 node scripts/verify-platform-interactions.mjs --output=output/final-platform-interactions
 node scripts/verify-storage.mjs
+node scripts/audit-frame-performance.mjs --output=output/frame-performance
 node scripts/verify-audio.mjs
 node scripts/verify-adaptive-quality.mjs
 node scripts/verify-graphics-recovery.mjs webgl

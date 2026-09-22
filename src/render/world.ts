@@ -30,7 +30,7 @@ export class WorldRenderer {
   private treeMesh:Mesh;private oakMesh:Mesh;private trunkMesh:Mesh;private oakTrunkMesh:Mesh;private grassMesh:Mesh;private boulders:Mesh;
   private woodland:ReturnType<typeof createCircuitWoodland>;
   streetLighting:StreetLighting;
-  private quality:Quality='Low';private enabled=true;private trafficScenery:TrafficScenery;
+  private quality:Quality='Low';private enabled=true;private wetness=-1;private trafficScenery:TrafficScenery;
   private worker=new CellWorkerClient();streamer:CellStreamer<CellBlueprint,Cell>;
   private materialPool=new ResourcePool<Material>(m=>m.dispose(false,true));private rootLeases=new Map<number,{release:()=>void}>();
   private warm=new Map<string,{demand:CellDemand;until:number}>();private demand=new Map<string,CellDemand>();private profile:StreamingProfile='exploration';
@@ -63,10 +63,10 @@ export class WorldRenderer {
     this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;const water=new PBRMaterial('lake-water',scene),waves=surfaceTexture(scene,'water','normal',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves;water.bumpTexture.level=.12;this.water.material=water;
   }
 
-  setEnabled(v:boolean){this.enabled=v;this.root.setEnabled(v);if(!v)this.streetLighting.disable();}
+  setEnabled(v:boolean){if(v===this.enabled)return;this.enabled=v;this.root.setEnabled(v);if(!v)this.streetLighting.disable();}
   updateLighting(position:V3,time:number,dt:number){this.streetLighting.update(position,time,dt,id=>this.cells.get(id)?.detail===true,this.enabled);}
   setQuality(q:Quality){if(q===this.quality)return;this.clear();this.quality=q;this.woodland.setQuality(q);}
-  setWetness(v:number){this.road.roughness=.94-v*.70;this.road.albedoColor.set(1-v*.40,1-v*.40,1-v*.40);}
+  setWetness(v:number){if(Math.abs(v-this.wetness)<.001)return;this.wetness=v;this.road.roughness=.94-v*.70;this.road.albedoColor.set(1-v*.40,1-v*.40,1-v*.40);}
   updateSignals(clock:number,time=12){this.glass.emissiveColor.setAll(windowEmission(time));const waves=(this.water.material as PBRMaterial).bumpTexture as Texture;waves.uOffset=clock*.008;waves.vOffset=clock*.004;for(const cell of this.cells.values()){if(cell.detail)this.trafficScenery.update(cell.signals,clock);else for(const signal of cell.signals)signal.mesh.isVisible=false;}}
   private around(position:V3,detail=true){const {cx,cz}=cellCoordinates(position),result:CellDemand[]=[];for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){const x=cx+dx,z=cz+dz;if(x< -9||x>8||z< -9||z>8)continue;result.push({id:cellKey(x,z),cx:x,cz:z,priority:-1200+dx*dx+dz*dz,collision:true,detail,owners:new Set(['warmup'])});}return result;}
   private commitDemand(){
