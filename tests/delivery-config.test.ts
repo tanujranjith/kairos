@@ -23,7 +23,7 @@ describe('static delivery configuration',()=>{
     for(const source of ['/assets/(.*)','/models/(.*)\\.glb','/textures/(.*)\\.ktx2','/environment/(.*)\\.env']){
       expect(cache(source)).toBe('public, max-age=31536000, immutable');
     }
-    expect(MODEL_ASSET_VERSION).toMatch(/^3-/);
+    expect(MODEL_ASSET_VERSION).toMatch(/^4-/);
     expect(ENVIRONMENT_ASSET_VERSION).toMatch(/^[a-f0-9]{12}$/);
     expect(modelAssetUrl('velara',0)).toContain(`?v=${MODEL_ASSET_VERSION}`);
     expect(galleryEnvironmentUrl()).toContain(`?v=${ENVIRONMENT_ASSET_VERSION}`);

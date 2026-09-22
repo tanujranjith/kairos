@@ -23,7 +23,7 @@ export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Custo
   const steering=nodes.find(node=>node.name.endsWith('steering-pivot'));if(steering&&!steering.rotationQuaternion)steering.rotationQuaternion=Quaternion.Identity();
   const materials=[...new Set(parts.map(p=>p.material).filter((m):m is PBRMaterial=>m instanceof PBRMaterial))];
   const find=(name:string)=>materials.find(m=>m.name.includes(`${modelId}-${name}`))!;
-  const trim=find('carbon');if(trim)finishCarTrim(trim);
+  const trim=find('carbon');if(trim){trim.albedoColor=Color3.FromHexString('#2a3034').toLinearSpace();trim.roughness=.74;finishCarTrim(trim);}
   const paint=find('paint'),glass=find('glass')??new PBRMaterial('unused-open-wheel-glass',scene),lights=find('headlight')??find('taillight'),tail=find('taillight');if(!materials.includes(glass))materials.push(glass);
   if(!paint||!glass||!lights||!tail||wheels.some(w=>!w)){root.dispose();materials.forEach(m=>m.dispose());return null;}
   finishCarPaint(paint);paint.albedoColor=Color3.FromHexString(setup?.paint??d.color).toLinearSpace();const alloy=find('alloy');if(alloy)alloy.albedoColor=Color3.FromHexString(setup?.wheels??'#b2bac0').toLinearSpace();const accent=find('accent');if(accent&&(setup?.livery??0)>0)accent.albedoColor=Color3.FromHexString(setup?.livery===1?'#e9edf0':'#2a9bb7').toLinearSpace();parts.forEach(p=>{p.isPickable=false;p.receiveShadows=true;});

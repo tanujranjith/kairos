@@ -18,7 +18,7 @@ export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,l
   const root=new TransformNode(`visual-${d.id}`,scene),mats:PBRMaterial[]=[];root.metadata={kairosCar:true,visualModel:visualDefinition.id,handlingProfile:d.id,fallback:true};
   const material=(name:string,color:string,metallic:number,roughness:number)=>{const m=new PBRMaterial(`${d.id}-${name}`,scene);m.albedoColor=Color3.FromHexString(color).toLinearSpace();m.metallic=metallic;m.roughness=roughness;mats.push(m);return m;};
   const paint=material('paint',setup?.paint??d.color,.46,.28);finishCarPaint(paint);
-  const dark=material('carbon','#1d2226',0,.82),glass=material('glass','#151c23',.05,.065),chrome=material('alloy',setup?.wheels??'#9baab4',.9,.19),rubber=material('rubber','#27282a',0,.94);
+  const dark=material('carbon','#2a3034',0,.74),glass=material('glass','#151c23',.05,.065),chrome=material('alloy',setup?.wheels??'#9baab4',.9,.19),rubber=material('rubber','#27282a',0,.94);
   finishCarTrim(dark);
   glass.clearCoat.isEnabled=true;glass.clearCoat.intensity=1;glass.indexOfRefraction=1.52;
   const light=material('headlight','#c8edff',.1,.16);light.emissiveColor=new Color3(.5,.7,.9);

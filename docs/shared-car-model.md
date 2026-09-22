@@ -4,7 +4,9 @@ Kairos now deliberately uses one authored sports-car body throughout the live ga
 
 `visualModelId` is the single mapping point. Startup requests only `/models/velara-lod0.glb` and `/models/velara-lod1.glb`; every visual root records both `visualModel: velara` and its independent `handlingProfile`. Paint and wheel customization remain per profile. Livery selection uses the same body and changes its accent treatment instead of switching to another procedural shape.
 
-If either GLB is unavailable, the local procedural fallback also generates the Velara body for every profile. It does not silently resurrect the old class-specific body generators. The source generators and historical GLBs remain in the repository as original Kairos source assets, but the runtime does not request them.
+If either GLB is unavailable, the local procedural fallback also generates the Velara body for every profile. It does not silently resurrect the old class-specific body generators. The ten obsolete alternate-body GLBs have been removed from the shipped source tree; only the shared Velara LOD0/LOD1 pair is generated and retained.
+
+The version-4 shared model also refines the cabin with brighter charcoal trim, chrome vent/display accents, a smaller higher-detail steering wheel and a higher cockpit eye point. These are presentation-only changes and do not alter any handling profile.
 
 ## Verification
 
