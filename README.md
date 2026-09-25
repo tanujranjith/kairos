@@ -6,7 +6,7 @@ A single-player browser driving game built with strict TypeScript, Babylon.js an
 
 ## Run
 
-Use **Node 24**, not the machine's default Node 20. Dependencies are pinned in the committed lockfile.
+Use **Node 24**. Dependencies are pinned in the committed lockfile. Confirm `node --version` reports `v24.x` and that `npm` is available on your PATH before continuing.
 
 ```sh
 npm ci
@@ -20,12 +20,6 @@ For development and automated verification:
 npm run dev -- --port 5187
 npm run check
 npm test
-```
-
-On this Windows machine, prepend the bundled runtime directory to PATH before running npm:
-
-```powershell
-$env:PATH = 'C:\Users\tanuj\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;' + $env:PATH
 ```
 
 Open the local URL in hardware-accelerated Chrome or Edge. Kairos prefers WebGPU and rebuilds with WebGL2 if initialization fails. Add `?renderer=webgl` to force WebGL2. Open through the local server, not by double-clicking `dist/index.html`.
