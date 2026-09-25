@@ -11,6 +11,7 @@ try{
   await page.goto('http://127.0.0.1:5187/?renderer=webgl');await page.waitForFunction(()=>window.kairos?.ui);await page.evaluate(()=>window.advanceTime(0));
   for(const id of ids){
     await page.evaluate(async id=>{const g=window.kairos;await g.action('select-car',id);g.setScreen('garage');g.cameraClock=0;g.save.settings.time=17.4;g.save.settings.timeRate=0;g.save.settings.volume=0;for(let n=0;n<12;n++){await g.advanceTime(0);await g.renderer.scene.whenReadyAsync();}},id);
+    if(process.argv.includes('--no-lens'))await page.evaluate(()=>{const g=window.kairos;for(const p of g.visual.parts)if(p.material?.name.includes('lamp-lens'))p.isVisible=false;g.renderer.invalidateActiveMeshes();});
     for(const [view,position]of [['front',[-3.4,-997.8,5.1]],['rear',[3.4,-997.7,-5.1]],['side',[-5.8,-998.25,.4]]]){
       await page.evaluate(async position=>{const g=window.kairos,{Vector3}=await import('/node_modules/@babylonjs/core/Maths/math.vector.js');document.querySelector('#ui').style.visibility='hidden';g.renderer.camera.position.set(...position);g.renderer.camera.setTarget(new Vector3(0,-999,0));g.renderer.camera.fov=.60;g.renderer.scene.render();await g.renderer.scene.whenReadyAsync();g.renderer.scene.render();},position);
       await page.screenshot({path:`${output}/${id}-${view}.png`});

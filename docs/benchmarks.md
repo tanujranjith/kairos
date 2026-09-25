@@ -2,6 +2,54 @@
 
 These are development-host results, not certification of the secondary 8GB integrated-GPU laptop. Browser screenshots and JSON reports are retained in `output/` (ignored by source control).
 
+## September 22 — full-plan follow-up
+
+Fresh isolated installed-Edge/WebGL2, RTX 3060, Low 1280×720 moving audit (`output/full-plan-frame-performance`) after the final version-7 model and distant landscape:
+
+| Moving scene | Frame p95 ms | CPU p95 ms | GPU p95 ms |
+|---|---:|---:|---:|
+| City traffic | 20.3 | 10.4 | 10.21 |
+| Mountain pass | 20.1 | 9.6 | 9.93 |
+| Highway | 22.4 | 10.3 | 10.02 |
+| Wet night | 20.3 | 10.5 | 10.81 |
+| Eight-car race | 20.0 | 8.1 | 8.88 |
+
+All five samples keep four wheel contacts. Vehicle/Havok simulation p95 stays at or below 2.3ms and AI at or below 1.1ms. No benchmark threshold changed, and no other browser verification ran concurrently with this measurement. The earlier city 12.7ms miss and unchanged-source repeat remain below as historical variability evidence, not erased by this run.
+
+`output/full-plan-render-cost` covers eleven Low scenes: maximum 283 draw calls (eight-car grids) and 475,615.67 submitted triangles (wet night), inside 300 / approximately 500,000. The shared body now uses 36,318 LOD0 triangles; its compressed files total 480,096 bytes. The added horizon groves use 6,400 triangles in one scene-owned mesh. Car simplification offsets their field cost.
+
+`output/full-plan-adaptive-final` verifies that menus/parked scenes no longer select a graphics preset, normal keyboard acceleration activates sampling with traffic/scenery present, and a new preset is deferred until the showroom. The benchmark restores a prior 70% scale to full requested resolution before warm-up and holds it during sampling. Frame intervals are deliberately injected to test selection and dynamic-resolution policy, not presented as measured performance.
+
+`output/full-plan-tests.json`: 277 tests / 46 files pass, plus strict TypeScript. `output/full-plan-streaming-fixed` passes collision-first loading freeze, injected failure/retry, three region round trips and three eight-car race/home cycles with exact resource-count equality and no page/external errors. The first failed streaming run and `output/race-resources-before-fix` are retained: hidden collision-mesh materials leaked fifteen instances per race. Including all owned cloned materials in disposal fixes the count, without changing visible geometry. The focused four-cycle installed-Edge/WebGL2 run returns to 142 meshes / 78 materials / 44 textures each time (`output/full-plan-race-resources`). The full rendered menu/save/camera/handling flow also passes (`output/interaction`).
+
+Native WebGPU also returns exactly to 142/78/44 resources through four races (`output/full-plan-race-resources-webgpu`, zero page errors). The final supplied keyboard client passes with four contacts (two asphalt/two gravel), 10.932653 m/s, zero damage and no loading error (`output/full-plan-release-input`); its screenshot and text state were opened. Its controlled-time frames are not a performance benchmark.
+
+Final production identity, unit/integration totals and the release reports are tracked in [final closeout](final-closeout.md). Target-laptop performance and physical-controller behavior remain unverified.
+
+## September 22 — final remaining-plan pass
+
+`output/plan-tests.json`: 269 tests / 45 files pass. `output/plan-weekends-final` completes both eight-car weekends, including physical practice pit service, five-minute qualifying, earned physical grids and three-lap races. GT ends at 376.20s and Formula at 318.92s; all eight finish, with zero warnings, penalties and damage. The separate input-driven worn-tire overtake in `output/racing-tactics` passes without contact loss/damage.
+
+`output/quality-effects-final-stable`: 24 showroom/wet-road preset states pass on actual WebGPU and forced WebGL2. No page/GPU validation errors or external requests; only the known Windows powerPreference warning. Low return texture counts stay stable; no geometry buffer remains on Low. Alpha-blended shadow/glass quads are excluded from opaque effect depth. Opened screenshots verify no black frames, missing streamed world or rectangular shadow-plane reflection.
+
+`output/plan-render-cost`: 11 Low scenes stay under 300 draw calls / 500k active triangles. Maximum is 282 / 476,638 at either eight-car grid. `output/plan-shared-car` verifies all six profiles, live traffic/parked/race reuse, fallback, pivots and hidden collision metadata in both renderers. Shared LOD0 is 37,628 triangles; model files total 481,884 bytes.
+
+The first isolated Low frame audit (`output/plan-frame-performance`) passes frame, GPU, simulation and AI budgets in every scene but misses city CPU p95: 12.7ms versus 12ms. **No runtime code or threshold was changed between runs.** The identical repeat (`output/plan-frame-performance-repeat`) passes, so this is variability/narrow-margin evidence, not a claimed optimization or hardware guarantee:
+
+| Moving scene | Frame p95 ms | CPU p95 ms | GPU p95 ms |
+|---|---:|---:|---:|
+| City traffic | 20.4 | 11.0 | 11.74 |
+| Mountain pass | 19.6 | 8.7 | 9.33 |
+| Highway | 21.1 | 9.7 | 9.47 |
+| Wet night | 20.0 | 9.7 | 10.26 |
+| Eight-car race | 19.8 | 8.4 | 9.54 |
+
+All repeat scenes keep four contacts; simulation p95 is at most 2.31ms and AI at most 1.21ms. Installed Edge/WebGL2, RTX 3060, 1280×720, original inputs/settings. Target laptop remains untested. Both reports are retained.
+
+`output/audio`: original combustion/intake/exhaust/overrun graph passes finite unclipped PCM, audible environment/vehicle layers, shifts, mute/pause silence and blocked-autoplay recovery. `output/interaction` and `output/plan-final-input` pass menus/saves/cameras and the supplied acceleration/steering/braking loop (10.933m/s, four mixed asphalt/gravel contacts, zero damage). Screenshots were opened.
+
+Ultra WebGL recovery rebuilds and resumes with four contacts (`output/graphics-recovery-Ultra`); forced WebGPU device destruction holds state and completes the documented saved-profile WebGL restart after the 20-second bound. This is not proof of an in-place WebGPU recovery. Production identity and final cold-cache figures are in `final-closeout.md`.
+
 ## Night-background readability closeout — September 21
 
 - The final night envelope raises only the after-dark ambient, environment, moon-key, exposure, fog and generated-sky/cloud floors; noon remains exactly 0.92 ambient / 1.0 environment / 2.8 direct / 1.18 exposure. Clear night is **0.46 / 0.36 / 0.36 / 1.23**, while rainy night keeps the same ambient/reflection floor and reduces the directional key to **0.217**.

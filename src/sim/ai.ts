@@ -3,22 +3,32 @@ import { CIRCUIT, pointAt, nearestRoad } from '../content/world';
 import { clamp, wrap } from '../core/math';
 import type { Vehicle } from './physics';
 import { RACE_AI } from '../content/race-course';
+import {chooseRaceTactic,initialTactic,type RaceTactic,type RaceNeighbour} from './racing-tactics';
 
 // A reserved lane is an anchored road offset, not the current lateral position
 // re-sampled every decision (which integrates ordinary corner tracking error).
 const reservedLanes=new WeakMap<Vehicle,{road:Road;offset:number}>();
 const plannedLanes=new WeakMap<Vehicle,{road:Road;offset:number}>();
+const tactics=new WeakMap<Vehicle,{road:Road;state:RaceTactic}>();
+export function racingTactic(vehicle:Vehicle){return {...(tactics.get(vehicle)?.state??initialTactic())};}
 /** A lane change is a path transition, not an instantaneous six-metre target jump. */
 export const advanceLaneOffset=(current:number,target:number,dt:number)=>current+clamp(target-current,-RACE_AI.laneChangeSpeed*dt,RACE_AI.laneChangeSpeed*dt);
 
 export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,wetness:number,index:number,road:Road=CIRCUIT,dt=.1,preferredOffset=0):InputFrame {
   const s=vehicle.state,near=nearestRoad(s.position.x,s.position.z,r=>r.id===road.id),speed=Math.abs(s.speed),lookAhead=clamp(9+speed*.60,9,48);
+  const tireCondition=Math.min(...s.wheels.map(w=>.65+.35*w.wear));
+  const wearMargin=clamp(Math.min(...s.wheels.map(w=>w.wear))/.9,.45,1);
+  const grip=vehicle.definition.grip*(1-wetness*.4)*tireCondition*wearMargin*wearMargin*(vehicle.definition.class==='GT'?.27+difficulty*.12:.34+difficulty*.16);
+  let targetSpeed=vehicle.definition.topSpeed/3.6*(.65+difficulty*.25);
+  if(s.wheels.some(w=>w.wear<RACE_AI.wornTireThreshold))targetSpeed=Math.min(targetSpeed,RACE_AI.wornTireSpeed[vehicle.definition.class]);
+  for(let ahead=0;ahead<=150;ahead+=12){const p=pointAt(road,near.progress+ahead);const cornerSpeed=Math.sqrt(grip*9.81/Math.max(.0001,Math.abs(p.curvature)));targetSpeed=Math.min(targetSpeed,Math.sqrt(cornerSpeed*cornerSpeed+2*grip*9.81*ahead*.65));}
   // Retain the grid lane until launch traffic has spread out; converging all cars
   // on the centerline in the first seconds caused avoidable contact.
   let offset=s.distance<80?clamp(near.lateral,-3,3):preferredOffset,bypass=false,bypassVehicle:Vehicle|null=null;
   const laneLimit=Math.max(0,road.width/2-vehicle.definition.width/2-RACE_AI.trackingMargin);
   const previous=reservedLanes.get(vehicle),anchor=clamp(previous?.road===road?previous.offset:near.lateral,-laneLimit,laneLimit);
   let leftLimit=-laneLimit,rightLimit=laneLimit,reserved=false;
+  const neighbours:RaceNeighbour[]=[];
   for(const other of others){
     if(other===vehicle)continue;
     const relX=other.state.position.x-s.position.x,relZ=other.state.position.z-s.position.z,forward=relX*Math.sin(s.yaw)+relZ*Math.cos(s.yaw),lateral=relX*Math.cos(s.yaw)-relZ*Math.sin(s.yaw);
@@ -27,6 +37,7 @@ export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,w
     let along=otherNear.progress-near.progress;
     if(road.loop)along=(along+road.length*1.5)%road.length-road.length*.5;
     const relativeSpeed=(other.state.velocity.x-s.velocity.x)*Math.sin(near.point.yaw)+(other.state.velocity.z-s.velocity.z)*Math.cos(near.point.yaw);
+    if(otherNear.distance<road.width/2+1)neighbours.push({id:other.state.id,along,offset:otherNear.lateral,speed:speed+relativeSpeed,width:other.definition.width,length:other.definition.length});
     const predicted=along+relativeSpeed*RACE_AI.overlapHorizon,clearance=(vehicle.definition.length+other.definition.length)/2+RACE_AI.longitudinalClearance;
     // Reserve the lane while bodies overlap now or within the next 1.2s.
     // The old 5m side trigger let the two 6m-spaced grid lanes converge, then
@@ -46,9 +57,13 @@ export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,w
       if(Math.abs(other.state.speed)<2){
         const candidate=pathLateral<=0?Math.min(3,laneLimit):-Math.min(3,laneLimit),clear=others.every(v=>{if(v===vehicle||v===other)return true;const n=nearestRoad(v.state.position.x,v.state.position.z,r=>r.id===road.id);let f=n.progress-near.progress;if(road.loop)f=(f+road.length*1.5)%road.length-road.length*.5;const side=n.lateral-near.lateral;return f< -3||f>45||Math.abs(side-(candidate-near.lateral))>(vehicle.definition.width+v.definition.width)/2+.5;});
         if(clear){offset=candidate;bypass=true;bypassVehicle=other;}
-      }else if(Math.abs(near.point.curvature)<.0015)offset=(index%2===0?1:-1)*2.8;
+      }
     }
   }
+  if(road.id===CIRCUIT.id&&s.distance>150&&!bypass){
+    const prior=tactics.get(vehicle),decision=chooseRaceTactic({speed,freeSpeed:targetSpeed,offset:near.lateral,width:vehicle.definition.width,length:vehicle.definition.length,limit:laneLimit,curvature:near.point.curvature,cornerAhead:pointAt(road,near.progress+100).curvature,difficulty,preferred:preferredOffset,neighbours},prior?.road===road?prior.state:initialTactic(),dt);
+    tactics.set(vehicle,{road,state:decision});offset=decision.offset;
+  }else tactics.delete(vehicle);
   if(reserved)reservedLanes.set(vehicle,{road,offset:anchor});else reservedLanes.delete(vehicle);
   const planned=plannedLanes.get(vehicle);
   offset=advanceLaneOffset(planned?.road===road?planned.offset:clamp(near.lateral,-laneLimit,laneLimit),offset,dt);
@@ -63,17 +78,7 @@ export function racingInput(vehicle:Vehicle,others:Vehicle[],difficulty:number,w
   // a steady sideslip steering bias. It changes the rack input, never velocity.
   const desiredYawRate=2*speed*Math.sin(alpha)/lookAhead,actualYawRate=vehicle.body?.getAngularVelocity().y??0;
   const angle=Math.atan2(2*vehicle.definition.wheelbase*Math.sin(alpha),lookAhead)+clamp((desiredYawRate-actualYawRate)*RACE_AI.yawRateGain,-RACE_AI.yawCorrectionLimit,RACE_AI.yawCorrectionLimit),maxSteer=clamp(.57/(1+speed*.055),.115,.57);
-  let targetSpeed=vehicle.definition.topSpeed/3.6*(.65+difficulty*.25);
   if(bypass)targetSpeed=Math.min(targetSpeed,10);
-  // A service-required car limps home instead of reaching full straight-line
-  // speed and asking cold, worn tires for a sudden combined braking maneuver.
-  if(s.wheels.some(w=>w.wear<RACE_AI.wornTireThreshold))targetSpeed=Math.min(targetSpeed,RACE_AI.wornTireSpeed[vehicle.definition.class]);
-  const tireCondition=Math.min(...s.wheels.map(w=>.65+.35*w.wear));
-  // Worn tires need both their physical grip reduction and an extra driving
-  // margin for combined braking/turning. This changes inputs, never tire forces.
-  const wearMargin=clamp(Math.min(...s.wheels.map(w=>w.wear))/.9,.45,1);
-  const grip=vehicle.definition.grip*(1-wetness*.4)*tireCondition*wearMargin*wearMargin*(vehicle.definition.class==='GT'?.27+difficulty*.12:.34+difficulty*.16);
-  for(let ahead=0;ahead<=150;ahead+=12){const p=pointAt(road,near.progress+ahead);const cornerSpeed=Math.sqrt(grip*9.81/Math.max(.0001,Math.abs(p.curvature)));targetSpeed=Math.min(targetSpeed,Math.sqrt(cornerSpeed*cornerSpeed+2*grip*9.81*ahead*.65));}
   if(Math.abs(alpha)>.65)targetSpeed=Math.min(targetSpeed,12);
   if(near.distance>road.width*.5)targetSpeed=Math.min(targetSpeed,13);
   if(road.kind==='pit')targetSpeed=Math.min(targetSpeed,15.5);

@@ -1,4 +1,10 @@
-import type {Quality} from '../core/types';
+import type {Quality,Screen} from '../core/types';
+
+/** A parked showroom is not representative of terrain, traffic and streaming.
+ * Collect only settled moving gameplay; pauses/loading must not bias selection. */
+export function qualityBenchmarkActive(screen:Screen,speed:number,grounded:boolean,ready:boolean){
+  return screen==='drive'&&Math.abs(speed)>=5&&grounded&&ready;
+}
 
 export type AdaptiveQualityPhase='waiting'|'benchmarking'|'complete'|'manual';
 export interface AdaptiveGraphicsState {
@@ -46,6 +52,8 @@ export class AdaptiveQuality {
     if(!context.automaticQuality&&this.phase!=='manual')this.reset(false);
     if(context.automaticQuality&&this.phase==='manual')this.reset(true);
     if(context.automaticQuality&&(this.phase==='waiting'||this.phase==='benchmarking')&&context.benchmarkActive){
+      const restoreScale=this.phase==='waiting'&&this.dynamicScale!==1;
+      if(this.phase==='waiting'){this.dynamicScale=1;this.adaptation=[];this.healthyWindows=0;}
       this.phase='benchmarking';
       if(this.warmup>0)this.warmup--;
       else this.benchmark.push(frameMs);
@@ -53,7 +61,11 @@ export class AdaptiveQuality {
         this.benchmarkP95=percentile(this.benchmark,.95);this.phase='complete';this.adaptation=[];this.healthyWindows=0;this.dynamicScale=1;
         return {quality:benchmarkQuality(this.benchmarkP95),dynamicScale:1,benchmarkComplete:true};
       }
+      // Measure one stable full-resolution baseline. Otherwise a resolution
+      // reduction halfway through the sample could recommend an excessive preset.
+      return restoreScale?{dynamicScale:1}:{};
     }
+    if(this.phase==='benchmarking')return {};
     if(!context.adaptationActive)return {};
     this.adaptation.push(frameMs);
     if(this.adaptation.length<120)return {};

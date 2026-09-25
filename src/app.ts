@@ -24,7 +24,7 @@ import { HANDLING, inHandlingCourse } from './content/handling-course';
 import { Input } from './core/input';
 import { SaveStore, validateSave } from './core/storage';
 import { DrivingAudio } from './core/audio';
-import {AdaptiveQuality} from './render/adaptive-quality';
+import {AdaptiveQuality,qualityBenchmarkActive} from './render/adaptive-quality';
 import {GraphicsRecovery,isExpectedGraphicsCancellation} from './render/graphics-recovery';
 import { Interface, type ViewModel } from './ui/interface';
 import { ControllerMenuNavigator } from './ui/controller-navigation';
@@ -192,9 +192,10 @@ export class Kairos {
   private finishSession(){this.audio.pause();this.setScreen('results');void this.store.write(this.save);}
   private applyPendingAutomaticQuality(){if(!this.pendingAutomaticQuality||!this.save.settings.automaticQuality)return;const changed=this.pendingAutomaticQuality!==this.save.settings.quality;this.save.settings.quality=this.pendingAutomaticQuality;this.pendingAutomaticQuality=null;this.applySettings(true);if(changed)void this.store.write(this.save);}
   private updateAdaptiveGraphics(frameMs:number){
-    const decision=this.adaptiveQuality.sample(frameMs,{automaticQuality:this.save.settings.automaticQuality,benchmarkActive:!this.preparingPresentation&&!this.loading&&!this.transitioning,adaptationActive:this.screen==='drive'&&!this.loading&&!this.transitioning,quality:this.save.settings.quality});
+    const ready=!this.preparingPresentation&&!this.loading&&!this.transitioning;
+    const decision=this.adaptiveQuality.sample(frameMs,{automaticQuality:this.save.settings.automaticQuality,benchmarkActive:qualityBenchmarkActive(this.screen,this.player.state.speed,this.player.state.grounded,ready),adaptationActive:this.screen==='drive'&&ready,quality:this.save.settings.quality});
     if(decision.quality){if(this.hasDrive&&decision.quality!==this.save.settings.quality){this.pendingAutomaticQuality=decision.quality;this.ui.update();}else{const changed=decision.quality!==this.save.settings.quality;this.save.settings.quality=decision.quality;this.applySettings(true);if(changed)void this.store.write(this.save);this.ui.render(true);}}
-    else if(decision.dynamicScale!==undefined)this.renderer.setDynamicResolutionScale(decision.dynamicScale);
+    if(decision.dynamicScale!==undefined)this.renderer.setDynamicResolutionScale(decision.dynamicScale);
   }
   private graphicsState(){return {quality:this.save.settings.quality,automaticQuality:this.save.settings.automaticQuality,pendingQuality:this.pendingAutomaticQuality,...this.adaptiveQuality.state(),...this.renderer.graphicsState(),recovery:this.graphicsRecovery.snapshot()};}
   private frame(){const cpuStart=performance.now(),now=cpuStart,raw=(now-this.last)/1000;this.last=now;if(this.manual)return;if(document.hidden)return;if(raw>FIXED_DT*8)this.overloads++;const dt=Math.min(raw,.067);this.frameTimes.push(raw*1000);if(this.frameTimes.length>1800)this.frameTimes.shift();this.accumulator+=dt;let steps=0;this.aiMs=0;this.simulationMs=0;const start=performance.now();while(this.accumulator>=FIXED_DT&&steps<8){if(!this.step()){this.accumulator=0;break;}this.accumulator-=FIXED_DT;steps++;}this.physicsMs=performance.now()-start;if(this.accumulator>=FIXED_DT){this.overloads++;this.accumulator%=FIXED_DT;}this.draw(dt,this.accumulator/FIXED_DT);this.updateAdaptiveGraphics(raw*1000);this.cpuMs=performance.now()-cpuStart;}

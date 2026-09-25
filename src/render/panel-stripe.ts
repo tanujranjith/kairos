@@ -21,15 +21,18 @@ export function panelSide(panel:Mesh,y:number,z:number,side:number):number|undef
 export function panelStripe(scene:Scene,name:string,panel:Mesh,material:Material,x:number,width:number,z0:number,z1:number){
   return panelDecal(scene,name,panel,material,[[x-width/2,z0],[x+width/2,z0],[x+width/2,z1],[x-width/2,z1]]);
 }
-export function panelDecal(scene:Scene,name:string,panel:Mesh,material:Material,footprint:[number,number][],offset=.0015){
-  const p=panel.getVerticesData('position')!,n=panel.getVerticesData('normal')!,faces=panel.getIndices()!,positions:number[]=[],indices:number[]=[];
+export function panelDecal(scene:Scene,name:string,panel:Mesh,material:Material,footprint:[number,number][],offset=.0015,side=0){
+  const p=panel.getVerticesData('position')!,n=panel.getVerticesData('normal')!,faces=panel.getIndices()!,positions:number[]=[],indices:number[]=[],normals:number[]=[];
+  const normalAxis=side?0:1,projectAxis=side?1:0,direction=side||1;
   const sign=Math.sign(footprint.reduce((a,v,i)=>{const next=footprint[(i+1)%footprint.length];return a+v[0]*next[1]-next[0]*v[1];},0));
   for(let f=0;f<faces.length;f+=3){
-    const ids=[faces[f],faces[f+1],faces[f+2]];if(ids.reduce((sum,i)=>sum+n[i*3+1],0)<1)continue;
-    let poly=ids.map(i=>[p[i*3],p[i*3+1],p[i*3+2]]);
+    const ids=[faces[f],faces[f+1],faces[f+2]];if(ids.reduce((sum,i)=>sum+n[i*3+normalAxis]*direction,0)<1)continue;
+    // Clip the interpolated skin normal alongside each vertex. Recomputing
+    // flat normals per clipped triangle makes a clear lamp look like metal shards.
+    let poly=ids.map(i=>[p[i*3],p[i*3+1],p[i*3+2],n[i*3],n[i*3+1],n[i*3+2]]);
     for(let edge=0;edge<footprint.length;edge++){
       const start=footprint[edge],end=footprint[(edge+1)%footprint.length];
-      const distance=(v:number[])=>sign*((end[0]-start[0])*(v[2]-start[1])-(end[1]-start[1])*(v[0]-start[0]));
+      const distance=(v:number[])=>sign*((end[0]-start[0])*(v[2]-start[1])-(end[1]-start[1])*(v[projectAxis]-start[0]));
       const clipped:number[][]=[];
       for(let i=0;i<poly.length;i++){
         const a=poly[i],b=poly[(i+1)%poly.length],da=distance(a),db=distance(b),insideA=da>=0,insideB=db>=0;
@@ -37,9 +40,9 @@ export function panelDecal(scene:Scene,name:string,panel:Mesh,material:Material,
         if(insideA!==insideB){const t=da/(da-db);clipped.push(a.map((v,k)=>v+(b[k]-v)*t));}
       }poly=clipped;
     }
-    const start=positions.length/3;for(const [px,py,pz]of poly)positions.push(px,py+offset,pz);
+    const start=positions.length/3;for(const vertex of poly){vertex[normalAxis]+=offset*direction;positions.push(...vertex.slice(0,3));const length=Math.hypot(...vertex.slice(3))||1;normals.push(...vertex.slice(3).map(v=>v/length));}
     for(let i=1;i<poly.length-1;i++)indices.push(start,start+i,start+i+1);
   }
-  const data=new VertexData(),normals:number[]=[];VertexData.ComputeNormals(positions,indices,normals);data.positions=positions;data.indices=indices;data.normals=normals;data.uvs=positions.flatMap((_,i)=>i%3===0?[positions[i],positions[i+2]]:[]);
+  const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;data.uvs=positions.flatMap((_,i)=>i%3===0?[positions[i],positions[i+2]]:[]);
   const result=new Mesh(name,scene);data.applyToMesh(result);result.material=material;return result;
 }

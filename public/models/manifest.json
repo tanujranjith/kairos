@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 7,
   "license": "Original Kairos content",
   "features": [
     "single shared Velara body",
@@ -7,8 +7,10 @@
     "camera mounts",
     "named chassis collision box",
     "animated steering pivot",
-    "layered wheel openings",
-    "authored exterior panel detail",
+    "clean wheel openings",
+    "surface-clipped trim with interpolated normals",
+    "restrained clear headlamp optics",
+    "layered pigmented paint",
     "refined charcoal cabin and sports controls"
   ],
   "models": [
@@ -16,13 +18,13 @@
       "id": "velara",
       "lod": 0,
       "file": "velara-lod0.glb",
-      "bytes": 352752
+      "bytes": 347928
     },
     {
       "id": "velara",
       "lod": 1,
       "file": "velara-lod1.glb",
-      "bytes": 133740
+      "bytes": 132168
     }
   ]
 }

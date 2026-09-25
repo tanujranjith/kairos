@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {AdaptiveQuality,benchmarkQuality,type AdaptiveGraphicsDecision} from '../src/render/adaptive-quality';
+import {AdaptiveQuality,benchmarkQuality,qualityBenchmarkActive,type AdaptiveGraphicsDecision} from '../src/render/adaptive-quality';
 
 const context=(automaticQuality=true,benchmarkActive=false,adaptationActive=false,quality='Low' as const)=>({automaticQuality,benchmarkActive,adaptationActive,quality});
 const feed=(policy:AdaptiveQuality,count:number,ms:number,c=context())=>{let last:AdaptiveGraphicsDecision={};for(let i=0;i<count;i++)last=policy.sample(ms,c);return last;};
@@ -8,7 +8,15 @@ describe('adaptive render quality',()=>{
   it('maps representative p95 frame time to bounded presets',()=>{
     expect(benchmarkQuality(9)).toBe('Ultra');expect(benchmarkQuality(16)).toBe('High');expect(benchmarkQuality(24)).toBe('Medium');expect(benchmarkQuality(33)).toBe('Low');
   });
-  it('warms up then completes one automatic showroom benchmark',()=>{
+  it('only admits loaded, grounded, moving gameplay to the preset benchmark',()=>{
+    for(const screen of ['home','garage','settings','pause','map','results'] as const)expect(qualityBenchmarkActive(screen,20,true,true)).toBe(false);
+    expect(qualityBenchmarkActive('drive',20,true,true)).toBe(true);
+    expect(qualityBenchmarkActive('drive',-8,true,true)).toBe(true);
+    expect(qualityBenchmarkActive('drive',4,true,true)).toBe(false);
+    expect(qualityBenchmarkActive('drive',20,false,true)).toBe(false);
+    expect(qualityBenchmarkActive('drive',20,true,false)).toBe(false);
+  });
+  it('warms up then completes one automatic moving-gameplay benchmark',()=>{
     const policy=new AdaptiveQuality();policy.reset(true);
     const result=feed(policy,150,16,context(true,true,false));
     expect(result).toEqual({quality:'High',dynamicScale:1,benchmarkComplete:true});
@@ -19,6 +27,19 @@ describe('adaptive render quality',()=>{
     const policy=new AdaptiveQuality();policy.reset(false);
     expect(feed(policy,500,9,context(false,true,false,'Low'))).toEqual({});
     expect(policy.state().phase).toBe('manual');
+  });
+  it('restores a reduced parked resolution before warming up the moving benchmark',()=>{
+    const policy=new AdaptiveQuality();policy.reset(true);
+    feed(policy,720,45,context(true,false,true));expect(policy.state().dynamicScale).toBe(.7);
+    expect(policy.sample(16,context(true,true,true))).toEqual({dynamicScale:1});
+    expect(feed(policy,149,16,context(true,true,true))).toEqual({quality:'High',dynamicScale:1,benchmarkComplete:true});
+  });
+  it('keeps benchmark resolution fixed and resumes adaptation after selecting the preset',()=>{
+    const policy=new AdaptiveQuality();policy.reset(true);
+    expect(feed(policy,120,45,context(true,true,true))).toEqual({});expect(policy.state().dynamicScale).toBe(1);
+    feed(policy,240,45,context(true,false,true));expect(policy.state().dynamicScale).toBe(1);
+    expect(feed(policy,30,45,context(true,true,true))).toEqual({quality:'Low',dynamicScale:1,benchmarkComplete:true});
+    expect(feed(policy,120,45,context(true,false,true))).toEqual({dynamicScale:.95});
   });
   it('reduces displayed resolution after sustained overload and stops at 70 percent',()=>{
     const policy=new AdaptiveQuality();policy.reset(false);const changes:number[]=[];

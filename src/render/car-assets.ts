@@ -3,9 +3,10 @@ import '@babylonjs/loaders/glTF';
 import type { VehicleDefinition, Customization } from '../core/types';
 import type { CarVisual } from './car';
 import { carInstruments } from './car-instruments';
-import { finishCarTrim,finishCarPaint } from './car-materials';
+import { finishCarTrim,finishCarPaint,finishCarLens } from './car-materials';
 import {updateSteeringVisual} from './car-steering';
 import {modelAssetUrl} from './asset-version';
+import {vehicleById} from '../content/vehicles';
 const libraries=new WeakMap<Scene,Map<string,AssetContainer>>();
 let staticInstance=0;
 export const SHARED_CAR_MODEL='velara';
@@ -17,14 +18,18 @@ export async function loadCarAssets(scene:Scene,_ids:string[]){
 }
 export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Customization,lite=false):CarVisual|null{
   const modelId=visualModelId(d.id),container=libraries.get(scene)?.get(`${modelId}:${lite?1:0}`);if(!container)return null;
+  const visualDefinition=vehicleById(modelId);
   const root=new TransformNode(`visual-${d.id}`,scene),entry=container.instantiateModelsToScene(name=>`${d.id}-instance-${name}`,true,{doNotInstantiate:true});root.metadata={kairosCar:true,visualModel:modelId,handlingProfile:d.id};entry.rootNodes.forEach(n=>n.parent=root);
   const allMeshes=root.getChildMeshes().filter((m):m is Mesh=>m instanceof Mesh),collisionMeshes=allMeshes.filter(mesh=>mesh.name.endsWith('collision-chassis'));collisionMeshes.forEach(mesh=>{mesh.setEnabled(false);mesh.isVisible=false;mesh.isPickable=false;});
   const parts=allMeshes.filter(mesh=>!collisionMeshes.includes(mesh)),nodes=root.getChildTransformNodes(),wheels=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`wheel-${i}`))!);
   const brakes=Array.from({length:4},(_,i)=>nodes.find(n=>n.name.endsWith(`brake-${i}`)));
   const steering=nodes.find(node=>node.name.endsWith('steering-pivot'));if(steering&&!steering.rotationQuaternion)steering.rotationQuaternion=Quaternion.Identity();
-  const materials=[...new Set(parts.map(p=>p.material).filter((m):m is PBRMaterial=>m instanceof PBRMaterial))];
+  // This instance owns every cloned material, including the disabled collision
+  // metadata mesh. Excluding it from drawing must not exclude it from disposal.
+  const materials=[...new Set(allMeshes.map(p=>p.material).filter((m):m is PBRMaterial=>m instanceof PBRMaterial))];
   const find=(name:string)=>materials.find(m=>m.name.includes(`${modelId}-${name}`))!;
   const trim=find('carbon');if(trim){trim.albedoColor=Color3.FromHexString('#2a3034').toLinearSpace();trim.roughness=.74;finishCarTrim(trim);}
+  const lens=find('lamp-lens');if(lens)finishCarLens(lens);
   const paint=find('paint'),glass=find('glass')??new PBRMaterial('unused-open-wheel-glass',scene),lights=find('headlight')??find('taillight'),tail=find('taillight');if(!materials.includes(glass))materials.push(glass);
   if(!paint||!glass||!lights||!tail||wheels.some(w=>!w)){root.dispose();materials.forEach(m=>m.dispose());return null;}
   finishCarPaint(paint);paint.albedoColor=Color3.FromHexString(setup?.paint??d.color).toLinearSpace();const alloy=find('alloy');if(alloy)alloy.albedoColor=Color3.FromHexString(setup?.wheels??'#b2bac0').toLinearSpace();const accent=find('accent');if(accent&&(setup?.livery??0)>0)accent.albedoColor=Color3.FromHexString(setup?.livery===1?'#e9edf0':'#2a9bb7').toLinearSpace();parts.forEach(p=>{p.isPickable=false;p.receiveShadows=true;});
@@ -35,7 +40,7 @@ export function instantiateCarAsset(scene:Scene,d:VehicleDefinition,setup?:Custo
   if(display?.emissiveTexture&&!container.textures.includes(display.emissiveTexture)){const unused=display.emissiveTexture;display.emissiveTexture=null;unused.dispose();}
   const instruments=display?carInstruments(scene,d,display):undefined;
   const displayMesh=parts.find(p=>p.material===display);
-  return {root,groundOffset:.32+d.wheelRadius,wheels,paint,glass,lights,tail,parts,update(s){wheels.forEach((w,i)=>{w.position.y=-(.32+d.travel*.5-s.wheels[i].compression);w.rotation.set(s.wheels[i].angle,i<2?-s.steer:0,0);w.rotationQuaternion=null;const b=brakes[i];if(b){b.position.copyFrom(w.position);b.rotationQuaternion=null;b.rotation.set(0,i<2?-s.steer:0,0);}});if(steering)updateSteeringVisual(d,s.steer,steering.rotationQuaternion!);tail.emissiveColor.r=s.absActive?.95:.5;if(root.isEnabled()&&displayMesh?.isVisible)instruments?.update(s);},dispose(){root.dispose();instruments?.dispose();materials.forEach(m=>m.dispose());}};
+  return {root,groundOffset:.32+visualDefinition.wheelRadius,wheels,paint,glass,lights,tail,parts,update(s){wheels.forEach((w,i)=>{w.position.y=-(.32+d.travel*.5-s.wheels[i].compression);w.rotation.set(s.wheels[i].angle,i<2?-s.steer:0,0);w.rotationQuaternion=null;const b=brakes[i];if(b){b.position.copyFrom(w.position);b.rotationQuaternion=null;b.rotation.set(0,i<2?-s.steer:0,0);}});if(steering)updateSteeringVisual(visualDefinition,s.steer,steering.rotationQuaternion!);tail.emissiveColor.r=s.absActive?.95:.5;if(root.isEnabled()&&displayMesh?.isVisible)instruments?.update(s);},dispose(){root.dispose();instruments?.dispose();materials.forEach(m=>m.dispose());}};
 }
 
 /** Reuse the authored LOD1 container for static scenery. Babylon creates
@@ -49,7 +54,8 @@ export function instantiateStaticCarAsset(scene:Scene,d:VehicleDefinition){
     if(part.name.endsWith('collision-chassis')){part.setEnabled(false);part.isVisible=false;part.isPickable=false;continue;}
     part.isPickable=false;if(part instanceof InstancedMesh)part.sourceMesh.receiveShadows=true;else part.receiveShadows=true;
     const material=part.material;if(material instanceof PBRMaterial)material.maxSimultaneousLights=6;
+    if(material instanceof PBRMaterial&&material.name.includes('lamp-lens'))finishCarLens(material);
     const name=material?.name??'';part.metadata={...part.metadata,worldCaster:!/(glass|headlight|lamp-lens|taillight|instruments)/.test(name),parkedCar:true};
   }
-  return {root,groundOffset:.32+d.wheelRadius,dispose:()=>root.dispose()};
+  return {root,groundOffset:.32+vehicleById(modelId).wheelRadius,dispose:()=>root.dispose()};
 }

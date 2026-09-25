@@ -21,6 +21,7 @@ import {createBoulders} from './boulders';
 import {configureArchitecturalGlass} from './architectural-glass';
 import {instantiateStaticCarAsset} from './car-assets';
 import {VEHICLES} from '../content/vehicles';
+import {createHorizonForest} from './horizon-forest';
 
 interface ParkedCar {root:TransformNode;collisionMesh:Mesh;collider?:{body:PhysicsBody;shape:PhysicsShape};dispose:()=>void}
 interface Cell {key:string;cx:number;cz:number;meshes:Mesh[];collisionMeshes:Mesh[];detailMeshes:Mesh[];colliders:{body:PhysicsBody;shape:PhysicsShape}[];parkedCars:ParkedCar[];signals:SignalMesh[];collision:boolean;detail:boolean;leases:Map<Mesh,{release:()=>void}>}
@@ -60,6 +61,7 @@ export class WorldRenderer {
     const geology=surfaceTexture(scene,'cliff','albedo',.035);ridgeMat.albedoTexture=geology;
     new GroundMaterial(ridgeMat,true);
     Object.assign(ridgeData,ridges);this.backdrop=new Mesh('valley-horizon',scene);ridgeData.applyToMesh(this.backdrop);this.backdrop.material=ridgeMat;this.backdrop.parent=this.root;this.backdrop.isPickable=false;this.backdrop.freezeWorldMatrix();
+    createHorizonForest(scene,this.root);
     this.water=MeshBuilder.CreateDisc('lake',{radius:1,tessellation:128,sideOrientation:Mesh.DOUBLESIDE},scene);this.water.rotation.x=Math.PI/2;this.water.scaling.set(LAKE.rx*1.015,LAKE.rz*1.015,1);this.water.position.set(LAKE.x,LAKE.level,LAKE.z);this.water.parent=this.root;this.water.freezeWorldMatrix();const water=new PBRMaterial('lake-water',scene),waves=surfaceTexture(scene,'water','normal',80);water.albedoColor=Color3.FromHexString('#345f62').toLinearSpace();water.metallic=.15;water.roughness=.23;water.bumpTexture=waves;water.bumpTexture.level=.12;this.water.material=water;
   }
 

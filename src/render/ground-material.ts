@@ -74,6 +74,20 @@ kgAlbedo=mix(kgAlbedo,${palette('shore')},kgSand*0.80);
 kgAlbedo=mix(kgAlbedo,${palette('stone')}*(0.72+kgPatch*0.45),kgRock);
 surfaceAlbedo=kgAlbedo*(0.88+kgPatch*0.18+kgFine*0.08)*kgMicro*${wgsl?'uniforms.':''}vAlbedoColor.rgb;
 #ifdef KAIROS_GROUND_FLOOR
+} else {
+// Metre-scale geology on the outer range only. It shares the existing ridge
+// pass, texture and atmospheric fog; never changes a playable contact mesh.
+${local(vec2,'krP',`${position}.xz`)}
+${scalar('krBroad',`kairosGroundNoise(krP*0.0017)`)}
+${scalar('krGully',`kairosGroundNoise(krP*0.008+${vec2}(krBroad*9.0,krBroad*3.0))`)}
+${scalar('krFine',`kairosGroundNoise(krP*0.065)`)}
+${scalar('krSlope','1.0-abs(geometricNormalW.y)')}
+${scalar('krRock',`max(smoothstep(0.045,0.27,krSlope),smoothstep(200.0,520.0,${position}.y+krBroad*110.0))`)}
+${scalar('krStrata',`0.5+0.5*sin(${position}.y*0.095+krP.x*0.011+krGully*7.0)`)}
+${scalar('krSnow',`smoothstep(560.0,760.0,${position}.y+krGully*125.0)*(1.0-smoothstep(0.12,0.36,krSlope))*smoothstep(0.27,0.68,krGully)`)}
+${local(vec3,'krForest',`${vec3}(0.023,0.050,0.032)*(0.68+krGully*0.64)`)}
+${local(vec3,'krStone',`mix(${vec3}(0.063,0.076,0.084),${vec3}(0.24,0.23,0.205),krBroad)*(0.53+krStrata*0.29+krFine*0.31)`)}
+surfaceAlbedo=mix(mix(krForest,krStone,krRock),${vec3}(0.69,0.74,0.77),krSnow)*(0.73+smoothstep(0.18,0.75,krGully)*0.35);
 }
 #endif
 #endif`;

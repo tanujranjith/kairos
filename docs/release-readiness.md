@@ -1,52 +1,50 @@
 # Local release readiness and handoff
 
-Kairos is a playable local release candidate. The current source integrates the approved driving, world, traffic, navigation, activity, garage, customization, weather, audio, persistence and motorsport systems. Per the user's later direction, one authored Velara body and its two LODs are reused throughout; the six unlocked garage entries remain distinct drivetrain, setup and performance profiles.
+The local gameplay implementation is complete under the user's shared-car/local-only scope. Full original-plan acceptance is not certified on the separate target hardware. See [current build and verified evidence](final-closeout.md), [subsystem acceptance matrix](acceptance-matrix.md) and [plan status](plan-completion.md).
 
-## Verified locally
+## Current verified release
 
-- Strict TypeScript, nineteen KTX2 assets, production build and 257 tests in 41 files pass.
-- Garage, customization, settings, map/routing, Free Drive, reverse/reset, all five cameras, pause/resume, night, the handling course and persisted reload pass in a complete rendered browser flow.
-- Confirmed progress reset survives reload. Save export/import, corrupt data preservation, genuine quota failure/recovery, closed-database writes and unavailable IndexedDB fail safely while play remains available.
-- Keyboard and controller navigation are covered; real fullscreen, disconnect pause and bounded vibration dispatch pass. A physical controller motor was not available.
-- Audio entry survives autoplay blocking and unlocks on the next real interaction. Engine/load, shift, transmission, road, wind, tire, impact, rain, cockpit and tunnel paths produce finite output; mute and pause reach silence.
-- Automatic preset selection, manual override and dynamic resolution's 70% floor/recovery do not alter simulation state.
-- A WebGL2 context loss rebuilds in place. A WebGPU device loss holds game state, then offers the documented persisted WebGL2 restart after its bounded recovery attempt.
-- Installed Chrome and Edge both drive through actual WebGPU and forced WebGL2 with third-party hosts blocked.
-- Selected 30-minute race endurance, maximum-speed streaming, 16-car racing/pits, wet-night traffic, handling/surface, race weekend and production delivery checks are retained in the dated benchmark evidence.
-- A conservative Low 1280×720 resident-resource audit peaks at 157.57MiB including a 25% untracked-allocation contingency, below the planned 256MiB estimate ceiling across city, mountain, highway, wet-night and eight-car-race scenes.
-- A CDP-scoped Windows/Edge process audit peaks at 1,334.97MiB settled summed working set, leaving 201.03MiB below the planned 1.5GiB process target on the development PC. Target-laptop certification remains separate.
-- A moving Low 1280×720 audit passes the 40ms frame-p95, 12ms complete CPU callback, 28ms GPU-p95, 5ms simulation-p95 and 2ms AI-p95 targets in city, mountain, highway, wet-night and eight-car-race scenes; see the benchmark log for exact values.
+Production `index-DtFmU65y.js`, engine `babylon-BtLuxeV9.js`, worker `cell-worker-BYSSieaE.js` and version-7 shared Velara LODs pass strict TypeScript, 277 tests / 46 files, nineteen texture integrity checks and the build. The known large engine-chunk warning remains.
 
-The exact current production files include `index-CDWvVxTB.js` and `cell-worker-BYSSieaE.js`. Under local cold-cache 25Mbps/40ms emulation, the menu is ready in 6.204 seconds forced WebGL2 and 5.352 seconds automatic, with 10,527,494 bytes transferred. Both enter Free Drive and Northstar without page errors, failed requests or external requests. The smoke test confirms version-5 fingerprinted shared Velara LODs, the gallery environment and all nineteen KTX2 textures.
+Cold-cache 25Mbps/40ms local production reaches the menu in 6.050s forced WebGL2 / 5.191s automatic, transferring 10,524,864 bytes through Free Drive and Northstar entry, with no page, failed or external requests. Both real UI flows accelerate successfully and production contains no development control hooks.
+
+Fresh browser checks cover both native renderers' model/preset/landscape paths, Chrome/Edge renderer combinations, complete GT/Formula race weekends, menu/save/camera interactions, loading failure/retry, resource disposal and representative automatic quality. The supplied keyboard client completes and its final screenshot/state were inspected. The final leak fix returns four race/home cycles to identical 142/78/44 mesh/material/texture counts in each native renderer.
+
+Low 1280×720 stays under 300 draw calls / approximately 500,000 submitted triangles across eleven scenes. Five isolated moving development-RTX scenes pass the frame/CPU/GPU/simulation/AI p95 targets. Prior narrow-margin city variability is preserved in the benchmark log.
+
+Earlier audio/storage/controller/fault/endurance/memory reports remain retained evidence, not freshly repeated tests. In particular, 157.57MiB estimated GPU residency and 1,334.97MiB settled browser-process working set belong to their earlier measured build, not new measurements of version 7.
 
 ## Remaining acceptance boundary
 
-The development machine cannot certify the 8 GB integrated-graphics laptop's 720p/30 FPS frame pacing, whole-process memory or actual driver-reported GPU residency. Run the documented benchmark routes on that machine before calling the hardware target accepted. The development RTX now passes every stated frame/CPU/GPU/simulation/AI p95 target, but that result must still be reproduced on the target machine before release.
+Run the existing benchmark/resource/endurance routes on the actual 8 GB integrated-graphics laptop before accepting its 720p/30 FPS target. Test a physical controller for stick feel and vibration. Automated gamepad events and development-PC measurements are not substitutes.
 
-No cloud project or destination has been authorized, so the included static/Vercel configuration has not been deployed or smoke-tested over HTTPS. Its local contract tests cover the Vite build/output commands, revalidated application shell, immutable fingerprinted payloads and absence of a service worker. Deployment still requires an explicitly authorized project, preview-first validation and preservation of the previous release for rollback.
+Art remains stylized procedural content; audio is synthesized; racing rules/AI are a compact driving-game implementation rather than a complete real-world marshal/safety-car simulation. No photorealistic reference equivalence or exhaustive permutation coverage is claimed.
 
-The original procedural cars and world are substantially richer than the initial blockout but remain stylized. They do not match the references' photorealism, and the compact racing rules/AI are not a complete real-world marshal or safety-car simulation. These are documented product simplifications, not hidden test passes.
+The user chose local-only delivery. Nothing has been published. A future hosted release requires a newly authorized project, HTTPS preview checks and preservation of its previous deployment for rollback.
 
 ## Handoff commands
 
-Use Node 24, then run:
+Use Node 24. The current local preview is **http://127.0.0.1:5192/**. For a clean checkout:
 
 ```sh
 npm ci
 npm test
 npm run build
 npm run preview -- --port 5192
-node scripts/verify-delivery.mjs --25mbps
-node scripts/verify-browsers.mjs
-node scripts/verify-interactions.mjs
-node scripts/verify-platform-interactions.mjs --output=output/final-platform-interactions
-node scripts/verify-storage.mjs
-node scripts/audit-frame-performance.mjs --output=output/frame-performance
-node scripts/profile-frame-cpu.mjs --output=output/frame-cpu-profile
-node scripts/verify-audio.mjs
-node scripts/verify-adaptive-quality.mjs
-node scripts/verify-graphics-recovery.mjs webgl
-node scripts/verify-graphics-recovery.mjs webgpu
 ```
 
-Do not publish until the target-hardware and authorized HTTPS checks above are completed and their results are added to the benchmark log.
+Start the development server on port 5187 before development-only browser verifiers:
+
+```sh
+npm run dev -- --port 5187
+node scripts/verify-interactions.mjs
+node scripts/verify-adaptive-quality.mjs
+node scripts/verify-graphics-streaming.mjs
+node scripts/verify-race-resource-lifecycle.mjs
+node scripts/verify-race-resource-lifecycle.mjs --webgpu
+node scripts/verify-browsers.mjs
+node scripts/audit-frame-performance.mjs --output=output/frame-performance
+node scripts/verify-delivery.mjs --25mbps
+```
+
+See [README](../README.md) for controls, local saves, pits, the bundled Windows Node path and restart instructions; [benchmarks](benchmarks.md) indexes the remaining targeted fault/hardware scripts.

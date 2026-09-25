@@ -24,7 +24,7 @@ for(const renderer of renderers){
   await page.keyboard.down('ArrowUp');await page.waitForFunction(()=>Number(document.querySelector('#speed')?.textContent)>5,null,{timeout:45000});await page.keyboard.up('ArrowUp');
   await page.screenshot({path:`${output}/${renderer}-handling.png`});
   const uniqueAssets=[...new Set(runtimeAssets)].sort();
-  for(const expected of ['/models/velara-lod0.glb?v=5-collision-contract','/models/velara-lod1.glb?v=5-collision-contract','/environment/fish-eagle-hill.env?v=a51e9198f02a'])assert.ok(uniqueAssets.includes(expected),`Missing versioned production request: ${expected}`);
+  for(const expected of ['/models/velara-lod0.glb?v=7-smooth-optics','/models/velara-lod1.glb?v=7-smooth-optics','/environment/fish-eagle-hill.env?v=a51e9198f02a'])assert.ok(uniqueAssets.includes(expected),`Missing versioned production request: ${expected}`);
   const metrics=await cdp.send('Performance.getMetrics');const report={rendererRequest:renderer,readyMs,bytes,jsHeapBytes:metrics.metrics.find(m=>m.name==='JSHeapUsedSize')?.value,errors,external,failed,runtimeAssets:uniqueAssets,speed,handlingCourse:true,network:throttled?{downloadMbps:25,uploadMbps:5,latencyMs:40}:'unthrottled localhost',environment:'Local development machine; Chromium/SwiftShader; cold browser cache. Includes Free Drive and handling-course startup. Browser network emulation when requested, not actual Internet/target-laptop or GPU performance certification.'};reports.push(report);console.log(report);await context.close();
 }
 await fs.writeFile(`${output}/report.json`,JSON.stringify(reports,null,2));await browser.close();assert.ok(reports.every(r=>!r.errors.length&&!r.external.length&&!r.failed.length));

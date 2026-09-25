@@ -34,11 +34,11 @@ export function mountainHeight(x:number,z:number){
   for(const p of MOUNTAIN_MASSIFS){const dx=x-p.x,dz=z-p.z,u=(dx*p.cos+dz*p.sin)/p.width,v=(-dx*p.sin+dz*p.cos)/p.depth,h=p.height*Math.exp(-(u*u+v*v)*1.45);mass+=h*h*h*h;}
   // Large ridge spines and subordinate gullies shape the silhouette and its
   // actual lighting, instead of painting tiny rock noise onto smooth domes.
-  const mountain=Math.pow(mass,.25)*(.35+ridge(900)*.55+ridge(520)*.12+ridge(280)*.04),foothills=hill*(25+landscapeNoise(x/650,z/650)*95);
+  const mountain=Math.pow(mass,.25)*(.30+ridge(900)*.40+ridge(400)*.21+ridge(210)*.12),foothills=hill*(25+landscapeNoise(x/650,z/650)*95);
   return -14+blend*(18+foothills+mountain);
 }
 export function mountainMesh(groundHeight?:(x:number,z:number)=>number){
-  const g=new MeshDataBuilder(),segments=384,rings=40;
+  const g=new MeshDataBuilder(),segments=256,rings=60;
   // Preserve a coarse, recessed valley floor beyond the streamed detail ring.
   // Without it, unloading a cell exposes sky between the player and the outer range.
   if(groundHeight)for(let x=-2176;x<2176;x+=128)for(let z=-2176;z<2176;z+=128){const p=(x:number,z:number)=>({x,y:groundHeight(x,z)-8,z});g.quad(p(x,z),p(x+128,z),p(x,z+128),p(x+128,z+128));}

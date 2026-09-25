@@ -11,6 +11,9 @@ import { atmosphereFog } from './sky-field';
 import { LocalReflections } from './local-reflections';
 import { createShowroom } from './showroom';
 import { cameraMounts } from './camera-mounts';
+import { visualModelId } from './car-assets';
+import { vehicleById } from '../content/vehicles';
+import {QualityEffects} from './quality-effects';
 import type { MirrorTexture,BaseTexture } from '@babylonjs/core';
 
 const AMBIENT_DAY=new Color3(.8,.87,.98),AMBIENT_NIGHT=new Color3(.48,.62,.88),GROUND_DAY=new Color3(.22,.20,.15),GROUND_NIGHT=new Color3(.12,.17,.25),SUN_DAY=new Color3(.96,.96,.89),SUN_GOLD=new Color3(1,.66,.34),MOON_LIGHT=new Color3(.48,.62,.88);
@@ -22,6 +25,7 @@ export class Renderer {
   reflections:LocalReflections;private registeredCars=new WeakMap<CarVisual,Mesh>();private studioLights:SpotLight[]=[];private floorReflection:MirrorTexture;private galleryEnvironment:BaseTexture;
   private activeSettings:Settings|null=null;private dynamicResolutionScale=1;private daylightColour=new Color3();private shadowSelectionAt=-Infinity;
   private activeMeshListDirty=true;private activeMeshCount=-1;private activeMeshRefreshes=0;
+  readonly effects:QualityEffects;
   constructor(public engine:AbstractEngine,public canvas:HTMLCanvasElement){
     this.rendererName=engine instanceof WebGPUEngine?'WebGPU':'WebGL2';
     this.scene=new Scene(engine);const scene=this.scene;scene.performancePriority=ScenePerformancePriority.Intermediate;scene.clearColor=new Color4(.57,.65,.69,1);scene.fogMode=Scene.FOGMODE_EXP2;scene.fogDensity=.00038;scene.fogColor=new Color3(.72,.69,.58);
@@ -32,6 +36,7 @@ export class Renderer {
     this.sun=new DirectionalLight('sun',new Vector3(.55,-.38,-.65),scene);this.sun.intensity=2.4;this.sun.diffuse=new Color3(1,.79,.52);this.sun.shadowMinZ=1;this.sun.shadowMaxZ=220;
     this.shadow=new ShadowGenerator(1024,this.sun);this.shadow.usePercentageCloserFiltering=true;this.shadow.filteringQuality=ShadowGenerator.QUALITY_LOW;this.shadow.bias=.001;this.shadow.normalBias=.03;this.shadow.setDarkness(.08);this.sun.shadowFrustumSize=115;
     this.pipeline=new DefaultRenderingPipeline('kairos-photographic',true,scene,[this.camera]);this.pipeline.fxaaEnabled=true;this.pipeline.bloomThreshold=1.15;this.pipeline.bloomWeight=.12;this.pipeline.bloomKernel=32;this.pipeline.bloomScale=.5;
+    this.effects=new QualityEffects(scene,this.camera,'kairos-photographic');scene.onDisposeObservable.addOnce(()=>this.effects.dispose());
     this.outdoorEnvironment=lightingEnvironment(scene);this.studioEnvironment=lightingEnvironment(scene,true);scene.environmentTexture=this.outdoorEnvironment;
     const shadowTexture=new DynamicTexture('original-contact-occlusion',128,scene,true),sctx=shadowTexture.getContext(),gradient=sctx.createRadialGradient(64,64,12,64,64,62);gradient.addColorStop(0,'rgba(0,0,0,.58)');gradient.addColorStop(.55,'rgba(0,0,0,.30)');gradient.addColorStop(1,'rgba(0,0,0,0)');sctx.fillStyle=gradient;sctx.fillRect(0,0,128,128);shadowTexture.update();shadowTexture.hasAlpha=true;
     this.contactMaterial=new StandardMaterial('contact-occlusion',scene);this.contactMaterial.diffuseTexture=shadowTexture;this.contactMaterial.emissiveTexture=shadowTexture;this.contactMaterial.useAlphaFromDiffuseTexture=true;this.contactMaterial.disableLighting=true;this.contactMaterial.emissiveColor=Color3.White();this.contactMaterial.zOffset=-1;this.contactMaterial.backFaceCulling=false;
@@ -76,7 +81,7 @@ export class Renderer {
     for(const part of car.parts){
       // Glass and tiny emissive faces are not opaque sun occluders. The body,
       // cabin/wing, tyres and wheels provide the car's actual shadow silhouette.
-      if(part.material===car.glass||part.material===car.lights||part.material===car.tail||part.material?.name.includes('-instruments'))continue;
+      if(part.material===car.glass||part.material===car.lights||part.material===car.tail||part.material?.name.includes('-instruments')||part.material?.name.includes('-lamp-lens'))continue;
       this.shadowParts.add(part);part.onDisposeObservable.addOnce(()=>{this.shadowParts.delete(part);this.shadow.removeShadowCaster(part);});
     }
   }
@@ -85,11 +90,12 @@ export class Renderer {
   prepareReflections(car:CarVisual,settings:Settings,garage:boolean,clock:number){this.reflections.update({position:car.root.position,garage,clock,stamp:`${Math.round(settings.time*4)}:${settings.weather}`},settings.quality,[car.paint,car.glass]);}
   recoverGraphicsResources(){this.scene.unfreezeActiveMeshes();this.invalidateActiveMeshes();this.reflections.recover();const old=[this.outdoorEnvironment,this.studioEnvironment];this.outdoorEnvironment=lightingEnvironment(this.scene);this.studioEnvironment=lightingEnvironment(this.scene,true);this.scene.environmentTexture=this.wasGarage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;for(const texture of old){const internal=(texture as unknown as {_texture?:{_hardwareTexture:unknown}})._texture;if(internal)internal._hardwareTexture=null;texture.dispose();}this.engine.wipeCaches(true);this.scene.markAllMaterialsAsDirty(Material.TextureDirtyFlag);}
   private applyHardwareScale(){if(!this.activeSettings)return;const profiles={Low:[1280,720],Medium:[1600,900],High:[1920,1080],Ultra:[2560,1440]},profile=profiles[this.activeSettings.quality],viewportScale=Math.max(1,window.innerWidth/profile[0],window.innerHeight/profile[1]);this.engine.setHardwareScalingLevel(viewportScale/(this.activeSettings.resolution*this.dynamicResolutionScale));}
-  applySettings(settings:Settings,resetDynamic=false){this.activeSettings=settings;if(resetDynamic)this.dynamicResolutionScale=1;this.applyHardwareScale();const shadows={Low:1024,Medium:1536,High:2048,Ultra:4096};this.shadow.getShadowMap()?.resize(shadows[settings.quality]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;}
+  applySettings(settings:Settings,resetDynamic=false){this.activeSettings=settings;if(resetDynamic)this.dynamicResolutionScale=1;this.applyHardwareScale();const shadows={Low:1024,Medium:1536,High:2048,Ultra:4096};this.shadow.getShadowMap()?.resize(shadows[settings.quality]);this.pipeline.bloomEnabled=settings.quality!=='Low';this.pipeline.samples=settings.quality==='Ultra'?4:1;this.effects.apply(settings.quality,this.wasGarage);this.invalidateActiveMeshes();}
   setDynamicResolutionScale(scale:number){const next=clamp(scale,.7,1);if(Math.abs(next-this.dynamicResolutionScale)<1e-6)return;this.dynamicResolutionScale=next;this.applyHardwareScale();}
-  graphicsState(){const requested=this.activeSettings?.resolution??1;return {dynamicScale:this.dynamicResolutionScale,requestedScale:requested,effectiveScale:requested*this.dynamicResolutionScale,width:this.engine.getRenderWidth(),height:this.engine.getRenderHeight()};}
+  graphicsState(){const requested=this.activeSettings?.resolution??1;return {dynamicScale:this.dynamicResolutionScale,requestedScale:requested,effectiveScale:requested*this.dynamicResolutionScale,width:this.engine.getRenderWidth(),height:this.engine.getRenderHeight(),effects:this.effects.snapshot()};}
   cameraState(){return {mode:this.cameraMode,obstructed:this.cameraObstructed,requestedDistance:this.cameraRequestedDistance,resolvedDistance:this.cameraResolvedDistance,currentDistance:this.cameraCurrentDistance};}
   update(vehicle:Vehicle,visual:CarVisual,settings:Settings,dt:number,garage:boolean,clock:number,wetness:number,alpha=1){
+    if(this.wasGarage!==garage){this.effects.apply(settings.quality,garage);this.invalidateActiveMeshes();}
     const time=settings.time,lighting=drivingLighting(time,settings.weather),solar=lighting.solar,day=lighting.day,night=lighting.night,golden=solar.golden;
     this.ambient.intensity=garage?.35:lighting.ambientIntensity;Color3.LerpToRef(AMBIENT_DAY,AMBIENT_NIGHT,lighting.nightBlend,this.ambient.diffuse);Color3.LerpToRef(GROUND_DAY,GROUND_NIGHT,lighting.nightBlend,this.ambient.groundColor);
     Color3.LerpToRef(SUN_DAY,SUN_GOLD,golden,this.daylightColour);this.sun.intensity=garage?2.8:lighting.directIntensity;Color3.LerpToRef(this.daylightColour,MOON_LIGHT,lighting.nightBlend,this.sun.diffuse);this.scene.environmentIntensity=garage?.65:lighting.environmentIntensity;this.scene.environmentTexture=garage?(this.galleryEnvironment.isReady()?this.galleryEnvironment:this.studioEnvironment):this.outdoorEnvironment;
@@ -105,13 +111,18 @@ export class Renderer {
     this.studioLights.forEach(light=>{if(light.isEnabled()!==garage)light.setEnabled(garage);});const headlampsEnabled=!garage;this.headlights.forEach(light=>{if(light.isEnabled()!==headlampsEnabled)light.setEnabled(headlampsEnabled);});
     if(garage){visual.glass.alpha=.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;for(const n of visual.root.getChildTransformNodes())if(/brake-\d$/.test(n.name)){n.position.y=-.32;n.rotationQuaternion=null;n.rotation.set(0,0,0);}}
     this.headlights.forEach((light,i)=>{const f=new Vector3(Math.sin(vehicle.state.yaw),-.08,Math.cos(vehicle.state.yaw)),r=new Vector3(Math.cos(vehicle.state.yaw),0,-Math.sin(vehicle.state.yaw));light.position.copyFrom(vehicle.node.position).addInPlace(f.scale(vehicle.definition.length*.48)).addInPlace(r.scale(i===0?-.55:.55));light.direction.copyFrom(f);light.intensity=!garage&&this.lightsEnabled?(night>.72?650:1):0;});
-    if(garage){const a=-.58+Math.sin(clock*.07)*.08;visual.wheels.forEach(w=>{w.position.y=-.32;w.rotation.set(0,0,0);w.rotationQuaternion=null;});visual.root.position.set(0,-1000+.105+.32+vehicle.definition.wheelRadius,0);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(.2,0,0);this.camera.position.set(Math.sin(a)*8.5,-998.32,Math.cos(a)*8.5);this.camera.setTarget(new Vector3(0,-999.12,0));this.camera.fov=.59;this.sun.position.copyFrom(visual.root.position).subtractInPlace(this.sun.direction.scale(90));this.scene.fogDensity=.0003;this.wasGarage=true;}
+    if(garage){const a=-.58+Math.sin(clock*.07)*.08;visual.wheels.forEach(w=>{w.position.y=-.32;w.rotation.set(0,0,0);w.rotationQuaternion=null;});visual.root.position.set(0,-1000+.105+visual.groundOffset,0);visual.root.rotationQuaternion=Quaternion.RotationYawPitchRoll(.2,0,0);this.camera.position.set(Math.sin(a)*8.5,-998.32,Math.cos(a)*8.5);this.camera.setTarget(new Vector3(0,-999.12,0));this.camera.fov=.59;this.sun.position.copyFrom(visual.root.position).subtractInPlace(this.sun.direction.scale(90));this.scene.fogDensity=.0003;this.wasGarage=true;}
     else{
       visual.root.position.copyFrom(Vector3.Lerp(vehicle.previousPosition,vehicle.node.position,alpha));visual.root.rotationQuaternion=Quaternion.Slerp(vehicle.previousRotation,vehicle.node.rotationQuaternion!,alpha);visual.update(vehicle.state);
-      const p=visual.root.position,yaw=vehicle.state.yaw,forward=new Vector3(Math.sin(yaw),0,Math.cos(yaw)),right=new Vector3(Math.cos(yaw),0,-Math.sin(yaw));const mode=settings.camera;this.cameraMode=mode;this.cameraObstructed=false;this.cameraRequestedDistance=0;this.cameraResolvedDistance=0;
+      const p=visual.root.position,yaw=vehicle.state.yaw,forward=new Vector3(Math.sin(yaw),0,Math.cos(yaw));const mode=settings.camera;this.cameraMode=mode;this.cameraObstructed=false;this.cameraRequestedDistance=0;this.cameraResolvedDistance=0;
       let target=p.add(new Vector3(0,.65,0)),desired:Vector3;
       if(mode<2){const dist=mode===0?6.5:4.9;desired=p.subtract(forward.scale(dist)).add(new Vector3(0,mode===0?1.65:1.25,0));target=p.add(new Vector3(0,.38,0)).add(forward.scale(4.2));}
-      else{const mounts=cameraMounts(vehicle.definition),mount=mode===2?mounts.cockpit:mode===3?mounts.hood:mounts.bumper;desired=p.add(forward.scale(mount.z)).add(right.scale(mount.x)).add(new Vector3(0,mount.y,0));target=desired.add(forward.scale(30));}
+      else{
+        // Mounts belong to the shared body, not the selected drivetrain profile.
+        // Body-mounted views also follow pitch/roll on slopes and banked roads.
+        const mounts=cameraMounts(vehicleById(visualModelId(vehicle.definition.id))),mount=mode===2?mounts.cockpit:mode===3?mounts.hood:mounts.bumper,matrix=visual.root.computeWorldMatrix(true);
+        desired=Vector3.TransformCoordinates(new Vector3(mount.x,mount.y,mount.z),matrix);target=desired.add(Vector3.TransformNormal(new Vector3(0,0,30),matrix));
+      }
       visual.glass.alpha=mode===2?.13:.64;visual.glass.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;
       const cameraOrigin=p.add(new Vector3(0,.8,0));
       if(mode<2){this.cameraRequestedDistance=Vector3.Distance(cameraOrigin,desired);const hit=vehicle.world.engine.raycast(cameraOrigin,desired,{collideWith:1});if(hit.hasHit){this.cameraObstructed=true;desired=Vector3.Lerp(cameraOrigin,hit.hitPointWorld,Math.max(.1,1-.25/Math.max(.25,hit.hitDistance)));}this.cameraResolvedDistance=Vector3.Distance(cameraOrigin,desired);}

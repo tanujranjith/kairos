@@ -4,6 +4,9 @@ No purchased assets, copied vehicle designs, third-party logos or remote runtime
 
 | Content | Source / terms |
 |---|---|
+| Outer-range rock/snow shader, ridge subdivision and distant fir groves | Original Kairos `ground-material.ts`, `world/landscape.ts` and both `horizon-forest.ts` modules. One locally generated 512×256 fir atlas; no downloaded image, paid asset or external runtime request. |
+| Smooth projected trim and dark clear headlamp covers | Original Kairos geometry/material corrections in `panel-stripe.ts`, `coachwork.ts` and `car-materials.ts`; version-7 shared Velara LOD0/LOD1, no new third-party asset. |
+| Combustion-pressure waveform, intake/exhaust resonance and overrun texture | Original Kairos synthesis in `src/core/engine-wave.ts`, `audio-mix.ts` and `audio-graph.ts`; no recorded samples or new third-party asset. |
 | Shared live Velara body | Original local `velara-lod0.glb` / `velara-lod1.glb` and matching procedural fallback. Reused for player, traffic, racing, showroom and parked scenery; no downloaded model, brand, paid asset or runtime host. |
 | Signal crosswalk and stop-bar geometry | Original Kairos lane-derived geometry in `src/render/traffic.ts`; merged into the existing local white-marking material with no downloaded asset, texture or runtime host. |
 | Historical car source generators/GLBs, showroom, terrain, roads, scenery, icons | Original Kairos code-generated content in this project. Non-Velara car GLBs remain source artifacts but are not requested by the current runtime. |

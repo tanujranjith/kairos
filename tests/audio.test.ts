@@ -4,12 +4,19 @@ import { vehicleById } from '../src/content/vehicles';
 import { ROADS, pointAt } from '../src/content/world';
 import { TUNNELS } from '../src/content/structures';
 import type { VehicleState } from '../src/core/types';
+import {combustionHarmonics} from '../src/core/engine-wave';
 
 const state=(patch:Partial<VehicleState>={}):VehicleState=>({id:'player',position:{x:0,y:0,z:0},velocity:{x:0,y:0,z:20},yaw:0,speed:20,rpm:3000,gear:2,steer:0,fuel:20,wheels:Array.from({length:4},()=>({load:3000,compression:.1,slip:0,angle:0,omega:60,temperature:40,wear:1,contact:true})),grounded:true,surface:'Asphalt',damage:0,absActive:false,tcActive:false,distance:0,...patch});
 const dry={cockpit:false,rain:0,wetness:0,tunnel:0};
 const car=vehicleById('velara');
 
 describe('original driving audio mix',()=>{
+  it('builds a finite, zero-DC pressure waveform and distinct load/overrun layers',()=>{
+    const wave=combustionHarmonics();expect(wave.real[0]).toBe(0);expect(wave.imag[0]).toBe(0);expect([...wave.real,...wave.imag].every(Number.isFinite)).toBe(true);
+    expect(Math.hypot(wave.real[40],wave.imag[40])).toBeLessThan(Math.hypot(wave.real[1],wave.imag[1]));
+    const loaded=drivingMix(state({rpm:5000}),car,1,dry),coast=drivingMix(state({rpm:5000}),car,0,dry);
+    expect(loaded.intakeGain).toBeGreaterThan(coast.intakeGain);expect(loaded.exhaustGain).toBeGreaterThan(coast.exhaustGain);expect(coast.overrunGain).toBeGreaterThan(loaded.overrunGain);
+  });
   it('follows engine speed and load without changing the simulation',()=>{
     const original=state(),before=structuredClone(original),idle=drivingMix(original,car,0,dry),loaded=drivingMix(original,car,1,dry);
     expect(loaded.engineHz).toBe(idle.engineHz);

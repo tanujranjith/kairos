@@ -6,7 +6,7 @@ import { roadCoachwork } from './coachwork';
 import { formulaCoachwork } from './formula-coachwork';
 import { carInstruments } from './car-instruments';
 import { wheelModel } from './wheel-model';
-import { finishCarTrim,finishCarPaint } from './car-materials';
+import { finishCarTrim,finishCarPaint,finishCarLens } from './car-materials';
 import {updateSteeringVisual} from './car-steering';
 
 export interface CarVisual {root:TransformNode;groundOffset:number;wheels:TransformNode[];paint:PBRMaterial;glass:PBRMaterial;lights:PBRMaterial;tail:PBRMaterial;parts:Mesh[];readonly lod?:0|1;selectDetail?:(distance:number,quality:Quality)=>boolean;update:(s:VehicleState)=>void;dispose:()=>void}
@@ -23,6 +23,7 @@ export function createCar(scene:Scene,d:VehicleDefinition,setup?:Customization,l
   glass.clearCoat.isEnabled=true;glass.clearCoat.intensity=1;glass.indexOfRefraction=1.52;
   const light=material('headlight','#c8edff',.1,.16);light.emissiveColor=new Color3(.5,.7,.9);
   const lens=material('lamp-lens','#dce9ee',.02,.09);lens.alpha=.24;lens.transparencyMode=PBRMaterial.PBRMATERIAL_ALPHABLEND;lens.backFaceCulling=false;lens.twoSidedLighting=true;lens.indexOfRefraction=1.49;lens.clearCoat.isEnabled=true;lens.clearCoat.intensity=1;
+  finishCarLens(lens);
   const tail=material('taillight','#cf1c2b',.1,.18);tail.emissiveColor=new Color3(.7,.015,.015);
   const accent=material('accent',d.class==='GT'?'#298fad':'#d9e3de',.45,.25);
   const brake=material('brake-rotor','#74777b',.82,.52);

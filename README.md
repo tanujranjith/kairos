@@ -1,53 +1,48 @@
 # Kairos
 
-A single-player browser driving game built with TypeScript, Babylon.js and Havok. All simulation, rendering and audio run locally. No account, economy, paid assets, multiplayer or service worker.
+A single-player browser driving game built with strict TypeScript, Babylon.js and Havok. Rendering, physics, traffic, racing AI and audio run on your computer. No account, economy, multiplayer, service worker or paid asset is required.
+
+**Local play:** http://127.0.0.1:5192/ while the production preview server is running. Nothing has been published. See the [current build and evidence](docs/final-closeout.md) and [full-plan acceptance matrix](docs/acceptance-matrix.md) for the difference between implemented systems and unverified hardware/visual targets.
 
 ## Run
 
-Use Node **24** (or a compatible Node >=22.12), not the machine's default Node 20.
+Use **Node 24**, not the machine's default Node 20. Dependencies are pinned in the committed lockfile.
 
 ```sh
 npm ci
-npm run dev -- --port 5187
-npm run check
-npm test
 npm run build
 npm run preview -- --port 5192
 ```
 
-The bundled Windows runtime is `C:/Users/tanuj/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe`. Prepend that runtime's `bin` directory to the current shell's `PATH` before invoking npm, so npm's child scripts also use Node24. Merely invoking `npm-cli.js` through Node24 leaves child scripts on the machine's default Node20.
+For development and automated verification:
 
-Open the local URL in hardware-accelerated Chrome or Edge. `?renderer=webgl` forces WebGL2. The default attempts WebGPU and falls back to WebGL2.
+```sh
+npm run dev -- --port 5187
+npm run check
+npm test
+```
+
+On this Windows machine, prepend the bundled runtime directory to PATH before running npm:
+
+```powershell
+$env:PATH = 'C:\Users\tanuj\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin;' + $env:PATH
+```
+
+Open the local URL in hardware-accelerated Chrome or Edge. Kairos prefers WebGPU and rebuilds with WebGL2 if initialization fails. Add `?renderer=webgl` to force WebGL2. Open through the local server, not by double-clicking `dist/index.html`.
 
 ## Play
 
-Keyboard turn-in and centering are quicker, with a speed- and surface-aware steering limit. Gravel/concrete shoulders now have matching physical support. Predictive ABS and split-surface brake-pressure control address the reproduced70mph spin without increasing tire grip. See [current handling evidence](docs/surface-handling.md) and the [earlier40mph correction](docs/keyboard-handling.md). All six tuning profiles retain their original tire-grip and power parameters.
+Select a tuning profile in the garage, then **Free Drive** or **Motorsport**. All profiles, roads and activities are immediately available.
 
-Per the current content direction, the live game now [reuses one authored Velara S model](docs/shared-car-model.md) for the player, traffic, race grids, showroom background and parked scenery. The garage presents six tuning profiles rather than six different bodies: their FWD/RWD/AWD, GT and Formula-class physics, power, tire and race-rule differences remain intact. Only the Velara LOD0/LOD1 files are requested; paint, wheel finish and accent treatment remain customizable. A blocked-asset fallback also preserves the same body instead of changing shape.
+- Free Drive connects a 4,096 m region with roughly 35–45 km of public roads, city/suburbs, industrial yards, countryside, forest, a mountain pass, lake, highway, bridges, tunnels and service locations.
+- The map offers routing/rerouting, road discovery, destination filters, four speed traps, three point-to-point trials, two drift zones and three scenic destinations. Records save locally.
+- Aster International offers Practice, Qualifying, Quick Race and a practice → qualifying → race weekend. Choose 3/5/10/20 laps and up to 16 total entrants. The defaults are eight entrants, five race laps and five-minute qualifying.
+- Northstar Handling Grounds supplies braking lanes, a slalom, skidpad, bumps, banking, gradient, curb and ramp.
+- Weather, day/night, five cameras, driving assists, traffic density, sound and controls are configurable.
 
-City corridors now have original lamp standards, benches, bins, planted beds and shelters. A [boulevard planting pass](docs/boulevard-planting.md) pairs all 83 lamp stations with 86 raised beds that reuse the original oak/trunk and low-cost grass cards, replacing isolated greenery with a consistent tree line. At night, two nearby pooled streetlights illuminate the road and cars; their ownership follows streamed scenery. This is bounded city dressing, not pedestrians, a completed world-art pass or a bus-service feature. The existing handling corrections are unchanged.
+Per the user's content direction, **one original Velara S model is reused throughout**: player, showroom, traffic, parked cars and race opponents. The six garage entries are physical tuning profiles (FWD/RWD/AWD, road/GT/Formula-class parameters), not six visually different cars. Paint, wheel finish, liveries, brake bias and eligible aero setup remain customizable.
 
-Westbrook's signalized approaches now add [lane-derived zebra crossings and correctly ordered stop bars](docs/urban-crosswalks.md) to the existing shared white-paint batch. [Continuous corner sidewalks](docs/junction-sidewalks.md) join the straight paving around all four signal aprons and analytically trim the old approach overlaps. Its ten transit shelters also carry a [small streamed street-life population](docs/street-life.md): one seated and one standing figure per shelter, merged by cell without AI or collision bodies. Together they improve junction scale and human context while preserving driving behavior.
-
-Ambient traffic uses wet-aware cruise, corner, following and stopping targets rather than dry-road pace on rain-reduced tire grip. A commanded-motion timer also recovers a physically wedged middle-distance car without touching legitimate red-light or following queues, preventing one blocked connector from starving an intersection indefinitely. The selected 270-second rainy-night stress evidence and remaining limits are documented in [traffic](docs/traffic.md).
-
-[Westbrook Commons](docs/westbrook-commons.md) replaces one large downtown lawn with a streamed civic park: terrain-following physical walks, a fountain, benches, path lamps, planted beds and reused mature trees. It shares existing cell materials and vegetation libraries and stays inside the Low submission budget. This is one composed public space, not pedestrians or a complete city-park network.
-
-Ground materials blend meadow, dry grass, woodland soil, shore sediment and exposed rock in world coordinates. Clipped terrain now shares boundary vertices across polygons and streamed cells, repairing a measured height-gap defect in the actual collision mesh. Authored road/shoulder surfaces and vehicle handling are unchanged. See [terrain continuity and off-road limits](docs/terrain-continuity.md). Scenery density, broader terrain shape and visual polish remain unfinished.
-
-The [directional sky](docs/atmosphere.md) now has layered clouds, sunward dusk haze, a small cloud-obscured sun, and a readable night gradient with stars and moon. A cost-neutral moonlight pass reuses the existing directional light, improving car, tree, terrain and road-edge silhouettes without adding lights or geometry; rain remains deliberately darker. It uses one shared cloud atlas and native shaders on both renderers, not a low-resolution coloured sky repainted every time the clock changes. This does not change driving physics or complete the wider scenery upgrade.
-
-Rural roads now use [authored roadside groves and weathered boulders](docs/rural-landscape.md) instead of uniform tree scatter and white concrete-looking rocks. A complementary [utility, field-edge and farm layer](docs/rural-infrastructure.md) adds road-following poles/wires, timber fencing with gate gaps and five distant farm clusters. [Roadside guidance](docs/roadside-guidance.md) adds dark-banded reflector posts at a continuous road-distance cadence and yellow-on-black chevron boards on Ridgeway's two sharp hairpins. The [industrial compound pass](docs/industrial-setting.md) adds two container yards, a tank farm and a process plant, while [four authored Westbrook blocks](docs/urban-setting.md) replace isolated towers and empty lawns with varied multi-building courtyards. A [shared background-office family](docs/background-offices.md) mixes cleaner continuous-band façades into one third of procedural offices, [single-surface repeated panes](docs/window-geometry.md) remove hidden architectural geometry, [renderer-safe façade materials](docs/facade-materials.md) remove the reproduced WebGPU mip/depth triangles, and [terrain-following urban aprons and marked forecourts](docs/urban-parcels.md) keep procedural buildings from meeting bare grass directly. Eligible lots now use [repeated instances of the same authored Velara LOD](docs/parked-model-reuse.md), rather than a cheaper background-car prop. All layers are deterministic, streamed by cell and kept clear of protected roads, water and junction views. The result is less empty and easier to read while broad lawns, pedestrians, sidewalk continuity and final material realism remain open.
-
-In Free Drive, select **Aster International** on the map to drive through its access underpass to the pit destination. The pit exit joins the one-way circuit; follow it to the west gate to return to public roads. See [circuit access and verification](docs/circuit-access.md).
-
-Choose one of six unlocked Velara tuning profiles in the garage, then Free Drive or Motorsport. The map filters All, Activities, Scenic, Services and Motorsport destinations and includes the complete optional set of four speed traps, three point-to-point trials, two drift zones and three scenic discoveries; its detail panel shows persistent personal bests. Motorsport offers practice, qualifying, quick races, and a practice → qualifying → race weekend.
-
-Pit visits use their own ordered timing route. Stay below **60 km/h (37 mph)**, stop in your assigned garage-side box and select **SERVICE / PIT** for fuel and tires. The HUD displays the limit; speeding incurs a penalty. See [timing and pit verification](docs/race-timing.md).
-
-Aster now has planted banks/tree belts and a dressed rear paddock. Racing AI requests fuel/tire service, leaves the continuous fast lane for one of sixteen assigned drive-through boxes, and yields at the circuit exit. If it misses its assigned stop, it continues forward, rejoins safely and retries on the next lap instead of reversing through pit traffic. A fifteen-AI same-lap service demand now passes in both GT and Formula profiles without an overshoot, reset, warning, penalty or collision. A car that fully depletes its fuel coasts to rest and receives an explicit `DNF · OUT OF FUEL`; it is never recycled through the spin-recovery teleport, and following cars use a slow road-coordinate bypass. The race HUD distinguishes local stopped-car/off-track yellow, a close lapping-car blue and checkered; these are local flag states, not a safety-car system. Predictive lane reservation, gradual line changes and yaw-rate feedback correct the reproduced opening-lap spins; both eight-car weekends and sixteen-car three-lap races pass selected clean-field and multi-retirement checks. Race Weekend now preserves the entire [earned qualifying grid](docs/qualifying-grid.md), including identity, ties and loading retries. Restart weekend starts fresh practice without overwriting your setup position. See [timing/flag rules](docs/race-timing.md), [racing control](docs/racing-ai.md), the [feature status](docs/feature-status.md) and [measured checks](docs/benchmarks.md), rather than treating the working build as final acceptance.
-
-**Handling course** in the sidebar opens Northstar's traffic-free proving ground with the selected car. It contains braking lanes, a slalom, three skidpad rings, measured bumps, a banked road, a gradient, a curb and a launch ramp. It is also connected to the public road network. Reset inside the course returns to its braking lane. See [course layout and measured tests](docs/handling-course.md).
+## Controls
 
 | Action | Keyboard | Xbox-style controller |
 |---|---|---|
@@ -57,95 +52,63 @@ Aster now has planted banks/tree belts and a dressed rear paddock. Racing AI req
 | Handbrake | Space | A |
 | Shift up / down (manual) | E / Q | RB / LB |
 | Camera | C | B |
-| Reset to road, invalidate lap | R | X |
+| Reset to road; invalidate lap | R | X |
 | Map | M | Y |
 | Pause | Escape | Menu |
 | Fullscreen | F | — |
 | Headlights | L | — |
 | Developer telemetry | F3 | — |
 
-Settings contain key remapping, assists, units, weather, time, graphics, traffic and sound. Fresh profiles benchmark displayed frame pacing and choose a graphics preset automatically; selecting Low, Medium, High or Ultra turns that selection off. Dynamic resolution remains active during driving, with a 70% floor and gradual recovery, and never changes physics or race rules. Telemetry shows actual render dimensions and effective scale. Save data is versioned IndexedDB data on this browser and origin; use export/import to transfer it or the confirmed **Reset progress** action to clear it. A full or unavailable database leaves the game playable in memory, displays a warning and can resume saving after storage recovers. Clearing browser data also removes local saves.
+Keyboard bindings are remappable. In menus use Tab/Shift+Tab and Enter/Space; controller D-pad/stick changes focus, left/right adjusts values, A confirms and B/Menu returns. Native save-file dialogs use the operating system's controls.
 
-If the browser loses its graphics context or GPU device while driving, Kairos pauses the simulation and keeps the vehicle/session state unchanged. WebGL2 rebuilds the local environment maps and reflection probes in place, then waits for the player to resume. A WebGPU device that cannot be reacquired within 20 seconds offers an explicit **Restart with WebGL2** action after persisting the save. The fallback reload is intentional because current Edge/Windows did not provide a replacement device after an explicit device destruction; it is not represented as seamless WebGPU recovery.
+Switching tabs, losing focus through browser visibility changes or disconnecting the active controller pauses driving and clears held input. A click or key press unlocks audio if autoplay was blocked.
 
-Switching to another tab or minimizing the browser pauses driving immediately, clears held controls and discards accumulated frame time. The pause screen explains the background interruption; resuming starts from the same simulation timestamp and pose instead of replaying missed physics steps. Controller disconnection uses the same safe pause path with its own explanation. See [background pause behavior](docs/visibility-pause.md).
+### Pits and services
 
-In menus, controller D-pad / left stick up-down moves focus, left-right changes selects/sliders or cycles paint colors, A confirms and B/Menu returns. Keyboard Tab/Shift+Tab moves focus, Enter/Space activates, and Escape returns. Focus survives settings changes; held buttons must be released after connecting or entering a menu. If browser autoplay is blocked, click or press a key once to enable audio; driving does not wait for sound permission. Native save-file dialogs still require the operating system's controls.
+Stay below **60 km/h / 37 mph** in Aster's pit lane. Stop in your assigned garage-side box and choose **SERVICE / PIT**; the six-second countdown restores fuel, tires and damage. Pit timing uses an ordered route and speeding incurs penalties. Free Drive service stations use the same stopped-car service action.
 
-## Validation and development
+### Graphics
 
-`window.render_game_to_text()`, `window.advanceTime(ms)`, and `window.kairos` exist only in development/test builds. **Await `advanceTime(ms)`**: it suspends normal stepping and waits for required collision cells without advancing session clocks during loading. Call `window.kairos.resumeRealTime()` to resume. One fixed accumulator owns the 120 Hz simulation.
+Low targets 1280 × 720; Medium, High and Ultra increase rendering quality without changing physics or rules. High adds ambient occlusion; Ultra also adds bounded outdoor screen-space reflections. Low/Medium retain the lightweight probe-based path.
+
+Automatic selection waits for **moving gameplay**, not showroom frames. A changed recommendation applies safely when you return to the showroom. Choosing a preset disables automatic selection. Dynamic resolution can fall to 70% and recover under lighter load.
+
+A graphics-device loss pauses simulation. WebGL2 can rebuild in place. If WebGPU cannot recover within 20 seconds, an explicit **Restart with WebGL2** action saves the profile and reloads; this is not seamless session recovery.
+
+### Saves
+
+Versioned IndexedDB stores settings, customization, discovery and records in this browser/origin. Export/import transfers a save to another browser, port or computer. **Reset progress** requires confirmation. Unavailable/full storage leaves play available in memory and displays a warning; unsaved progress can be lost on exit.
+
+## Development and verification
+
+Development builds expose `window.render_game_to_text()`, `window.advanceTime(ms)` and `window.kairos`; production builds do not. Await `advanceTime(ms)`: it suspends normal stepping and waits for collision data without advancing session clocks during loading. `window.kairos.resumeRealTime()` restores the animation loop.
+
+Verification scripts use port 5187; production delivery checks use 5192. Playwright browser binaries must be installed. Do not rebuild watched source/assets during a running browser test.
 
 ```sh
-node scripts/web_game_playwright_client.mjs --url "http://127.0.0.1:5187/?renderer=webgl" --actions-file tests/actions-drive.json --click-selector "#start-drive" --iterations 1 --screenshot-dir output/driving
-node scripts/inspect.mjs "http://127.0.0.1:5187/?renderer=webgl" garage
-node scripts/verify-racing.mjs
-node scripts/verify-weekend.mjs
-node scripts/verify-physics.mjs
-node scripts/profile-startup.mjs
-node scripts/verify-startup.mjs --repeats=3 --output=output/startup-delivery
-node scripts/verify-startup.mjs --channel=msedge --race --output=output/startup-edge
-node scripts/verify-startup.mjs --channel=chrome --race --formula --output=output/startup-formula-chrome
-node scripts/verify-formula-model.mjs
-node scripts/verify-road-models.mjs
-node scripts/verify-road-models.mjs --fallback
-node scripts/verify-handling.mjs
-node scripts/verify-traffic.mjs
-node scripts/verify-layers.mjs
-node scripts/verify-access.mjs
-node scripts/verify-pits.mjs
-node scripts/verify-pit-timing.mjs
-node scripts/verify-contested-pits.mjs
-node scripts/verify-scenery.mjs
-node scripts/verify-crosswalks.mjs --output=output/junction-sidewalks
-node scripts/verify-streetscape.mjs
-node scripts/verify-streetscape.mjs --renderer=auto --output=output/streetscape-webgpu
-node scripts/verify-agricultural-fields.mjs --output=output/agricultural-fields
-node scripts/verify-industrial-setting.mjs --output=output/industrial-setting
-node scripts/verify-urban-setting.mjs --output=output/urban-setting
-node scripts/verify-urban-park.mjs --output=output/urban-park
-node scripts/verify-reused-parked-cars.mjs --output=output/reused-parked-cars
-node scripts/verify-roadside-guidance.mjs
-node scripts/verify-graphics-streaming.mjs
-node scripts/verify-wet-night-driving.mjs
-node scripts/verify-freedrive-stress.mjs
-node scripts/verify-worker-recovery.mjs
-node scripts/inspect-handling.mjs
-node scripts/verify-controller-navigation.mjs
-node scripts/verify-camera-collision.mjs
-node scripts/verify-visibility-pause.mjs
-node scripts/verify-navigation-reroute.mjs
-node scripts/verify-player-service.mjs
-node scripts/verify-platform-interactions.mjs --output=output/platform-interactions
-node scripts/verify-audio.mjs
 node scripts/verify-interactions.mjs
-node scripts/verify-storage.mjs
-node scripts/audit-gpu-resources.mjs --output=output/gpu-resources
-node scripts/audit-browser-memory.mjs --output=output/browser-memory
-node scripts/audit-frame-performance.mjs --output=output/frame-performance
-node scripts/profile-frame-cpu.mjs --output=output/frame-cpu-profile
-node scripts/verify-browsers.mjs msedge
 node scripts/verify-adaptive-quality.mjs
-node scripts/verify-graphics-recovery.mjs
-node scripts/verify-endurance.mjs --minutes=30 --sample-ms=30000 --renderer=webgl --output=output/endurance-real30
-node scripts/build-assets.mjs
-npm run build:textures
-npm run verify:textures
-node scripts/verify-compressed-textures.mjs
+node scripts/verify-shared-car-model.mjs
+node scripts/verify-quality-effects.mjs
+node scripts/verify-graphics-streaming.mjs
+node scripts/verify-race-resource-lifecycle.mjs
+node scripts/verify-keyboard-grip.mjs
+node scripts/verify-weekend.mjs
+node scripts/verify-browsers.mjs
+node scripts/audit-frame-performance.mjs
+node scripts/verify-delivery.mjs --25mbps
 ```
 
-The web-game client is an unmodified copy of the supplied skill client. Supplementary scripts inspect full HTML HUDs and run physical race traces. Artifacts go in `output/`. Headless Chromium may use SwiftShader: its timings are **not** integrated-GPU laptop performance measurements.
+Additional focused tests and retained raw reports are indexed in [benchmarks](docs/benchmarks.md). Rebuild the original car assets with `node scripts/build-assets.mjs` while the dev server runs; rebuild original KTX2 assets with `npm run build:textures`. Ordinary production builds verify generated textures and copy dependency notices.
 
-Vite excludes generated `output/` captures/reports from hot reload. Watching those files caused a confirmed Windows `EBUSY` server crash while a report was being copied; game source and public models remain watched. This prevents that specific artifact-watcher failure, not every possible startup problem.
+## Handoff and limits
 
-The verification scripts use the dev server on port 5187. `verify-delivery.mjs` requires the production preview on port 5192. Browser binaries must be available to Playwright. `build-assets.mjs` rebuilds the shared compressed Velara LOD0/LOD1 pair through the dev-only exporter; the generated models are already included. `build:textures` rebuilds the nineteen original KTX2 surface/cloud assets and their cache version from the shared deterministic source fields. The ordinary production build verifies those generated assets rather than silently regenerating them. `npm run build` also copies third-party runtime notices into `dist/licenses/`.
+The core local gameplay systems are implemented. The [final presentation pass](docs/final-presentation.md) corrects shared-car trim/optics, adds distant geology and forest groves, and fixes representative automatic-quality sampling. Art remains stylized; it does not reproduce the mockups' photorealism.
 
-`node scripts/verify-delivery.mjs --25mbps` adds browser-emulated 25Mbps download / 5Mbps upload with 40ms latency and a cold browser cache. Its separate `output/delivery-25mbps/` results are development-host network emulation, not an actual-laptop or Internet deployment benchmark.
+Development-PC tests **do not certify** performance/endurance on the separate 8 GB integrated-graphics laptop or feel/vibration on a physical controller. These remain explicit acceptance checks, not hidden passes. Synthetic audio and compact local race flags/rules are intentional documented implementations; there is no full safety-car/marshal simulation.
 
-See [architecture and tuning](docs/architecture.md), [graphics](docs/graphics.md), [background pause behavior](docs/visibility-pause.md), [chase-camera collision](docs/camera-collision.md), [Free Drive activities](docs/free-drive-activities.md), [map filters](docs/map-filters.md), [navigation and rerouting](docs/navigation-rerouting.md), [player service](docs/player-service.md), [rural landscape](docs/rural-landscape.md), [rural infrastructure](docs/rural-infrastructure.md), [agricultural fields](docs/agricultural-fields.md), [industrial compounds](docs/industrial-setting.md), [Westbrook urban blocks](docs/urban-setting.md), [roadside guidance](docs/roadside-guidance.md), [road/contact layers](docs/road-layers.md), [streaming](docs/streaming.md), [traffic](docs/traffic.md), [feature status](docs/feature-status.md), [local release readiness](docs/release-readiness.md), [validation evidence](docs/benchmarks.md), [licenses](docs/assets-and-licenses.md), and [progress](progress.md). This is a playable local release candidate, **not external acceptance of every requirement in the approved plan**. The current development build passes the broad interaction/fault matrix, a real-time 30-minute repeated eight-car race/session run, selected maximum-speed Free Drive routes, every five-scene Low frame/CPU/GPU/simulation/AI p95 gate, a conservative 157.57MiB peak Low GPU-resource estimate and a 1,334.97MiB peak settled Edge process audit. Reference-level visual polish, actual target-laptop telemetry and an authorized HTTPS deployment remain outside the verified envelope.
+See [architecture and tuning](docs/architecture.md), [plan status](docs/plan-completion.md), [current closeout](docs/final-closeout.md), [feature history](docs/feature-status.md), [licenses](docs/assets-and-licenses.md) and [progress](progress.md).
 
-## Static hosting
+## Static output
 
-`dist/` is the static output. The included Vercel configuration builds with npm, revalidates the application shell, and gives only hashed or fingerprint-query runtime payloads immutable caching: `/assets/`, `/models/*.glb`, `/textures/*.ktx2`, and `/environment/*.env`. The production smoke test asserts the retained Velara LODs and gallery environment carry their expected fingerprints. Select Node 24 in the authorized project's settings. Do not publish source references or the complete project directory as a static file server.
-
-No deployment has been authorized or verified yet. Once a project is supplied, deploy a preview, test startup and driving with external hosts blocked, then promote that exact tested deployment. Keep its predecessor for rollback. The Vercel deployment guidance informed this preview-first configuration; no credentials or cloud services are required for local play.
+`dist/` is the self-contained static production output. The retained Vercel configuration revalidates the application shell and gives versioned assets immutable caching. **Do not publish:** the user chose local-only delivery. A future hosted release needs a newly authorized destination, preview checks and preservation of the previous deployment for rollback.

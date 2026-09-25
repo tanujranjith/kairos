@@ -31,6 +31,6 @@ describe('smooth non-uniform authored body profiles',()=>{
   });
   it('applies the same layered paint response after import or procedural creation',()=>{
     const engine=new NullEngine(),scene=new Scene(engine),paint=new PBRMaterial('paint',scene);
-    try{paint.metallic=.9;paint.clearCoat.roughness=0;finishCarPaint(paint);expect(paint.metallic).toBe(.46);expect(paint.roughness).toBe(.28);expect(paint.clearCoat.isEnabled).toBe(true);expect(paint.clearCoat.roughness).toBe(.13);expect(paint.environmentIntensity).toBe(.85);}finally{scene.dispose();engine.dispose();}
+    try{paint.metallic=.9;paint.clearCoat.roughness=0;finishCarPaint(paint);expect(paint.metallic).toBe(.24);expect(paint.roughness).toBe(.34);expect(paint.clearCoat.isEnabled).toBe(true);expect(paint.clearCoat.roughness).toBe(.20);expect(paint.environmentIntensity).toBe(.75);}finally{scene.dispose();engine.dispose();}
   });
 });

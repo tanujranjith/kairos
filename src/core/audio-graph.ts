@@ -1,5 +1,6 @@
 import { clamp, rng } from './math';
 import type { drivingMix } from './audio-mix';
+import {combustionHarmonics} from './engine-wave';
 
 export type DrivingMix=ReturnType<typeof drivingMix>;
 
@@ -16,7 +17,12 @@ export function createDrivingAudioGraph(ctx:BaseAudioContext){
   const oscillator=(type:OscillatorType,hz:number,level:number,target:AudioNode)=>{
     const o=track(ctx.createOscillator()),g=gain(level);o.type=type;o.frequency.value=hz;o.connect(g);g.connect(target);o.start();sources.push(o);return o;
   };
-  const engine=[oscillator('sawtooth',40,.24,engineGain),oscillator('triangle',80,.14,engineGain),oscillator('triangle',160,.09,engineGain)];
+  const harmonics=combustionHarmonics(),pulse=ctx.createPeriodicWave(harmonics.real,harmonics.imag);
+  const exhaustGain=gain(.7),exhaust=filter('lowpass',350,.85),intakeGain=gain(.2),intake=filter('bandpass',650,1.1);
+  exhaustGain.connect(exhaust);exhaust.connect(engineGain);intakeGain.connect(intake);intake.connect(engineGain);
+  const firing=oscillator('sine',80,.52,exhaustGain);firing.setPeriodicWave(pulse);
+  const intakePulse=oscillator('sine',80,.5,intakeGain);intakePulse.setPeriodicWave(pulse);
+  const crank=oscillator('triangle',40,.13,engineGain);
   const whineGain=gain(),whine=oscillator('sine',100,1,whineGain);whineGain.connect(bus);
   const buffer=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),samples=buffer.getChannelData(0),random=rng(27183);
   for(let i=0;i<samples.length;i++)samples[i]=random()*2-1;
@@ -24,6 +30,7 @@ export function createDrivingAudioGraph(ctx:BaseAudioContext){
     const source=track(ctx.createBufferSource()),f=filter(type,hz),g=gain();source.buffer=buffer;source.loop=true;source.connect(f);f.connect(g);g.connect(bus);source.start(0,offset);sources.push(source);return {gain:g,filter:f};
   };
   const tires=noise('bandpass',1850,0),road=noise('lowpass',500,.3),wind=noise('lowpass',420,.7),rain=noise('highpass',2400,1.1);
+  const combustionNoise=noise('bandpass',950,1.5);combustionNoise.gain.disconnect();combustionNoise.gain.connect(engineGain);
   const tunnelSend=gain(),delay=track(ctx.createDelay(.3)),echoFilter=filter('lowpass',2200),feedback=gain(.28);
   delay.delayTime.value=.087;bus.connect(tunnelSend);tunnelSend.connect(delay);delay.connect(echoFilter);echoFilter.connect(cabin);echoFilter.connect(feedback);feedback.connect(delay);
   const target=(param:AudioParam,value:number,time:number,tau=.045)=>param.setTargetAtTime(value,time,tau);
@@ -32,7 +39,10 @@ export function createDrivingAudioGraph(ctx:BaseAudioContext){
     master,
     update(mix:DrivingMix,gear:number,volume:number,active:boolean,time=ctx.currentTime){
       target(master.gain,active?clamp(volume,0,1)*.7:0,time,.04);
-      engine.forEach((o,i)=>target(o.frequency,mix.engineHz*[.5,1,2.015][i],time,.025));
+      target(firing.frequency,mix.engineHz,time,.025);target(intakePulse.frequency,mix.engineHz*.997,time,.025);target(crank.frequency,mix.engineHz*.5,time,.025);
+      target(exhaustGain.gain,mix.exhaustGain,time);target(exhaust.frequency,mix.exhaustHz,time);
+      target(intakeGain.gain,mix.intakeGain,time);target(intake.frequency,mix.intakeHz,time);
+      target(combustionNoise.gain.gain,mix.overrunGain+.018*mix.intakeGain,time,.07);
       engineGain.gain.cancelScheduledValues(time);
       if(lastGear!==undefined&&gear!==lastGear){shiftUntil=time+.06;engineGain.gain.setValueAtTime(.012,time);}
       target(engineGain.gain,mix.engineGain,Math.max(time,shiftUntil),.035);

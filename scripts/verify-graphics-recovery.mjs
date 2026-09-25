@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 
 const requested=process.argv[2]??'webgl';
 assert.ok(requested==='webgl'||requested==='webgpu','Usage: node scripts/verify-graphics-recovery.mjs [webgl|webgpu]');
-const output='output/graphics-recovery';await fs.mkdir(output,{recursive:true});
+const quality=process.argv.find(a=>a.startsWith('--quality='))?.slice(10)??'Low';assert.ok(['Low','Medium','High','Ultra'].includes(quality));
+const output=quality==='Low'?'output/graphics-recovery':`output/graphics-recovery-${quality}`;await fs.mkdir(output,{recursive:true});
 const browser=await chromium.launch({channel:'msedge',headless:true});
 const context=await browser.newContext({viewport:{width:1280,height:720}}),page=await context.newPage();
 const errors=[],warnings=[],external=[],trace=[];page.setDefaultTimeout(90000);
@@ -17,6 +18,7 @@ try{
   await page.waitForFunction(()=>window.kairos?.ui);await page.evaluate(()=>window.advanceTime(0));
   const renderer=(await state()).renderer;assert.equal(renderer,requested==='webgl'?'WebGL2':'WebGPU');
   await page.evaluate(async()=>{const game=window.kairos;game.save.settings.automaticQuality=false;game.save.settings.traffic=0;game.save.settings.timeRate=0;await game.startDrive();await game.advanceTime(1000);});
+  await page.evaluate(async quality=>{const g=window.kairos;await g.action('setting',JSON.stringify({key:'quality',value:quality}));await g.world.loadAround(g.player.node.position,true);await g.advanceTime(1000);},quality);
   await page.keyboard.down('ArrowUp');await page.evaluate(()=>window.advanceTime(1500));await page.keyboard.up('ArrowUp');
   await page.evaluate(kind=>{const game=window.kairos;window.__graphicsRecoveryTrace=[];window.__badTextureBinds=[];const record=event=>window.__graphicsRecoveryTrace.push({event,at:performance.now(),screen:game.screen,recovery:structuredClone(game.snapshot().graphics.recovery)});game.renderer.engine.onContextLostObservable.add(()=>record('lost'));game.renderer.engine.onContextRestoredObservable.add(()=>record('engine-restored'));if(kind==='webgl'){const gl=game.renderer.engine._gl,bind=gl.bindTexture.bind(gl);gl.bindTexture=(target,texture)=>{if(texture&&!gl.isTexture(texture)&&!gl.isContextLost()&&window.__badTextureBinds.length<300)window.__badTextureBinds.push({at:performance.now(),phase:game.snapshot().graphics.recovery.phase,stack:new Error('stale texture bind').stack});return bind(target,texture);};}},requested);
   const moving=await state();assert.equal(moving.screen,'drive');assert.ok(Math.abs(moving.player.speed)>2);

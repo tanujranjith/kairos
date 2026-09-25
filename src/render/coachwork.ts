@@ -90,15 +90,24 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
         const outer:[number,number,number]=[x,y,z],inner:[number,number,number]=[x,-.32+Math.sin(a)*innerRadius,zc+Math.cos(a)*innerRadius];
         liner.push(side>0?[outer,inner]:[inner,outer]);
       }
-      tube('rolled-fender-lip',points,.010,m.paint);sheet('wheel-arch-liner',liner,m.dark);
+      // The continuous body already defines the painted aperture. A second
+      // tube crossed that edge and made the wheel arch look serrated.
+      sheet('wheel-arch-liner',liner,m.dark);
     }
     tube('rocker-sill',[[side*W*.97,-.385,-d.wheelbase/2+.38],[side*W*.94,-.40,0],[side*W*.98,-.385,d.wheelbase/2-.38]],gt?.045:.027,m.dark);
     const creaseStart=-d.wheelbase/2+d.wheelRadius+.10,creaseEnd=d.wheelbase/2-d.wheelRadius-.08,creaseMid=mix(creaseStart,creaseEnd,.52);
     const creaseY=d.id==='crest'?.12:d.id==='nova'?.055:d.id==='aeris'?.02:.085;
-    tube('sculpted-shoulder-crease',onSide(side,[[0,creaseY-.025,creaseStart],[0,creaseY,creaseMid],[0,creaseY+(d.id==='nova'?.025:-.012),creaseEnd]],.007),d.class==='GT'?.007:.0055,m.paint);
-    const seam:Point[]=[],outline=[[.205,.66],[-.31,.54],[-.34,-.74],[.21,-.84]];
-    for(let edge=0;edge<outline.length-1;edge++)for(let i=0;i<=8;i++){const t=i/8,y=mix(outline[edge][0],outline[edge+1][0],t),z=mix(outline[edge][1],outline[edge+1][1],t);seam.push([(panelSide(body,y,z,side)??side*W)+side*.002,y,z]);}
-    tube('door-shutline',seam,.0021,m.dark);
+    const crease=[[creaseY-.025,creaseStart],[creaseY,creaseMid],[creaseY+(d.id==='nova'?.025:-.012),creaseEnd]];
+    // A subtle moulding hugs the actual side instead of a floating silver rod.
+    const creaseMesh=panelDecal(scene,'sculpted-shoulder-crease',body,m.paint,[...crease.map(([y,z])=>[y+.004,z] as [number,number]),...crease.slice().reverse().map(([y,z])=>[y-.004,z] as [number,number])],.001,side);
+    parts.push(creaseMesh);
+    const outline=[[.205,.66],[-.31,.54],[-.34,-.74],[.21,-.84]];
+    // Clip each gap directly to the body triangles. A tubular polyline sits
+    // alternately inside/outside curved panels and produces dotted stitches.
+    for(let edge=0;edge<outline.length-1;edge++){
+      const a=outline[edge],b=outline[edge+1],length=Math.hypot(b[0]-a[0],b[1]-a[1]),dy=-(b[1]-a[1])/length*.003,dz=(b[0]-a[0])/length*.003;
+      parts.push(panelDecal(scene,'door-shutline',body,m.dark,[[a[0]+dy,a[1]+dz],[b[0]+dy,b[1]+dz],[b[0]-dy,b[1]-dz],[a[0]-dy,a[1]-dz]],.003,side));
+    }
     box('flush-door-handle',.014,.023,.135,(panelSide(body,.15,-.51,side)??side*W)+side*.007,.15,-.51,m.chrome);
     tube('mirror-arm',[[side*W*.76,.30,.66],[side*(W+.04),.31,.57]],.017,m.dark);
     const mirror=MeshBuilder.CreateSphere('sculpted-mirror',{diameter:1,segments:lite?8:16},scene);mirror.scaling.set(.22,.09,.22);mirror.position.set(side*(W+.055),.33,.55);add(mirror,m.paint);
@@ -120,7 +129,7 @@ export function roadCoachwork(scene:Scene,d:VehicleDefinition,m:{paint:PBRMateri
     tube('led-signature',onSkin([[side*(lampInset+.04),0,L-.187],[side*.66,0,L-.263],[side*W*.835,0,L-.359]],.016),design.lamp==='blade'?.009:.013,m.light);
     if(design.lamp==='tourer'||design.lamp==='compact')tube('led-return',onSkin([[side*(lampInset+.05),0,L-.080],[side*.67,0,L-.225]],.016),.010,m.light);
     if(design.lamp==='rally')tube('rally-lamp-hook',onSkin([[side*W*.825,0,L-.34],[side*W*.85,0,L-.21],[side*W*.70,0,L-.12]],.016),.014,m.light);
-    parts.push(panelDecal(scene,'headlamp-clear-lens',body,m.lens??m.glass,lampFootprint,.019));
+    parts.push(panelDecal(scene,'headlamp-clear-lens',body,m.lens??m.glass,lampFootprint,.012));
     const rearY=design.shoulders[0]-.015,rearInner=d.id==='aeris'?.52:d.id==='crest'?.39:.13;
     const lampEnd=W*design.widths[0]*.92;
     tube('rear-lamp-housing',[rearTrim(side*rearInner,rearY),rearTrim(side*(rearInner+lampEnd)/2,rearY+.006),rearTrim(side*lampEnd,rearY+.005)],d.id==='aeris'?.035:.025,m.dark);
